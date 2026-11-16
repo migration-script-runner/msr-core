@@ -42,6 +42,12 @@ Contribution guidelines and standards:
 - Pull request process
 - Issue reporting
 
+### 🗂️ [GitHub Project Workflow](github-project-workflow)
+Manage repository work on GitHub:
+- Issues, labels, and milestones
+- Release branches and pull requests
+- GitHub Releases and npm publication
+
 ---
 
 ## Architecture & Design

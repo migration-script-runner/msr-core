@@ -23,10 +23,9 @@ Set up your development environment for contributing to MSR.
 
 ### Required Software
 
-- **Node.js**: 14.x or higher
-- **npm**: 6.x or higher (or yarn 1.x+)
+- **Node.js**: 20.x or higher (see `engines` in `package.json`)
+- **npm**: Use the npm version bundled with your supported Node.js installation
 - **Git**: 2.x or higher
-- **TypeScript**: 4.x or higher (installed via npm)
 
 ### Recommended Tools
 
@@ -48,8 +47,10 @@ cd msr-core
 ### 2. Install Dependencies
 
 ```bash
-npm install
+npm ci
 ```
+
+`npm ci` installs the exact dependency versions from `package-lock.json` and runs the package's `prepare` script, which installs the Husky hooks.
 
 This installs:
 - TypeScript compiler
@@ -58,10 +59,10 @@ This installs:
 - ESLint for linting
 - NYC for coverage
 - Stryker for mutation testing
-- **Husky** for pre-commit hooks (v0.7.0+)
+- **Husky** for pre-commit hooks
 
 {: .note }
-> **Pre-Commit Hooks (v0.7.0+):** The `npm install` command automatically sets up Git hooks via Husky. These hooks run TypeScript type checking, build verification, ESLint, tests, and coverage checks before every commit to ensure code quality.
+> **Pre-Commit Hook:** Dependency installation sets up the Git hook via Husky. Before each commit, it runs TypeScript type checking, a build, ESLint, tests with coverage, and a local check requiring 100% statement, branch, function, and line coverage. This local threshold does not block CI: GitHub Actions and CircleCI generate coverage reports without enforcing the 100% threshold.
 
 ### 3. Verify Installation
 
@@ -76,11 +77,7 @@ npm test
 npm run test:coverage
 ```
 
-**Expected Output:**
-```
-✓ 573 tests passing
-Coverage: 100% (statements, branches, functions, lines)
-```
+Test counts can change as tests are added. Confirm the commands complete successfully. The 100% threshold is checked by the local pre-commit hook; CI generates coverage reports without making that threshold a CI gate.
 
 ---
 
@@ -88,21 +85,21 @@ Coverage: 100% (statements, branches, functions, lines)
 
 ```
 msr-core/
-├── src/                   # Source code
-│   ├── error/            # Error classes
-│   ├── hooks/            # Lifecycle hooks
-│   ├── interface/        # TypeScript interfaces
-│   ├── logger/           # Logger implementations
-│   ├── model/            # Model classes
-│   └── service/          # Service layer
-├── test/                  # Test files
-│   ├── unit/             # Unit tests
-│   ├── integration/      # Integration tests
-│   ├── benchmarks/       # Performance tests
-│   └── helpers/          # Test utilities
-├── docs/                  # Documentation
-├── dist/                  # Compiled JavaScript (gitignored)
-└── coverage/              # Coverage reports (gitignored)
+├── src/                   # TypeScript source
+│   ├── cli/              # CLI commands and utilities
+│   ├── error/             # Error classes
+│   ├── hooks/             # Lifecycle hooks
+│   ├── interface/         # Public and internal interfaces
+│   ├── loader/            # Migration loaders
+│   ├── logger/            # Logger implementations
+│   ├── metrics/           # Metrics and collectors
+│   ├── model/             # Models and configuration
+│   ├── service/           # Services and renderers
+│   └── util/              # Shared utilities
+├── test/                  # Unit, integration, and benchmark tests
+├── docs/                  # Jekyll documentation site
+├── dist/                  # Compiled output
+└── reports/               # Test and coverage reports
 ```
 
 ---
@@ -112,11 +109,7 @@ msr-core/
 ### Building
 
 ```bash
-# Clean build
 npm run build
-
-# Watch mode (auto-rebuild on changes)
-npm run build:watch  # If available
 ```
 
 ### Testing
@@ -146,10 +139,9 @@ npm run test:watch
 ```bash
 # Run ESLint
 npm run lint
-
-# Auto-fix issues
-npm run lint:fix  # If available
 ```
+
+There is no `lint:fix` npm script. Fix reported issues in the source and rerun the linter.
 
 ### Mutation Testing
 
@@ -213,6 +205,8 @@ npm run test:mutation:incremental
 
 ### 1. Create a Branch
 
+Choose the base branch according to the issue's milestone and the [Development Workflow](workflow). For a versioned milestone, use its matching `release/X.Y.Z` branch when available.
+
 ```bash
 git checkout -b feature/my-feature
 # or
@@ -234,12 +228,12 @@ npm run build
 # Test
 npm test
 
-# Coverage (must be 100%)
+# Generate the coverage report
 npm run test:coverage
 
-# Lint
-npm run lint
 ```
+
+`npm test` already runs ESLint followed by the Mocha suite. `npm run test:coverage` runs the suite with coverage instrumentation. The local pre-commit hook separately checks the 100% threshold; the CI workflows do not fail on that threshold.
 
 ### 4. Commit Changes
 
@@ -267,7 +261,7 @@ Then create a Pull Request on GitHub.
 
 ---
 
-## Pre-Commit Hooks (v0.7.0+)
+## Pre-Commit Hook
 
 MSR uses [Husky](https://typicode.github.io/husky/) to automatically run quality checks before every commit.
 
@@ -278,8 +272,10 @@ Pre-commit hooks run these checks in sequence:
 1. **TypeScript Type Check** - Validates types without emitting files (`tsc --noEmit`)
 2. **Build Check** - Ensures project compiles successfully
 3. **ESLint** - Enforces code style and catches errors
-4. **Full Test Suite** - Runs all unit and integration tests
-5. **Coverage Verification** - Ensures 100% code coverage
+4. **Tests with Coverage** - Runs the Mocha suite and creates a coverage report
+5. **Coverage Threshold** - Runs `nyc check-coverage` and requires 100% statements, branches, functions, and lines
+
+The hook is a local commit gate. The current GitHub Actions and CircleCI workflows generate coverage reports but do not fail because coverage is below 100%.
 
 **Expected output when committing:**
 ```
@@ -294,12 +290,12 @@ Pre-commit hooks run these checks in sequence:
 
 ### Automatic Setup
 
-Hooks are automatically installed when you run:
+Hooks are installed by the package's `prepare` script when you run:
 ```bash
-npm install
+npm ci
 ```
 
-This is handled by the `prepare` script in `package.json`.
+The `prepare` script in `package.json` invokes Husky.
 
 ### Bypassing Hooks
 
@@ -316,12 +312,12 @@ git commit --no-verify -m "WIP: work in progress"
 
 ### Troubleshooting Hooks
 
-**Issue:** Hooks don't run after `npm install`
+**Issue:** Hooks do not run after dependency installation
 
 **Solution:**
 ```bash
-# Reinstall Husky manually
-npx husky install
+# Reinstall dependencies and the Husky hook
+npm ci
 ```
 
 **Issue:** Hooks fail even though manual checks pass
@@ -334,10 +330,7 @@ npx husky install
 
 **Issue:** Hooks run but take too long
 
-**Note:** Pre-commit checks typically take 60-90 seconds (includes type check, build, lint, tests, and coverage). This is expected and ensures code quality. If checks take longer, consider:
-- Running tests in watch mode during development: `npm run test:watch`
-- Committing more frequently with smaller changes
-- Using WIP commits (with `--no-verify`) during active development, then squashing before PR
+Pre-commit checks include type checking, a build, linting, tests, and coverage verification. Run the narrow relevant checks while iterating, then let the hook run before committing. Watch mode is available with `npm run test:watch`.
 
 ---
 
@@ -351,18 +344,21 @@ npx husky install
 ```bash
 # Clean and rebuild
 rm -rf dist node_modules
-npm install
+npm ci
 npm run build
 ```
 
 ### Test Failures
 
-**Issue:** Tests fail after fresh clone
+**Issue:** Tests fail after a fresh clone
 
 **Solution:**
 ```bash
-# Ensure dependencies are installed
-npm install
+# Install locked dependencies
+npm ci
+
+# Create the directory used by CI and some tests, if it is absent
+mkdir -p backups
 
 # Try running specific test
 npm run test:one -- test/unit/service/YourService.test.ts
@@ -375,11 +371,14 @@ npm run test:one -- test/unit/service/YourService.test.ts
 **Solution:**
 - Add tests for uncovered lines
 - Check branch coverage
+- Run `npx nyc check-coverage --lines 100 --branches 100 --functions 100 --statements 100` to check the local commit threshold
 - See [Testing Guide](testing/) for coverage requirements
+
+Coverage below 100% does not fail the current CI workflows; the local pre-commit hook enforces that threshold.
 
 ### Permission Errors (macOS)
 
-**Issue:** `EACCES` errors during npm install
+**Issue:** `EACCES` errors during dependency installation
 
 **Solution:**
 ```bash
@@ -402,7 +401,7 @@ sudo chown -R $(whoami) ~/.npm
 
 | Command | Purpose |
 |---------|---------|
-| `npm install` | Install dependencies |
+| `npm ci` | Install locked dependencies and set up Git hooks |
 | `npm run build` | Compile TypeScript |
 | `npm test` | Run all tests |
 | `npm run test:coverage` | Run tests with coverage |
@@ -410,3 +409,11 @@ sudo chown -R $(whoami) ~/.npm
 | `npm run test:integration` | Run integration tests only |
 | `npm run lint` | Run ESLint |
 | `npm run test:mutation` | Run mutation tests |
+| `npm run docs:install` | Install the Jekyll site's Ruby dependencies |
+| `npm run docs:build` | Build the Jekyll documentation site |
+
+## Continuous Integration
+
+The GitHub Actions test workflow currently runs on pushes to `master`, `develop`, and `release/*`, and on pull requests targeting `master` or `develop`. It tests on Node.js 20.x and 22.x, installs with `npm ci`, creates `backups/`, runs lint and tests, and generates a coverage report. A task PR targeting `release/*` is covered by the push workflow when commits reach that branch; the pull request event filter currently names only `master` and `develop`.
+
+CircleCI currently uses Node.js 20.18, runs `npm run test:report`, and uploads the coverage report to Coveralls. Neither CI workflow enforces the local 100% coverage threshold.

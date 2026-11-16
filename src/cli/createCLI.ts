@@ -2,9 +2,16 @@ import {Command} from 'commander';
 import {MigrationScriptExecutor} from '../service/MigrationScriptExecutor';
 import {IConfigLoader} from '../interface/IConfigLoader';
 import {Config} from '../model/Config';
+import {BackupMode} from '../model/BackupMode';
 import {IDB} from '../interface';
 import {ConfigLoader} from '../util/ConfigLoader';
-import {mapFlagsToConfig, CLIFlags} from './utils/flagMapper';
+import {
+    mapFlagsToConfig,
+    CLIFlags,
+    LOGGER_TYPES,
+    LOG_LEVELS,
+    OUTPUT_FORMATS
+} from './utils/flagMapper';
 import {
     addMigrateCommand,
     addListCommand,
@@ -246,6 +253,9 @@ export interface CLIOptions<
  * 4. options.config (if provided)
  * 5. CLI flags (highest priority)
  *
+ * The common `--backup-mode` flag accepts `full`, `create_only`, `restore_only`,
+ * or `manual`. If omitted, the loaded configuration's backup mode is preserved.
+ *
  * The final merged config is passed to your `createExecutor` factory function,
  * allowing you to initialize your adapter with the correct configuration.
  *
@@ -342,6 +352,10 @@ export function createCLI<
 >(
     options: CLIOptions<DB, TExecutor, TConfig>
 ): Command {
+    const loggerTypes = LOGGER_TYPES.join('|');
+    const logLevels = LOG_LEVELS.join('|');
+    const outputFormats = OUTPUT_FORMATS.join('|');
+    const backupModes = Object.values(BackupMode).join('|');
     const program = new Command();
 
     // Set CLI metadata
@@ -358,10 +372,11 @@ export function createCLI<
         .option('--display-limit <number>', 'Maximum migrations to display', parseInt)
         .option('--dry-run', 'Simulate without executing')
         .option('--no-lock', 'Disable migration locking for this run')
-        .option('--logger <type>', 'Logger type (console|file|silent)')
-        .option('--log-level <level>', 'Log level (error|warn|info|debug)')
+        .option('--logger <type>', `Logger type (${loggerTypes})`)
+        .option('--log-level <level>', `Log level (${logLevels})`)
         .option('--log-file <path>', 'Log file path (required with --logger file)')
-        .option('--format <format>', 'Output format (table|json)');
+        .option('--format <format>', `Output format (${outputFormats})`)
+        .option('--backup-mode <mode>', `Backup behavior (${backupModes})`);
 
     // Call adapter's custom options callback if provided
     if (options.addCustomOptions) {

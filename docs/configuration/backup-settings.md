@@ -523,6 +523,23 @@ backupConfig.ext = '.backup';
 
 Controls when backups are created and whether automatic restore occurs on failure.
 
+#### Using `--backup-mode` with the CLI
+
+Choose a backup mode for a migration run without changing the config file:
+
+```bash
+npx msr migrate --backup-mode manual
+```
+
+The supported values shown in CLI help are `full`, `create_only`, `restore_only`,
+and `manual`. The CLI flag overrides the mode loaded from a config file, environment variables,
+or `createCLI` options. If the flag is omitted, the loaded mode is preserved;
+when no mode is configured, the default is `full` (`BackupMode.FULL`).
+
+`restore_only` still requires `backup.existingBackupPath` to point to an existing
+backup. The selected mode also follows the interaction with `rollbackStrategy`
+described below; `down` and `none` strategies do not use automatic backup mode.
+
 ```typescript
 import { BackupMode, RollbackStrategy } from '@migration-script-runner/core';
 

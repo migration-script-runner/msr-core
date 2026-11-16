@@ -3,6 +3,8 @@ import sinon from 'sinon';
 import {createCLI} from '../../../src/cli/createCLI';
 import {IDB} from '../../../src/interface';
 import {Config} from '../../../src/model/Config';
+import {BackupMode} from '../../../src/model/BackupMode';
+import {LOGGER_TYPES, LOG_LEVELS, OUTPUT_FORMATS} from '../../../src/cli/utils/flagMapper';
 import {MigrationScriptExecutor} from '../../../src/service/MigrationScriptExecutor';
 
 interface MockDB extends IDB {
@@ -130,12 +132,26 @@ describe('createCLI', () => {
             expect(optionFlags).to.include('--log-level');
             expect(optionFlags).to.include('--log-file');
             expect(optionFlags).to.include('--format');
+            expect(optionFlags).to.include('--backup-mode');
         });
 
         /**
          * Test: Registers short options
          * Validates that short option aliases are available
          */
+        it('should list supported values in common option descriptions', () => {
+            const program = createCLI({createExecutor: createExecutorStub});
+            const getDescription = (flag: string): string | undefined =>
+                program.options.find(option => option.long === flag)?.description;
+
+            expect(getDescription('--logger')).to.equal(`Logger type (${LOGGER_TYPES.join('|')})`);
+            expect(getDescription('--log-level')).to.equal(`Log level (${LOG_LEVELS.join('|')})`);
+            expect(getDescription('--format')).to.equal(`Output format (${OUTPUT_FORMATS.join('|')})`);
+            expect(getDescription('--backup-mode')).to.equal(
+                `Backup behavior (${Object.values(BackupMode).join('|')})`
+            );
+        });
+
         it('should register short options', () => {
             const program = createCLI({createExecutor: createExecutorStub});
             const shortOptions = program.options.map(opt => opt.short).filter(Boolean);
@@ -342,7 +358,7 @@ describe('createCLI', () => {
 
             const program = createCLI({
                 createExecutor: createExecutorStub,
-                config: {folder: './custom-folder'},
+                config: {folder: './custom-folder', backupMode: BackupMode.MANUAL},
             });
             program.exitOverride();
 
@@ -353,7 +369,22 @@ describe('createCLI', () => {
             expect(passedConfig).to.be.an('object');
             expect(passedConfig.dryRun).to.be.true;
             expect(passedConfig.folder).to.equal('./custom-folder');
+            expect(passedConfig.backupMode).to.equal(BackupMode.MANUAL);
         });
+
+        for (const backupMode of Object.values(BackupMode)) {
+            it(`maps --backup-mode ${backupMode} to config.backupMode`, async () => {
+                mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+
+                const program = createCLI({createExecutor: createExecutorStub});
+                program.exitOverride();
+
+                await program.parseAsync(['node', 'test', 'migrate', '--backup-mode', backupMode]);
+
+                const passedConfig = createExecutorStub.firstCall.args[0] as Config;
+                expect(passedConfig.backupMode).to.equal(backupMode);
+            });
+        }
 
         /**
          * Test: Handles CLI flags with logger override

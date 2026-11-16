@@ -758,7 +758,8 @@ msr backup delete
 
 ## Common CLI Flags
 
-All commands support these common flags:
+All commands support these common flags. Descriptions for options with a finite set
+of values list those values in the CLI help output.
 
 | Flag | Short | Description | Type | Example |
 |------|-------|-------------|------|---------|
@@ -767,6 +768,7 @@ All commands support these common flags:
 | `--table-name` | | Schema version table name | string | `--table-name _versions` |
 | `--display-limit` | | Max migrations to display | number | `--display-limit 50` |
 | `--dry-run` | | Simulate without executing | boolean | `--dry-run` |
+| `--backup-mode` | | Backup/restore behavior | `full\|create_only\|restore_only\|manual` | `--backup-mode manual` |
 | `--logger` | | Logger type | console\|file\|silent | `--logger file` |
 | `--log-level` | | Log level | error\|warn\|info\|debug | `--log-level debug` |
 | `--log-file` | | Log file path (required with --logger file) | string | `--log-file ./logs/msr.log` |

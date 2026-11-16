@@ -4,6 +4,7 @@ import {Config} from '../../../../src/model/Config';
 import {ConsoleLogger} from '../../../../src/logger/ConsoleLogger';
 import {FileLogger} from '../../../../src/logger/FileLogger';
 import {SilentLogger} from '../../../../src/logger/SilentLogger';
+import {BackupMode} from '../../../../src/model/BackupMode';
 
 describe('flagMapper', () => {
     let config: Config;
@@ -71,6 +72,18 @@ describe('flagMapper', () => {
             const flags: CLIFlags = {noLock: false};
             mapFlagsToConfig(config, flags);
             expect(config.locking.enabled).to.equal(true);
+        });
+
+        it('should map backupMode flag to config.backupMode', () => {
+            const flags: CLIFlags = {backupMode: BackupMode.RESTORE_ONLY};
+            mapFlagsToConfig(config, flags);
+            expect(config.backupMode).to.equal(BackupMode.RESTORE_ONLY);
+        });
+
+        it('should preserve config.backupMode when the flag is undefined', () => {
+            config.backupMode = BackupMode.MANUAL;
+            mapFlagsToConfig(config, {});
+            expect(config.backupMode).to.equal(BackupMode.MANUAL);
         });
 
         /**

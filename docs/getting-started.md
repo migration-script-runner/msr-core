@@ -585,6 +585,7 @@ Available on all commands:
 --logger <type>          # Logger type (console|file|silent)
 --log-level <level>      # Log level (error|warn|info|debug)
 --dry-run                # Simulate without executing
+--backup-mode <mode>     # Backup behavior (full|create_only|restore_only|manual)
 --format <format>        # Output format (table|json)
 ```
 

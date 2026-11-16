@@ -23,8 +23,8 @@ Guide for contributors and maintainers.
 
 ### Prerequisites
 
-- Node.js 16 or higher
-- npm 7 or higher
+- Node.js 20 or higher (see [Compatibility](../compatibility))
+- npm bundled with the supported Node.js installation
 - Git
 
 ### Clone and Install
@@ -32,7 +32,7 @@ Guide for contributors and maintainers.
 ```bash
 git clone https://github.com/migration-script-runner/msr-core.git
 cd msr-core
-npm install
+npm ci
 ```
 
 ---
@@ -87,87 +87,7 @@ npm run test:report
 
 ## Publishing New Versions
 
-### Automated Publishing (Recommended)
-
-GitHub Actions automatically publishes to npm when the version in `package.json` changes:
-
-1. **Update the version** in `package.json`:
-   ```bash
-   # For patch releases (bug fixes)
-   npm version patch
-
-   # For minor releases (new features, backward compatible)
-   npm version minor
-
-   # For major releases (breaking changes)
-   npm version major
-   ```
-
-2. **Commit and push**:
-   ```bash
-   git push origin master
-   git push origin --tags
-   ```
-
-3. **GitHub Actions will automatically**:
-   - Run all tests
-   - Build the package
-   - Publish to npm
-   - Create git tag
-
-### Manual Publishing
-
-If you need to publish manually:
-
-1. **Ensure you're logged in to npm**:
-   ```bash
-   npm whoami
-   # If not logged in:
-   npm login
-   ```
-
-2. **Build the project**:
-   ```bash
-   npm run build
-   ```
-
-3. **Publish to npm**:
-   ```bash
-   npm publish --access public
-   ```
-
-4. **Create and push git tag**:
-   ```bash
-   git tag v0.2.x
-   git push origin v0.2.x
-   ```
-
-5. **Create GitHub release**:
-   ```bash
-   gh release create v0.2.x \
-     --title "v0.2.x - Release Title" \
-     --notes "Release notes here"
-   ```
-
----
-
-## Release Checklist
-
-Before releasing a new version:
-
-- [ ] All tests pass (`npm test`)
-- [ ] Code coverage is 100% (`npm run test:coverage`)
-- [ ] Documentation is updated
-- [ ] CHANGELOG is updated (if exists)
-- [ ] Version is bumped in `package.json`
-- [ ] Breaking changes are documented in migration guide (for major/minor with breaking changes)
-
-After releasing:
-
-- [ ] Verify package appears on npm: https://www.npmjs.com/package/@migration-script-runner/core
-- [ ] Verify GitHub release is created
-- [ ] Update documentation site if needed
-- [ ] Close related issues and milestone
+Maintainers follow the [publishing guide](publishing) and [GitHub project workflow](github-project-workflow). The release branch is promoted through a PR to `master`; a pushed `v*` tag triggers npm publication. Contributors should not create version commits or tags as part of an ordinary change.
 
 ---
 
@@ -202,25 +122,15 @@ After releasing:
 
 ## Commit Message Guidelines
 
-Use clear, descriptive commit messages:
+Use the repository format `#<issue number>: <imperative title>`, followed by a body explaining what changed and why. For example:
 
-```bash
-# Good examples
-Fix #42: Resolve backup deletion issue
-Add displayLimit configuration option
-Update documentation for new list() method
+```text
+#123: Add database handler support
 
-# Bad examples
-fix bug
-update
-changes
+Add the handler contract and tests so adapters can use the new database type.
 ```
 
-**Format:**
-- Start with action verb (Add, Fix, Update, Remove, etc.)
-- Reference issue number if applicable (`Fix #42:`)
-- Keep first line under 72 characters
-- Add detailed explanation in body if needed
+Do not add AI attribution. See the [development workflow](workflow) for branch and review details.
 
 ---
 

@@ -322,6 +322,9 @@ See [Pre-Commit Hook](setup#pre-commit-hook) in the Setup guide for detailed inf
 #123: Add MySQL database handler support
 ```
 
+The PR title validation workflow checks this format. Release promotion PRs use
+`Release vX.Y.Z` and are accepted by the same check.
+
 ### PR Description Template
 
 ```markdown

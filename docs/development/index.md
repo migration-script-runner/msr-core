@@ -21,6 +21,9 @@ This section contains documentation for developers who want to contribute to Mig
 
 ## Getting Started
 
+### 🧩 [Compatibility](../compatibility)
+Node.js, TypeScript, and database adapter support.
+
 ### 🚀 [Development Setup](setup)
 Set up your development environment:
 - Clone and install dependencies

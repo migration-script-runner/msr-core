@@ -2,6 +2,7 @@
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/migration-script-runner/msr-core/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/migration-script-runner/msr-core/tree/master)
 [![Test](https://github.com/migration-script-runner/msr-core/actions/workflows/test.yml/badge.svg)](https://github.com/migration-script-runner/msr-core/actions/workflows/test.yml)
+[![Security audit](https://github.com/migration-script-runner/msr-core/actions/workflows/security.yml/badge.svg)](https://github.com/migration-script-runner/msr-core/actions/workflows/security.yml)
 [![Coverage Status](https://coveralls.io/repos/github/migration-script-runner/msr-core/badge.svg?branch=master)](https://coveralls.io/github/migration-script-runner/msr-core?branch=master)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=vlavrynovych_msr&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=vlavrynovych_msr)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=vlavrynovych_msr&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=vlavrynovych_msr)
@@ -18,6 +19,15 @@
 **A database-agnostic migration framework for TypeScript and JavaScript projects.**
 
 MSR provides a lightweight, flexible framework for managing database migrations without locking you into a specific ORM or database system. Bring your own database implementation and let MSR handle the migration workflow, versioning, validation, and execution.
+
+## The MSR Ecosystem
+
+**One core. Built for different databases.**
+
+MSR Core powers the Migration Script Runner family with versioned migrations, checksum validation, locking for distributed deployments, backup and rollback strategies, and a shared CLI. Each implementation adds the behavior its database needs.
+
+- **[MSR Firebase →](https://github.com/migration-script-runner/msr-firebase)** — Bring the MSR workflow to Firebase Realtime Database, with Firebase-specific backup, restore, and locking.
+- **MSR PostgreSQL** — In development. The MSR foundation, adapted for PostgreSQL.
 
 ---
 
@@ -300,9 +310,11 @@ Today, MSR powers migrations across multiple database platforms with features tr
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](https://migration-script-runner.github.io/msr-core/development/contributing) for guidelines on code style, testing requirements, and pull request process.
+Contributions are welcome! Please read our [Contributing Guide](https://core.migration-script-runner.dev/development/contributing) for guidelines on code style, testing requirements, and pull request process.
 
-See our [GitHub Issues](https://github.com/migration-script-runner/msr-core/issues) for tasks that need help.
+See our [GitHub Issues](https://github.com/migration-script-runner/msr-core/issues) for tasks that need help. Read the [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md) before reporting community or security concerns.
+
+See the [Changelog](CHANGELOG.md) for release history and the [Compatibility Guide](https://core.migration-script-runner.dev/compatibility) for supported environments.
 
 ---
 

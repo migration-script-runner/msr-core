@@ -41,7 +41,7 @@ describe('ExecutionSummaryLogger', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(testLogDir, file));
             }
-            fs.rmdirSync(testLogDir, { recursive: true });
+            fs.rmSync(testLogDir, { recursive: true });
         }
     });
 
@@ -52,7 +52,7 @@ describe('ExecutionSummaryLogger', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(testLogDir, file));
             }
-            fs.rmdirSync(testLogDir, { recursive: true });
+            fs.rmSync(testLogDir, { recursive: true });
         }
     });
 
@@ -361,7 +361,7 @@ describe('ExecutionSummaryLogger', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(defaultPath, file));
             }
-            fs.rmdirSync(defaultPath, { recursive: true });
+            fs.rmSync(defaultPath, { recursive: true });
         });
 
         it('should use default format (JSON) when not configured', async () => {
@@ -507,7 +507,7 @@ describe('ExecutionSummaryLogger', () => {
                     try {
                         const stats = fs.statSync(filePath);
                         if (stats.isDirectory()) {
-                            fs.rmdirSync(filePath);
+                            fs.rmSync(filePath, { recursive: true, force: true });
                         } else {
                             fs.unlinkSync(filePath);
                         }
@@ -515,7 +515,7 @@ describe('ExecutionSummaryLogger', () => {
                         // Ignore cleanup errors
                     }
                 }
-                fs.rmdirSync(testDir, { recursive: true });
+                fs.rmSync(testDir, { recursive: true });
             }
         });
     });
@@ -552,7 +552,7 @@ describe('ExecutionSummaryLogger', () => {
                 for (const file of files) {
                     fs.unlinkSync(path.join(testDir, file));
                 }
-                fs.rmdirSync(testDir, { recursive: true });
+                fs.rmSync(testDir, { recursive: true });
             }
         });
 

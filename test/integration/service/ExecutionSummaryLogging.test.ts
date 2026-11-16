@@ -38,7 +38,7 @@ describe('Execution Summary Logging Integration', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(testLogDir, file));
             }
-            fs.rmdirSync(testLogDir, { recursive: true });
+            fs.rmSync(testLogDir, { recursive: true });
         }
 
         // Mock handler
@@ -102,7 +102,7 @@ describe('Execution Summary Logging Integration', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(testLogDir, file));
             }
-            fs.rmdirSync(testLogDir, { recursive: true });
+            fs.rmSync(testLogDir, { recursive: true });
         }
     });
 

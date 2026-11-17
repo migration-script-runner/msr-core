@@ -172,8 +172,8 @@ The API approach embeds migration execution directly in your application code.
 import {MigrationScriptRunner} from '@migration-script-runner/core';
 
 // Run migrations on app startup
-const executor = new MigrationScriptRunner({handler, config});
-await executor.migrate();
+const runner = new MigrationScriptRunner({handler, config});
+await runner.migrate();
 
 // Then start your app
 await startServer();
@@ -186,24 +186,24 @@ await startServer();
 1. **Local Development**
    ```typescript
    if (process.env.NODE_ENV === 'development') {
-     await executor.migrate();
+     await runner.migrate();
    }
    ```
 
 2. **Automated Testing**
    ```typescript
    beforeAll(async () => {
-     await executor.migrate();
+     await runner.migrate();
    });
 
    afterAll(async () => {
-     await executor.down(0); // Rollback all
+     await runner.down(0); // Rollback all
    });
    ```
 
 3. **Database Seeding**
    ```typescript
-   await executor.migrate();
+   await runner.migrate();
    await seedDatabase(db);
    ```
 
@@ -232,12 +232,12 @@ import {MyHandler} from './database';
 async function startApp() {
   const config = new Config();
   const handler = new MyHandler();
-  const executor = new MigrationScriptRunner({handler, config});
+  const runner = new MigrationScriptRunner({handler, config});
 
   // Only in development
   if (process.env.NODE_ENV === 'development') {
     console.log('Running migrations...');
-    const result = await executor.migrate();
+    const result = await runner.migrate();
 
     if (!result.success) {
       console.error('Migration failed:', result.errors);
@@ -257,15 +257,15 @@ startApp();
 import {MigrationScriptRunner} from '@migration-script-runner/core';
 
 describe('User API', () => {
-  let executor: MigrationScriptRunner;
+  let runner: MigrationScriptRunner;
 
   beforeAll(async () => {
-    executor = new MigrationScriptRunner({handler, config});
-    await executor.migrate(); // Fresh database
+    runner = new MigrationScriptRunner({handler, config});
+    await runner.migrate(); // Fresh database
   });
 
   afterAll(async () => {
-    await executor.down(0); // Clean up
+    await runner.down(0); // Clean up
   });
 
   it('should create user', async () => {
@@ -285,7 +285,7 @@ describe('User API', () => {
 // server.ts - DON'T DO THIS IN PRODUCTION
 async function startServer() {
   // This runs on EVERY instance startup
-  await executor.migrate(); // ← Race condition!
+  await runner.migrate(); // ← Race condition!
 
   await app.listen(3000);
 }
@@ -332,7 +332,7 @@ GRANT CREATE, ALTER, DROP ON SCHEMA public TO migration_user;
 **Bad - Unguarded API usage:**
 ```typescript
 // This runs in ALL environments
-await executor.migrate(); // ← Dangerous in production!
+await runner.migrate(); // ← Dangerous in production!
 await startServer();
 ```
 
@@ -341,12 +341,12 @@ await startServer();
 // Only allow API in specific environments
 const allowedEnvs = ['development', 'test'];
 if (allowedEnvs.includes(process.env.NODE_ENV)) {
-  await executor.migrate();
+  await runner.migrate();
 }
 
 // Or explicitly disable in production
 if (process.env.NODE_ENV !== 'production') {
-  await executor.migrate();
+  await runner.migrate();
 }
 ```
 
@@ -445,12 +445,12 @@ For serverless, consider:
 ```typescript
 // src/migrations.ts
 export async function runMigrations() {
-  const executor = new MigrationScriptRunner({handler, config});
+  const runner = new MigrationScriptRunner({handler, config});
 
   // Only in development
   if (process.env.NODE_ENV === 'development') {
     console.log('Auto-running migrations (development mode)...');
-    const result = await executor.migrate();
+    const result = await runner.migrate();
 
     if (!result.success) {
       throw new Error('Migrations failed: ' + result.errors?.map(e => e.message).join(', '));
@@ -477,12 +477,12 @@ npm start
 ```typescript
 // test/setup.ts
 export async function setupTestDatabase() {
-  const executor = new MigrationScriptRunner({handler, testConfig});
-  await executor.migrate();
+  const runner = new MigrationScriptRunner({handler, testConfig});
+  await runner.migrate();
 }
 
 export async function teardownTestDatabase() {
-  await executor.down(0);
+  await runner.down(0);
 }
 ```
 
@@ -568,7 +568,7 @@ export async function teardownTestDatabase() {
 ```typescript
 // Development: API
 if (process.env.NODE_ENV === 'development') {
-  await executor.migrate();
+  await runner.migrate();
 }
 
 // Production: CLI (separate step)

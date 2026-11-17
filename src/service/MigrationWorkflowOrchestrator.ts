@@ -251,15 +251,15 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
     }
 
     /**
-     * Generate unique executor ID for lock tracking.
+     * Generate unique runner ID for lock tracking.
      *
      * Format: hostname-pid-uuid
      * Example: macbook-pro-12345-a1b2c3d4-e5f6-7890-abcd-ef1234567890
      *
      * @private
-     * @returns Unique executor identifier
+     * @returns Unique runner identifier
      */
-    private generateExecutorId(): string {
+    private generateRunnerId(): string {
         return `${hostname()}-${process.pid}-${randomUUID()}`;
     }
 
@@ -273,11 +273,11 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * 4. Invoke hooks for observability
      *
      * @private
-     * @param executorId - Unique identifier for this executor
+     * @param runnerId - Unique identifier for this runner
      * @returns Promise that resolves when lock is acquired and verified
      * @throws Error if lock acquisition fails or ownership verification fails
      */
-    private async acquireLockWithRetries(executorId: string): Promise<void> {
+    private async acquireLockWithRetries(runnerId: string): Promise<void> {
         if (!this.lockingOrchestrator) {
             return; // Locking not configured
         }
@@ -291,7 +291,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
         await this.lockingOrchestrator.checkAndReleaseExpiredLock();
 
         // Attempt to acquire lock (orchestrator handles retry logic and hooks)
-        const acquired = await this.lockingOrchestrator.acquireLock(executorId);
+        const acquired = await this.lockingOrchestrator.acquireLock(runnerId);
 
         if (!acquired) {
             // Get current lock status for error message
@@ -316,9 +316,9 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * Logs errors but doesn't throw to ensure cleanup can continue.
      *
      * @private
-     * @param executorId - Unique identifier for this executor
+     * @param runnerId - Unique identifier for this runner
      */
-    private async releaseLock(executorId: string): Promise<void> {
+    private async releaseLock(runnerId: string): Promise<void> {
         if (!this.lockingOrchestrator) {
             return; // Locking not configured
         }
@@ -328,7 +328,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
         }
 
         try {
-            await this.lockingOrchestrator.releaseLock(executorId);
+            await this.lockingOrchestrator.releaseLock(runnerId);
         } catch (error) {
             // Log but don't throw - we don't want lock release failure to mask original error
             this.logger.warn(`Failed to release migration lock: ${error}`);
@@ -339,9 +339,9 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * Execute all pending database migrations.
      */
     public async migrateAll(): Promise<IMigrationResult<DB>> {
-        // Generate unique executor ID and acquire lock before starting
-        const executorId = this.generateExecutorId();
-        await this.acquireLockWithRetries(executorId);
+        // Generate unique runner ID and acquire lock before starting
+        const runnerId = this.generateRunnerId();
+        await this.acquireLockWithRetries(runnerId);
 
         let scripts: IScripts<DB> = {
             all: [],
@@ -398,7 +398,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
             };
         } finally {
             // Always release lock, even on error
-            await this.releaseLock(executorId);
+            await this.releaseLock(runnerId);
         }
     }
 
@@ -406,9 +406,9 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * Execute migrations up to a specific target version.
      */
     public async migrateToVersion(targetVersion: number): Promise<IMigrationResult<DB>> {
-        // Generate unique executor ID and acquire lock before starting
-        const executorId = this.generateExecutorId();
-        await this.acquireLockWithRetries(executorId);
+        // Generate unique runner ID and acquire lock before starting
+        const runnerId = this.generateRunnerId();
+        await this.acquireLockWithRetries(runnerId);
 
         let scripts: IScripts<DB> = {
             all: [],
@@ -453,7 +453,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
             throw await this.errorHandler.handleMigrationError(error, targetVersion, scripts.executed, backupPath, errors);
         } finally {
             // Always release lock, even on error
-            await this.releaseLock(executorId);
+            await this.releaseLock(runnerId);
         }
     }
 

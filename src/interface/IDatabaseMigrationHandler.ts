@@ -182,35 +182,35 @@ export interface IDatabaseMigrationHandler<DB extends IDB> {
      *     private readonly config: LockingConfig
      *   ) {}
      *
-     *   async acquireLock(executorId: string): Promise<boolean> {
+     *   async acquireLock(runnerId: string): Promise<boolean> {
      *     const result = await this.db.query(
-     *       `INSERT INTO ${this.config.tableName} (executor_id, locked_at, expires_at)
+     *       `INSERT INTO ${this.config.tableName} (runner_id, locked_at, expires_at)
      *        VALUES ($1, NOW(), NOW() + INTERVAL '${this.config.timeout / 1000} seconds')
      *        ON CONFLICT DO NOTHING RETURNING id`,
-     *       [executorId]
+     *       [runnerId]
      *     );
      *     return result.rows.length > 0;
      *   }
      *
-     *   async verifyLockOwnership(executorId: string): Promise<boolean> {
+     *   async verifyLockOwnership(runnerId: string): Promise<boolean> {
      *     const result = await this.db.query(
-     *       `SELECT executor_id FROM ${this.config.tableName}
+     *       `SELECT runner_id FROM ${this.config.tableName}
      *        WHERE expires_at > NOW()`,
      *       []
      *     );
-     *     return result.rows[0]?.executor_id === executorId;
+     *     return result.rows[0]?.runner_id === runnerId;
      *   }
      *
-     *   async releaseLock(executorId: string): Promise<void> {
+     *   async releaseLock(runnerId: string): Promise<void> {
      *     await this.db.query(
-     *       `DELETE FROM ${this.config.tableName} WHERE executor_id = $1`,
-     *       [executorId]
+     *       `DELETE FROM ${this.config.tableName} WHERE runner_id = $1`,
+     *       [runnerId]
      *     );
      *   }
      *
      *   async getLockStatus(): Promise<ILockStatus | null> {
      *     const result = await this.db.query(
-     *       `SELECT executor_id, locked_at, expires_at
+     *       `SELECT runner_id, locked_at, expires_at
      *        FROM ${this.config.tableName}
      *        WHERE expires_at > NOW()`,
      *       []
@@ -221,10 +221,10 @@ export interface IDatabaseMigrationHandler<DB extends IDB> {
      *     }
      *
      *     const row = result.rows[0];
-     *     const parts = row.executor_id.split('-');
+     *     const parts = row.runner_id.split('-');
      *     return {
      *       isLocked: true,
-     *       lockedBy: row.executor_id,
+     *       lockedBy: row.runner_id,
      *       lockedAt: new Date(row.locked_at),
      *       expiresAt: new Date(row.expires_at),
      *       processId: parts.length >= 2 ? parts[1] : undefined

@@ -32,9 +32,9 @@ Register the provider on `IDatabaseMigrationHandler` as `lockingProvider`.
 | --- | --- |
 | `initLockStorage()` | Create or prepare the lock storage. |
 | `ensureLockStorageAccessible()` | Confirm the storage is ready before migrations run. |
-| `acquireLock(executorId)` | Atomically acquire the lock when it is free. |
-| `verifyLockOwnership(executorId)` | Confirm that the caller still owns the lock. |
-| `releaseLock(executorId)` | Release the caller's lock. |
+| `acquireLock(runnerId)` | Atomically acquire the lock when it is free. |
+| `verifyLockOwnership(runnerId)` | Confirm that the caller still owns the lock. |
+| `releaseLock(runnerId)` | Release the caller's lock. |
 | `getLockStatus()` | Return current lock state or null. |
 | `forceReleaseLock()` | Remove a lock regardless of owner for emergency recovery. |
 | `checkAndReleaseExpiredLock()` | Remove expired lock records. |
@@ -60,17 +60,17 @@ class PostgreSqlLockingProvider implements ILockingProvider<PostgreSqlDB> {
     return true;
   }
 
-  async acquireLock(executorId: string): Promise<boolean> {
+  async acquireLock(runnerId: string): Promise<boolean> {
     // Use an atomic insert or equivalent database operation.
     return true;
   }
 
-  async verifyLockOwnership(executorId: string): Promise<boolean> {
+  async verifyLockOwnership(runnerId: string): Promise<boolean> {
     return true;
   }
 
-  async releaseLock(executorId: string): Promise<void> {
-    // Delete only the lock owned by executorId.
+  async releaseLock(runnerId: string): Promise<void> {
+    // Delete only the lock owned by runnerId.
   }
 
   async getLockStatus(): Promise<ILockStatus | null> {

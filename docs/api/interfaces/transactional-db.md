@@ -509,8 +509,8 @@ config.transaction.mode = TransactionMode.PER_MIGRATION;
 // 3. Wraps migrations in transactions
 // 4. Handles retries on deadlocks
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.up();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.up();
 ```
 
 **What Happens Automatically:**

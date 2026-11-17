@@ -86,7 +86,7 @@ All loggers are automatically wrapped with level-aware filtering:
 
 ```typescript
 // Your logger is automatically wrapped with log level filtering
-const executor = new MigrationScriptRunner({ handler }, {
+const runner = new MigrationScriptRunner({ handler }, {
     logLevel: 'error'  // Only errors will be shown
 }, {
     logger: new ConsoleLogger()  // Automatically wrapped

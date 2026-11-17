@@ -622,7 +622,7 @@ const hooks: ITransactionHooks = {
   }
 };
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
   logger,
   hooks
 });
@@ -681,6 +681,6 @@ const handler: IDatabaseMigrationHandler = {
   getVersion: () => '1.0.0'
 };
 
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 // Uses custom transaction manager instead of default
 ```

@@ -29,10 +29,10 @@ export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
  * @example
  * ```typescript
  * // Using the default console logger
- * const executor = new MigrationScriptRunner<DB>(handler);
+ * const runner = new MigrationScriptRunner<DB>(handler);
  *
  * // Using a silent logger (no output)
- * const executor = new MigrationScriptRunner<DB>(handler, new SilentLogger());
+ * const runner = new MigrationScriptRunner<DB>(handler, new SilentLogger());
  *
  * // Using a custom logger
  * class MyLogger implements ILogger {
@@ -41,7 +41,7 @@ export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
  *   }
  *   // ... implement other methods
  * }
- * const executor = new MigrationScriptRunner<DB>(handler, new MyLogger());
+ * const runner = new MigrationScriptRunner<DB>(handler, new MyLogger());
  * ```
  */
 export interface ILogger {

@@ -13,7 +13,7 @@ export interface ILockStatus {
     isLocked: boolean;
 
     /**
-     * Unique identifier of the executor holding the lock.
+     * Unique identifier of the runner holding the lock.
      * Format: `hostname-pid-uuid`
      * null if no lock is held.
      */
@@ -32,7 +32,7 @@ export interface ILockStatus {
     expiresAt: Date | null;
 
     /**
-     * Process ID component from the executor identifier.
+     * Process ID component from the runner identifier.
      * Useful for debugging and identifying stale locks.
      */
     processId?: string;
@@ -45,10 +45,10 @@ export interface ILockStatus {
  * a two-phase locking mechanism with ownership verification.
  *
  * **Two-Phase Locking Process:**
- * 1. **Acquire:** Attempt to obtain the lock with executor ID
- * 2. **Verify:** Confirm the lock is still held by this executor
+ * 1. **Acquire:** Attempt to obtain the lock with runner ID
+ * 2. **Verify:** Confirm the lock is still held by this runner
  *
- * This prevents race conditions where multiple executors might acquire
+ * This prevents race conditions where multiple runners might acquire
  * the lock simultaneously due to network delays or clock skew.
  *
  * **Lock Lifecycle:**
@@ -60,7 +60,7 @@ export interface ILockStatus {
  * - Adapter-specific (PostgreSQL, MongoDB, etc.)
  * - Optional feature (check handler.lockingProvider existence)
  * - Database-backed (not in-memory) for multi-instance safety
- * - Executor ID format: `hostname-pid-uuid` for uniqueness
+ * - Runner ID format: `hostname-pid-uuid` for uniqueness
  *
  * @template DB - Database interface type extending IDB
  *
@@ -68,22 +68,22 @@ export interface ILockStatus {
  * ```typescript
  * // PostgreSQL implementation
  * class PostgreSqlLockingProvider implements ILockingProvider<PostgreSqlDB> {
- *   async acquireLock(executorId: string): Promise<boolean> {
+ *   async acquireLock(runnerId: string): Promise<boolean> {
  *     const result = await this.db.query(
- *       'INSERT INTO migration_locks (executor_id, locked_at, expires_at) ' +
+ *       'INSERT INTO migration_locks (runner_id, locked_at, expires_at) ' +
  *       'VALUES ($1, NOW(), NOW() + INTERVAL \'10 minutes\') ' +
  *       'ON CONFLICT DO NOTHING RETURNING id',
- *       [executorId]
+ *       [runnerId]
  *     );
  *     return result.rows.length > 0;
  *   }
  *
- *   async verifyLockOwnership(executorId: string): Promise<boolean> {
+ *   async verifyLockOwnership(runnerId: string): Promise<boolean> {
  *     const result = await this.db.query(
- *       'SELECT executor_id FROM migration_locks WHERE expires_at > NOW()',
+ *       'SELECT runner_id FROM migration_locks WHERE expires_at > NOW()',
  *       []
  *     );
- *     return result.rows[0]?.executor_id === executorId;
+ *     return result.rows[0]?.runner_id === runnerId;
  *   }
  * }
  *
@@ -134,7 +134,7 @@ export interface ILockingProvider<DB extends IDB> {
      *     await this.db.query(`
      *       CREATE TABLE IF NOT EXISTS migration_locks (
      *         id SERIAL PRIMARY KEY,
-     *         executor_id VARCHAR(255) UNIQUE NOT NULL,
+     *         runner_id VARCHAR(255) UNIQUE NOT NULL,
      *         locked_at TIMESTAMP NOT NULL DEFAULT NOW(),
      *         expires_at TIMESTAMP NOT NULL
      *       )
@@ -182,9 +182,9 @@ export interface ILockingProvider<DB extends IDB> {
      *       await db.createCollection('migration_locks');
      *     }
      *
-     *     // Create unique index on executor_id
+     *     // Create unique index on runner_id
      *     await db.collection('migration_locks').createIndex(
-     *       { executor_id: 1 },
+     *       { runner_id: 1 },
      *       { unique: true }
      *     );
      *
@@ -316,56 +316,56 @@ export interface ILockingProvider<DB extends IDB> {
      * Attempt to acquire the migration lock.
      *
      * This is phase 1 of the two-phase locking process.
-     * Tries to insert/update a lock record with the executor ID.
+     * Tries to insert/update a lock record with the runner ID.
      *
      * **Implementation:**
      * - Use database-specific atomic operations (INSERT ... ON CONFLICT, etc.)
      * - Set lock expiration time based on config.locking.timeout
      * - Return true only if lock was successfully acquired
-     * - Return false if lock is already held by another executor
+     * - Return false if lock is already held by another runner
      *
      * **Concurrency:**
-     * Multiple executors may call this simultaneously.
+     * Multiple runners may call this simultaneously.
      * Database must ensure only one succeeds (use constraints, transactions).
      *
-     * @param executorId Unique identifier for this executor (hostname-pid-uuid)
+     * @param runnerId Unique identifier for this runner (hostname-pid-uuid)
      * @returns true if lock acquired, false if already locked by another
      * @throws Error if database operation fails
      *
      * @example
      * ```typescript
-     * const executorId = `${hostname()}-${process.pid}-${randomUUID()}`;
-     * const acquired = await lockingProvider.acquireLock(executorId);
+     * const runnerId = `${hostname()}-${process.pid}-${randomUUID()}`;
+     * const acquired = await lockingProvider.acquireLock(runnerId);
      * if (!acquired) {
      *   throw new Error('Another migration is already running');
      * }
      * ```
      */
-    acquireLock(executorId: string): Promise<boolean>;
+    acquireLock(runnerId: string): Promise<boolean>;
 
     /**
-     * Verify that this executor still owns the lock.
+     * Verify that this runner still owns the lock.
      *
      * This is phase 2 of the two-phase locking process.
-     * Confirms the lock record still exists and belongs to this executor.
+     * Confirms the lock record still exists and belongs to this runner.
      *
      * **Critical for Safety:**
      * Even if acquireLock() returned true, the lock might have been:
      * - Expired due to clock skew between servers
      * - Force-released by an administrator
-     * - Stolen by another executor due to race condition
+     * - Stolen by another runner due to race condition
      *
      * Always verify ownership before proceeding with migrations.
      *
-     * @param executorId Unique identifier for this executor
-     * @returns true if lock is still held by this executor, false otherwise
+     * @param runnerId Unique identifier for this runner
+     * @returns true if lock is still held by this runner, false otherwise
      * @throws Error if database operation fails
      *
      * @example
      * ```typescript
-     * const acquired = await lockingProvider.acquireLock(executorId);
+     * const acquired = await lockingProvider.acquireLock(runnerId);
      * if (acquired) {
-     *   const stillOwned = await lockingProvider.verifyLockOwnership(executorId);
+     *   const stillOwned = await lockingProvider.verifyLockOwnership(runnerId);
      *   if (!stillOwned) {
      *     throw new Error('Lost lock ownership during verification');
      *   }
@@ -373,34 +373,34 @@ export interface ILockingProvider<DB extends IDB> {
      * }
      * ```
      */
-    verifyLockOwnership(executorId: string): Promise<boolean>;
+    verifyLockOwnership(runnerId: string): Promise<boolean>;
 
     /**
      * Release the migration lock.
      *
      * Should be called in a finally block to ensure cleanup even on error.
-     * Only releases if the executor still owns the lock.
+     * Only releases if the runner still owns the lock.
      *
      * **Implementation:**
-     * - Delete lock record where executor_id matches
+     * - Delete lock record where runner_id matches
      * - Ignore if lock doesn't exist (already released/expired)
-     * - Log warning if lock was stolen by another executor
+     * - Log warning if lock was stolen by another runner
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      * @returns Promise that resolves when lock is released
      * @throws Error if database operation fails (not if lock missing)
      *
      * @example
      * ```typescript
      * try {
-     *   await lockingProvider.acquireLock(executorId);
+     *   await lockingProvider.acquireLock(runnerId);
      *   await executeMigrations();
      * } finally {
-     *   await lockingProvider.releaseLock(executorId);
+     *   await lockingProvider.releaseLock(runnerId);
      * }
      * ```
      */
-    releaseLock(executorId: string): Promise<void>;
+    releaseLock(runnerId: string): Promise<void>;
 
     /**
      * Get current lock status.
@@ -411,7 +411,7 @@ export interface ILockingProvider<DB extends IDB> {
      * **Implementation:**
      * - Query lock table for current lock record
      * - Check if lock is expired (expires_at < NOW)
-     * - Parse executor ID to extract process ID if possible
+     * - Parse runner ID to extract process ID if possible
      * - Return null if no lock exists
      *
      * @returns Current lock status or null if no lock exists
@@ -476,7 +476,7 @@ export interface ILockingProvider<DB extends IDB> {
      * ```typescript
      * // Called automatically by acquireLock:
      * await lockingProvider.checkAndReleaseExpiredLock();
-     * const acquired = await lockingProvider.acquireLock(executorId);
+     * const acquired = await lockingProvider.acquireLock(runnerId);
      * ```
      */
     checkAndReleaseExpiredLock(): Promise<void>;

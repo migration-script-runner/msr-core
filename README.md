@@ -190,10 +190,10 @@ config.folder = './migrations';
 config.logLevel = 'info';  // v0.6.0: 'error' | 'warn' | 'info' | 'debug'
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner<IMyDatabase>({ handler, config });
+const runner = new MigrationScriptRunner<IMyDatabase>({ handler, config });
 
 // Library usage - returns structured result
-const result = await executor.up();
+const result = await runner.up();
 
 if (result.success) {
   console.log(`✅ Executed ${result.executed.length} migrations`);
@@ -229,7 +229,7 @@ const program = createCLI({
   name: 'my-db-migrate',
   version: '1.0.0',
   description: 'Database migration CLI',
-  createExecutor: (config) => {
+  createRunner: (config) => {
     const handler = new MyDatabaseHandler();
     return new MigrationScriptRunner({ handler, config });
   }

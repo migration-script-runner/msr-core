@@ -41,8 +41,8 @@ describe('Migration Locking Mechanism', () => {
             return this.storageInitialized;
         }
 
-        async acquireLock(executorId: string): Promise<boolean> {
-            lockAcquireCalls.push(executorId);
+        async acquireLock(runnerId: string): Promise<boolean> {
+            lockAcquireCalls.push(runnerId);
 
             if (this.shouldFailAcquire) {
                 return false;
@@ -58,23 +58,23 @@ describe('Migration Locking Mechanism', () => {
             }
 
             this.locked = true;
-            this.owner = executorId;
+            this.owner = runnerId;
             return true;
         }
 
-        async verifyLockOwnership(executorId: string): Promise<boolean> {
-            lockVerifyCalls.push(executorId);
+        async verifyLockOwnership(runnerId: string): Promise<boolean> {
+            lockVerifyCalls.push(runnerId);
 
             if (this.shouldFailVerify) {
                 return false;
             }
 
-            return this.locked && this.owner === executorId;
+            return this.locked && this.owner === runnerId;
         }
 
-        async releaseLock(executorId: string): Promise<void> {
-            lockReleaseCalls.push(executorId);
-            if (this.owner === executorId) {
+        async releaseLock(runnerId: string): Promise<void> {
+            lockReleaseCalls.push(runnerId);
+            if (this.owner === runnerId) {
                 this.locked = false;
                 this.owner = null;
             }
@@ -153,13 +153,13 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: true });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
 
             // Should call cleanup, acquire, verify, and release
             expect(lockCleanupCalls).to.equal(1);
@@ -167,13 +167,13 @@ describe('Migration Locking Mechanism', () => {
             expect(lockVerifyCalls).to.have.lengthOf(1);
             expect(lockReleaseCalls).to.have.lengthOf(1);
 
-            // Verify same executor ID used throughout
+            // Verify same runner ID used throughout
             expect(lockAcquireCalls[0]).to.equal(lockVerifyCalls[0]);
             expect(lockAcquireCalls[0]).to.equal(lockReleaseCalls[0]);
 
-            // Verify executor ID format (hostname-pid-uuid)
-            const executorId = lockAcquireCalls[0];
-            const parts = executorId.split('-');
+            // Verify runner ID format (hostname-pid-uuid)
+            const runnerId = lockAcquireCalls[0];
+            const parts = runnerId.split('-');
             expect(parts.length).to.be.greaterThan(3); // hostname-pid-uuid (uuid has dashes)
         });
 
@@ -183,13 +183,13 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate(999999999999);
+            await runner.migrate(999999999999);
 
             expect(lockAcquireCalls).to.have.lengthOf(1);
             expect(lockVerifyCalls).to.have.lengthOf(1);
@@ -203,13 +203,13 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
 
             // No locking calls should be made
             expect(lockAcquireCalls).to.have.lengthOf(0);
@@ -224,13 +224,13 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: false });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
 
             // No locking calls should be made
             expect(lockAcquireCalls).to.have.lengthOf(0);
@@ -252,13 +252,13 @@ describe('Migration Locking Mechanism', () => {
                 retryAttempts: 0 // Fail fast
             });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await expect(executor.migrate()).to.be.rejectedWith(
+            await expect(runner.migrate()).to.be.rejectedWith(
                 /Failed to acquire migration lock after 1 attempt/
             );
 
@@ -281,13 +281,13 @@ describe('Migration Locking Mechanism', () => {
                 retryDelay: 10 // Fast for testing
             });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
 
             // Should attempt 3 times before succeeding
             expect(lockAcquireCalls).to.have.lengthOf(3);
@@ -308,13 +308,13 @@ describe('Migration Locking Mechanism', () => {
                 retryDelay: 10
             });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await expect(executor.migrate()).to.be.rejectedWith(
+            await expect(runner.migrate()).to.be.rejectedWith(
                 /Failed to acquire migration lock after 3 attempt/
             );
 
@@ -333,13 +333,13 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await expect(executor.migrate()).to.be.rejectedWith(
+            await expect(runner.migrate()).to.be.rejectedWith(
                 /Lock ownership verification failed/
             );
 
@@ -357,7 +357,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: true });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -371,7 +371,7 @@ describe('Migration Locking Mechanism', () => {
             };
 
             // Stub the scanner to return the failing migration
-            sinon.stub((executor as any).core.scanner, 'scan').resolves({
+            sinon.stub((runner as any).core.scanner, 'scan').resolves({
                 all: [failingMigration],
                 migrated: [],
                 pending: [failingMigration],
@@ -379,7 +379,7 @@ describe('Migration Locking Mechanism', () => {
                 executed: []
             });
 
-            const result = await executor.migrate();
+            const result = await runner.migrate();
 
             // Migration should fail but lock should be released
             expect(result.success).to.be.false;
@@ -399,37 +399,37 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             // Should not throw despite lock release failure
-            await executor.migrate();
+            await runner.migrate();
 
             expect(lockReleaseCalls).to.have.lengthOf(1);
         });
     });
 
-    describe('Executor ID Generation', () => {
-        it('should generate unique executor IDs for each migration', async () => {
+    describe('Runner ID Generation', () => {
+        it('should generate unique runner IDs for each migration', async () => {
             const lockingProvider = new MockLockingProvider();
             const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
             const firstId = lockAcquireCalls[0];
 
             lockAcquireCalls = [];
-            await executor.migrate();
+            await runner.migrate();
             const secondId = lockAcquireCalls[0];
 
             // IDs should be different due to UUID
@@ -453,14 +453,14 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
@@ -473,8 +473,8 @@ describe('Migration Locking Mechanism', () => {
         it('should include lock holder information in error when available', async () => {
             const lockingProvider = new MockLockingProvider();
 
-            // Manually set lock to simulate another executor holding it
-            await lockingProvider.acquireLock('other-executor-123-uuid');
+            // Manually set lock to simulate another runner holding it
+            await lockingProvider.acquireLock('other-runner-123-uuid');
             lockingProvider.shouldFailAcquire = true;
 
             const handler = createHandler(lockingProvider);
@@ -482,18 +482,18 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
-                expect(errorMsg).to.include('currently held by: other-executor-123-uuid');
+                expect(errorMsg).to.include('currently held by: other-runner-123-uuid');
                 expect(errorMsg).to.include('expires:');
             }
         });
@@ -510,14 +510,14 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
@@ -544,14 +544,14 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
@@ -563,14 +563,14 @@ describe('Migration Locking Mechanism', () => {
         it('should handle lock status with null expiresAt', async () => {
             const lockingProvider = new MockLockingProvider();
 
-            // Manually set lock to simulate another executor holding it
-            await lockingProvider.acquireLock('other-executor-456-uuid');
+            // Manually set lock to simulate another runner holding it
+            await lockingProvider.acquireLock('other-runner-456-uuid');
             lockingProvider.shouldFailAcquire = true;
 
             // Override getLockStatus to return status with null expiresAt
             lockingProvider.getLockStatus = async () => ({
                 isLocked: true,
-                lockedBy: 'other-executor-456-uuid',
+                lockedBy: 'other-runner-456-uuid',
                 lockedAt: new Date(),
                 expiresAt: null, // null expiresAt
                 processId: '456'
@@ -581,18 +581,18 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
-                expect(errorMsg).to.include('currently held by: other-executor-456-uuid');
+                expect(errorMsg).to.include('currently held by: other-runner-456-uuid');
                 // Should not crash when expiresAt is null
                 expect(errorMsg).to.not.include('undefined');
             }

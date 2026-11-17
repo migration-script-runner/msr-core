@@ -291,7 +291,7 @@ class SimpleMetricsCollector implements IMetricsCollector {
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new SimpleMetricsCollector()
@@ -299,13 +299,13 @@ const executor = new MigrationScriptRunner({
   config 
 });
 
-await executor.up();
+await runner.up();
 ```
 
 ### Multiple Collectors
 
 ```typescript
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),      // Real-time feedback

@@ -27,7 +27,7 @@ This flowchart shows the complete data flow through MSR from user invocation to 
 
 ```mermaid
 graph TD
-    Start[User calls executor migrate] --> Backup[BackupOrchestrator backup<br/>Creates database dump]
+    Start[User calls runner migrate] --> Backup[BackupOrchestrator backup<br/>Creates database dump]
     Backup --> Init[SchemaVersionOrchestrator init<br/>Creates validates schema_version table]
     Init --> Scan[MigrationScanner scan]
 

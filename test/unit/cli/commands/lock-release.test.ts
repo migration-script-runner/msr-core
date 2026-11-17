@@ -13,8 +13,8 @@ interface MockDB extends IDB {
 
 describe('lock:release command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
-    let createExecutorStub: sinon.SinonStub;
+    let mockRunner: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
+    let createRunnerStub: sinon.SinonStub;
     let consoleLogStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
     let processExitStub: sinon.SinonStub;
@@ -24,14 +24,14 @@ describe('lock:release command', () => {
         program = new Command();
         program.exitOverride(); // Prevent actual process exit in tests
 
-        // Create mock executor
-        mockExecutor = {
+        // Create mock runner
+        mockRunner = {
             getLockStatus: sinon.stub(),
             forceReleaseLock: sinon.stub(),
         } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
-        createExecutorStub = sinon.stub().returns(mockExecutor);
+        createRunnerStub = sinon.stub().returns(mockRunner);
 
         // Stub console and process.exit
         consoleLogStub = sinon.stub(console, 'log');
@@ -42,7 +42,7 @@ describe('lock:release command', () => {
         mockPromptFunction = sinon.stub();
 
         // Add command with mock prompt function
-        addLockReleaseCommand(program, createExecutorStub, mockPromptFunction);
+        addLockReleaseCommand(program, createRunnerStub, mockPromptFunction);
     });
 
     afterEach(() => {
@@ -87,7 +87,7 @@ describe('lock:release command', () => {
 
     describe('Execution with --force flag', () => {
         it('should show error when locking service is not configured', async () => {
-            mockExecutor.getLockStatus.resolves(null);
+            mockRunner.getLockStatus.resolves(null);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
@@ -103,7 +103,7 @@ describe('lock:release command', () => {
                 expiresAt: null,
                 processId: undefined
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
@@ -116,18 +116,18 @@ describe('lock:release command', () => {
             const expiresAt = new Date('2025-12-18T10:10:00Z');
             const status: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt,
                 expiresAt,
                 processId: '12345'
             };
-            mockExecutor.getLockStatus.resolves(status);
-            mockExecutor.forceReleaseLock.resolves();
+            mockRunner.getLockStatus.resolves(status);
+            mockRunner.forceReleaseLock.resolves();
             mockPromptFunction.resolves(true);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
-            expect(mockExecutor.forceReleaseLock.called).to.be.true;
+            expect(mockRunner.forceReleaseLock.called).to.be.true;
             expect(consoleLogStub.calledWith('\n✓ Lock forcibly released')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -135,35 +135,35 @@ describe('lock:release command', () => {
         it('should release lock when user confirms with "yes"', async () => {
             const status: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date(),
                 expiresAt: new Date(),
                 processId: '12345'
             };
-            mockExecutor.getLockStatus.resolves(status);
-            mockExecutor.forceReleaseLock.resolves();
+            mockRunner.getLockStatus.resolves(status);
+            mockRunner.forceReleaseLock.resolves();
             mockPromptFunction.resolves(true);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
-            expect(mockExecutor.forceReleaseLock.called).to.be.true;
+            expect(mockRunner.forceReleaseLock.called).to.be.true;
             expect(consoleLogStub.calledWith('\n✓ Lock forcibly released')).to.be.true;
         });
 
         it('should cancel when user types "n"', async () => {
             const status: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date(),
                 expiresAt: new Date(),
                 processId: '12345'
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
             mockPromptFunction.resolves(false);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
-            expect(mockExecutor.forceReleaseLock.called).to.be.false;
+            expect(mockRunner.forceReleaseLock.called).to.be.false;
             expect(consoleLogStub.calledWith('\n✓ Operation cancelled')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -171,47 +171,47 @@ describe('lock:release command', () => {
         it('should cancel when user types "no"', async () => {
             const status: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date(),
                 expiresAt: new Date(),
                 processId: '12345'
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
             mockPromptFunction.resolves(false);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
-            expect(mockExecutor.forceReleaseLock.called).to.be.false;
+            expect(mockRunner.forceReleaseLock.called).to.be.false;
             expect(consoleLogStub.calledWith('\n✓ Operation cancelled')).to.be.true;
         });
 
         it('should cancel when user presses enter (default no)', async () => {
             const status: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date(),
                 expiresAt: new Date(),
                 processId: '12345'
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
             mockPromptFunction.resolves(false);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
-            expect(mockExecutor.forceReleaseLock.called).to.be.false;
+            expect(mockRunner.forceReleaseLock.called).to.be.false;
             expect(consoleLogStub.calledWith('\n✓ Operation cancelled')).to.be.true;
         });
 
         it('should handle errors during lock release', async () => {
             const status: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date(),
                 expiresAt: new Date(),
                 processId: '12345'
             };
-            mockExecutor.getLockStatus.resolves(status);
-            mockExecutor.forceReleaseLock.rejects(new Error('Database error'));
+            mockRunner.getLockStatus.resolves(status);
+            mockRunner.forceReleaseLock.rejects(new Error('Database error'));
             mockPromptFunction.resolves(true);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
@@ -221,7 +221,7 @@ describe('lock:release command', () => {
         });
 
         it('should handle errors during lock status check', async () => {
-            mockExecutor.getLockStatus.rejects(new Error('Connection failed'));
+            mockRunner.getLockStatus.rejects(new Error('Connection failed'));
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
@@ -230,7 +230,7 @@ describe('lock:release command', () => {
         });
 
         it('should handle non-Error exceptions', async () => {
-            mockExecutor.getLockStatus.callsFake(async () => {
+            mockRunner.getLockStatus.callsFake(async () => {
                 throw 'String error';
             });
 
@@ -245,7 +245,7 @@ describe('lock:release command', () => {
             const errorWithNullMessage = Object.create(Error.prototype);
             errorWithNullMessage.message = null;
             errorWithNullMessage.name = 'Error';
-            mockExecutor.getLockStatus.rejects(errorWithNullMessage);
+            mockRunner.getLockStatus.rejects(errorWithNullMessage);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);
 
@@ -262,7 +262,7 @@ describe('lock:release command', () => {
                 expiresAt: null,
                 processId: undefined
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
             mockPromptFunction.resolves(false);
 
             await program.parseAsync(['node', 'test', 'lock:release', '--force']);

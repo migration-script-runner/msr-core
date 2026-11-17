@@ -7,29 +7,29 @@ import { ILockStatus } from './ILockingProvider';
  * around the database-specific {@link ILockingProvider} implementation.
  *
  * @example
- * const acquired = await lockingOrchestrator.acquireLock(executorId);
+ * const acquired = await lockingOrchestrator.acquireLock(runnerId);
  * if (acquired) await runMigrations();
  */
 export interface ILockingOrchestrator {
     /**
      * Acquires and verifies a migration lock.
      *
-     * @param executorId Unique identifier for the migration runner.
+     * @param runnerId Unique identifier for the migration runner.
      * @returns Whether the lock was acquired and ownership verified.
      * @throws Error If the provider operation fails.
-     * @example `await lockingOrchestrator.acquireLock(executorId);`
+     * @example `await lockingOrchestrator.acquireLock(runnerId);`
      */
-    acquireLock(executorId: string): Promise<boolean>;
+    acquireLock(runnerId: string): Promise<boolean>;
 
     /**
      * Releases the lock held by the given runner.
      *
-     * @param executorId Unique identifier for the migration runner.
+     * @param runnerId Unique identifier for the migration runner.
      * @returns A promise that resolves when the release completes.
      * @throws Error If the provider operation fails.
-     * @example `await lockingOrchestrator.releaseLock(executorId);`
+     * @example `await lockingOrchestrator.releaseLock(runnerId);`
      */
-    releaseLock(executorId: string): Promise<void>;
+    releaseLock(runnerId: string): Promise<void>;
 
     /**
      * Returns the current migration lock state.

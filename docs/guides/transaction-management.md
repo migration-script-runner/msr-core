@@ -69,8 +69,8 @@ const config = new Config();
 config.transaction.mode = 'PER_MIGRATION';  // Default
 config.transaction.isolation = 'READ COMMITTED';
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 **Behavior:**
@@ -98,8 +98,8 @@ const config = new Config();
 config.transaction.mode = 'PER_BATCH';
 config.transaction.retries = 5;  // Retry entire batch on transient errors
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();  // All migrations in single transaction
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();  // All migrations in single transaction
 ```
 
 **Behavior:**
@@ -129,8 +129,8 @@ No transaction wrapping. Each migration's `up()` method is responsible for its o
 const config = new Config();
 config.transaction.mode = 'NONE';
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 {: .warning }
@@ -296,8 +296,8 @@ config.transaction.retries = 3;
 config.transaction.retryDelay = 200;  // 200ms base delay
 config.transaction.retryBackoff = true;  // Exponential backoff
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ---
@@ -333,8 +333,8 @@ config.transaction.retries = 5;           // Max retry attempts (default: 3)
 config.transaction.retryDelay = 100;      // Base delay in ms (default: 100)
 config.transaction.retryBackoff = true;   // Enable exponential backoff (default: true)
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ### Retry Behavior with Exponential Backoff
@@ -512,8 +512,8 @@ config.transaction.mode = 'PER_MIGRATION';  // Auto-uses CallbackTransactionProv
 config.transaction.retries = 5;
 config.transaction.retryBackoff = true;
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 #### MongoDB Example
@@ -562,8 +562,8 @@ const config = new Config();
 config.transaction.mode = 'PER_BATCH';  // All migrations in one transaction
 config.transaction.retries = 3;
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ### Writing NoSQL Migrations
@@ -740,8 +740,8 @@ const hooks: ITransactionHooks = {
   }
 };
 
-const executor = new MigrationScriptRunner({ handler, hooks , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler, hooks , config });
+await runner.migrate();
 ```
 
 ---
@@ -1264,8 +1264,8 @@ config.transaction.mode = TransactionMode.PER_MIGRATION;
 config.transaction.timeout = 30000;  // 30 seconds
 
 // Option 3: Run migrations in smaller batches
-await executor.up(202501220500);  // First batch (5 migrations)
-await executor.up(202501220800);  // Second batch (3 migrations)
+await runner.up(202501220500);  // First batch (5 migrations)
+await runner.up(202501220800);  // Second batch (3 migrations)
 ```
 
 ---
@@ -1335,7 +1335,7 @@ class CustomTransactionProvider implements ITransactionProvider {
 
 // Use custom transaction manager
 const txManager = new CustomTransactionProvider(db, logger);
-const executor = new MigrationScriptRunner(
+const runner = new MigrationScriptRunner(
   handler,
   config,
   undefined,  // hooks

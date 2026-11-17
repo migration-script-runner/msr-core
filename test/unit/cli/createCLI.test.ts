@@ -12,15 +12,15 @@ interface MockDB extends IDB {
 }
 
 describe('createCLI', () => {
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
-    let createExecutorStub: sinon.SinonStub;
+    let mockRunner: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
+    let createRunnerStub: sinon.SinonStub;
 
     beforeEach(() => {
-        // Create mock executor
-        mockExecutor = sinon.createStubInstance(MigrationScriptRunner);
+        // Create mock runner
+        mockRunner = sinon.createStubInstance(MigrationScriptRunner);
 
         // Create factory stub
-        createExecutorStub = sinon.stub().returns(mockExecutor);
+        createRunnerStub = sinon.stub().returns(mockRunner);
     });
 
     afterEach(() => {
@@ -33,7 +33,7 @@ describe('createCLI', () => {
          * Validates that program is created with default name, description, version
          */
         it('should create CLI program with default metadata', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
 
             expect(program.name()).to.equal('msr');
             expect(program.description()).to.equal('Migration Script Runner');
@@ -46,7 +46,7 @@ describe('createCLI', () => {
          */
         it('should create CLI program with custom metadata', () => {
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 name: 'msr-custom',
                 description: 'Custom Migration Runner',
                 version: '2.5.0',
@@ -62,7 +62,7 @@ describe('createCLI', () => {
          * Validates that the returned object is a Commander program
          */
         it('should return Commander program instance', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
 
             expect(program).to.be.an('object');
             expect(program.parse).to.be.a('function');
@@ -77,7 +77,7 @@ describe('createCLI', () => {
          * Validates that migrate, list, down, validate, backup are registered
          */
         it('should register all base commands', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             const commands = program.commands.map(cmd => cmd.name());
 
             expect(commands).to.include('migrate');
@@ -92,7 +92,7 @@ describe('createCLI', () => {
          * Validates that no extra commands are added
          */
         it('should register exactly 7 base commands', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             expect(program.commands.length).to.equal(7);
         });
 
@@ -101,7 +101,7 @@ describe('createCLI', () => {
          * Validates that adapters can add custom commands
          */
         it('should allow extending with custom commands', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
 
             program
                 .command('custom')
@@ -120,7 +120,7 @@ describe('createCLI', () => {
          * Validates that all common options are available
          */
         it('should register all common CLI options', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             const optionFlags = program.options.map(opt => opt.long);
 
             expect(optionFlags).to.include('--config-file');
@@ -140,7 +140,7 @@ describe('createCLI', () => {
          * Validates that short option aliases are available
          */
         it('should list supported values in common option descriptions', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             const getDescription = (flag: string): string | undefined =>
                 program.options.find(option => option.long === flag)?.description;
 
@@ -153,7 +153,7 @@ describe('createCLI', () => {
         });
 
         it('should register short options', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             const shortOptions = program.options.map(opt => opt.short).filter(Boolean);
 
             expect(shortOptions).to.include('-c');
@@ -164,7 +164,7 @@ describe('createCLI', () => {
          * Validates that display-limit option uses parseInt parser
          */
         it('should register option with parser for display-limit', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             const displayLimitOption = program.options.find(opt => opt.long === '--display-limit');
 
             expect(displayLimitOption).to.exist;
@@ -174,14 +174,14 @@ describe('createCLI', () => {
 
     describe('Configuration loading', () => {
         /**
-         * Test: createExecutor receives Config parameter
+         * Test: createRunner receives Config parameter
          * Validates that factory function is called with Config object
          */
-        it('should pass Config to createExecutor factory', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+        it('should pass Config to createRunner factory', () => {
+            const program = createCLI({createRunner: createRunnerStub});
             expect(program).to.exist;
-            // createExecutor will be called when a command is invoked, not during setup
-            expect(createExecutorStub.called).to.be.false;
+            // createRunner will be called when a command is invoked, not during setup
+            expect(createRunnerStub.called).to.be.false;
         });
 
         /**
@@ -190,7 +190,7 @@ describe('createCLI', () => {
          */
         it('should merge options.config with loaded config', () => {
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 config: {
                     folder: './custom-migrations',
                     tableName: 'custom_versions',
@@ -207,7 +207,7 @@ describe('createCLI', () => {
          * Validates that the returned program supports adding commands
          */
         it('should allow adding additional commands to returned program', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
 
             program
                 .command('stats')
@@ -225,7 +225,7 @@ describe('createCLI', () => {
          * Validates that the returned program supports adding global options
          */
         it('should allow adding global options to returned program', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
 
             program.option('--custom-option <value>', 'Custom global option');
 
@@ -238,7 +238,7 @@ describe('createCLI', () => {
          * Validates that the returned program supports hooks
          */
         it('should allow attaching hooks to returned program', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             const hookSpy = sinon.spy();
 
             program.hook('preAction', hookSpy);
@@ -249,11 +249,11 @@ describe('createCLI', () => {
 
     describe('Options parameter handling', () => {
         /**
-         * Test: Works with minimal options (createExecutor only)
-         * Validates that only createExecutor is required
+         * Test: Works with minimal options (createRunner only)
+         * Validates that only createRunner is required
          */
-        it('should work with minimal options (createExecutor only)', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+        it('should work with minimal options (createRunner only)', () => {
+            const program = createCLI({createRunner: createRunnerStub});
 
             expect(program).to.exist;
             expect(program.name()).to.equal('msr');
@@ -265,7 +265,7 @@ describe('createCLI', () => {
          */
         it('should work with all optional parameters', () => {
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 name: 'test-cli',
                 description: 'Test CLI',
                 version: '1.0.0-test',
@@ -284,7 +284,7 @@ describe('createCLI', () => {
          */
         it('should handle undefined optional parameters', () => {
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 name: undefined,
                 description: undefined,
                 version: undefined,
@@ -308,8 +308,8 @@ describe('createCLI', () => {
                 customField: string;
             }
 
-            const customExecutorStub = sinon.stub().returns(sinon.createStubInstance(MigrationScriptRunner));
-            const program = createCLI<CustomDB>({createExecutor: customExecutorStub});
+            const customRunnerStub = sinon.stub().returns(sinon.createStubInstance(MigrationScriptRunner));
+            const program = createCLI<CustomDB>({createRunner: customRunnerStub});
 
             expect(program).to.exist;
         });
@@ -334,7 +334,7 @@ describe('createCLI', () => {
          * Validates that the program can parse command-line arguments
          */
         it('should create a program that can parse arguments', () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             program.exitOverride(); // Prevent process.exit in tests
 
             expect(() => program.parse(['node', 'test', '--version'])).to.throw(Error, '1.0.0');
@@ -345,27 +345,27 @@ describe('createCLI', () => {
          * Validates that the program supports parseAsync
          */
         it('should create a program that supports parseAsync', async () => {
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             expect(program.parseAsync).to.be.a('function');
         });
 
         /**
          * Test: Executes command with config merging
-         * Validates that createExecutorWithFlags properly merges config and creates executor
+         * Validates that createRunnerWithFlags properly merges config and creates runner
          */
         it('should execute command with config merging and flag processing', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 config: {folder: './custom-folder', backupMode: BackupMode.MANUAL},
             });
             program.exitOverride();
 
             await program.parseAsync(['node', 'test', 'migrate', '--dry-run']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            const passedConfig = createExecutorStub.firstCall.args[0] as Config;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            const passedConfig = createRunnerStub.firstCall.args[0] as Config;
             expect(passedConfig).to.be.an('object');
             expect(passedConfig.dryRun).to.be.true;
             expect(passedConfig.folder).to.equal('./custom-folder');
@@ -374,33 +374,33 @@ describe('createCLI', () => {
 
         for (const backupMode of Object.values(BackupMode)) {
             it(`maps --backup-mode ${backupMode} to config.backupMode`, async () => {
-                mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+                mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
-                const program = createCLI({createExecutor: createExecutorStub});
+                const program = createCLI({createRunner: createRunnerStub});
                 program.exitOverride();
 
                 await program.parseAsync(['node', 'test', 'migrate', '--backup-mode', backupMode]);
 
-                const passedConfig = createExecutorStub.firstCall.args[0] as Config;
+                const passedConfig = createRunnerStub.firstCall.args[0] as Config;
                 expect(passedConfig.backupMode).to.equal(backupMode);
             });
         }
 
         /**
          * Test: Handles CLI flags with logger override
-         * Validates that logger CLI flag overrides executor logger
+         * Validates that logger CLI flag overrides runner logger
          */
         it('should handle CLI flags with logger creation', async () => {
-            mockExecutor.list.resolves();
+            mockRunner.list.resolves();
 
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             program.exitOverride();
 
             await program.parseAsync(['node', 'test', 'list', '--logger', 'silent']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            expect((mockExecutor as any).logger).to.exist;
+            expect((mockRunner as any).logger).to.exist;
         });
 
         /**
@@ -408,9 +408,9 @@ describe('createCLI', () => {
          * Validates that --config-file flag triggers config file loading
          */
         it('should handle --config-file flag', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
-            const program = createCLI({createExecutor: createExecutorStub});
+            const program = createCLI({createRunner: createRunnerStub});
             program.exitOverride();
 
             // Note: This will fail to load the file, but exercises the config loading path
@@ -425,13 +425,13 @@ describe('createCLI', () => {
     describe('CLI Extension (extendCLI)', () => {
         /**
          * Test: extendCLI callback is called if provided
-         * Validates that the extendCLI callback is invoked with program and createExecutor
+         * Validates that the extendCLI callback is invoked with program and createRunner
          */
         it('should call extendCLI callback when provided', () => {
             const extendCLISpy = sinon.spy();
 
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 extendCLI: extendCLISpy
             });
 
@@ -448,14 +448,14 @@ describe('createCLI', () => {
             const customActionSpy = sinon.spy();
 
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 extendCLI: (prog, createExec) => {
                     prog
                         .command('custom')
                         .description('Custom command')
                         .action(async () => {
-                            const executor = await createExec();
-                            customActionSpy(executor);
+                            const runner = await createExec();
+                            customActionSpy(runner);
                         });
                 }
             });
@@ -466,14 +466,14 @@ describe('createCLI', () => {
             await program.parseAsync(['node', 'test', 'custom']);
 
             expect(customActionSpy.calledOnce).to.be.true;
-            expect(customActionSpy.firstCall.args[0]).to.equal(mockExecutor);
+            expect(customActionSpy.firstCall.args[0]).to.equal(mockRunner);
         });
 
         /**
-         * Test: createExecutor in extendCLI returns correct type
+         * Test: createRunner in extendCLI returns correct type
          * Validates type safety for adapter-specific methods
          */
-        it('should provide typed createExecutor to extendCLI callback', async () => {
+        it('should provide typed createRunner to extendCLI callback', async () => {
             // Create a custom adapter class with custom method
             class CustomRunner extends MigrationScriptRunner<MockDB> {
                 customMethod(): string {
@@ -485,30 +485,30 @@ describe('createCLI', () => {
             const customAdapter = sinon.createStubInstance(CustomRunner);
             (customAdapter as any).customMethod = sinon.stub().returns('custom result');
 
-            const customExecutorStub = sinon.stub().returns(customAdapter);
+            const customRunnerStub = sinon.stub().returns(customAdapter);
 
-            let capturedExecutor: any;
+            let capturedRunner: any;
 
             const program = createCLI({
-                createExecutor: customExecutorStub,
+                createRunner: customRunnerStub,
                 extendCLI: (prog, createExec) => {
                     prog
                         .command('custom-typed')
                         .action(async () => {
                             // TypeScript should infer this as CustomRunner
                             const adapter = await createExec();
-                            capturedExecutor = adapter;
+                            capturedRunner = adapter;
                         });
                 }
             });
 
             program.exitOverride();
 
-            // Trigger command to capture executor
+            // Trigger command to capture runner
             await program.parseAsync(['node', 'test', 'custom-typed']);
 
-            expect(capturedExecutor).to.equal(customAdapter);
-            expect(customExecutorStub.calledOnce).to.be.true;
+            expect(capturedRunner).to.equal(customAdapter);
+            expect(customRunnerStub.calledOnce).to.be.true;
         });
 
         /**
@@ -517,21 +517,21 @@ describe('createCLI', () => {
          */
         it('should not fail when extendCLI is not provided', () => {
             expect(() => {
-                createCLI({createExecutor: createExecutorStub});
+                createCLI({createRunner: createRunnerStub});
             }).to.not.throw();
         });
 
         /**
-         * Test: extendCLI receives createExecutor with config merging
-         * Validates that executor created in extendCLI has proper config
+         * Test: extendCLI receives createRunner with config merging
+         * Validates that runner created in extendCLI has proper config
          */
-        it('should pass createExecutor with config merging to extendCLI', async () => {
-            let executorConfig: Config | undefined;
+        it('should pass createRunner with config merging to extendCLI', async () => {
+            let runnerConfig: Config | undefined;
 
             const program = createCLI({
-                createExecutor: (config) => {
-                    executorConfig = config;
-                    return createExecutorStub(config);
+                createRunner: (config) => {
+                    runnerConfig = config;
+                    return createRunnerStub(config);
                 },
                 config: {
                     folder: './initial-folder'
@@ -549,28 +549,28 @@ describe('createCLI', () => {
 
             await program.parseAsync(['node', 'test', 'test-config', '--folder', './override-folder']);
 
-            expect(executorConfig).to.exist;
-            expect(executorConfig!.folder).to.equal('./override-folder');
+            expect(runnerConfig).to.exist;
+            expect(runnerConfig!.folder).to.equal('./override-folder');
         });
     });
 
-    describe('Async executor support (v0.8.2)', () => {
+    describe('Async runner support (v0.8.2)', () => {
         /**
-         * Test: synchronous executor (backward compatibility)
+         * Test: synchronous runner (backward compatibility)
          * Tests the instanceof Promise === false branch
          */
-        it('should handle synchronous executor creation', async () => {
-            mockExecutor.validate.resolves({pending: [], migrated: []});
+        it('should handle synchronous runner creation', async () => {
+            mockRunner.validate.resolves({pending: [], migrated: []});
 
-            // Return executor directly (not a Promise)
-            const syncStub = sinon.stub().returns(mockExecutor);
+            // Return runner directly (not a Promise)
+            const syncStub = sinon.stub().returns(mockRunner);
 
             // Stub process.exit to prevent test hanging
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI({
-                    createExecutor: syncStub
+                    createRunner: syncStub
                 });
 
                 program.exitOverride();
@@ -584,21 +584,21 @@ describe('createCLI', () => {
         });
 
         /**
-         * Test: asynchronous executor (new in v0.8.2)
+         * Test: asynchronous runner (new in v0.8.2)
          * Tests the instanceof Promise === true branch
          */
-        it('should handle asynchronous executor creation', async () => {
-            mockExecutor.validate.resolves({pending: [], migrated: []});
+        it('should handle asynchronous runner creation', async () => {
+            mockRunner.validate.resolves({pending: [], migrated: []});
 
             // Return a Promise
-            const asyncStub = sinon.stub().returns(Promise.resolve(mockExecutor));
+            const asyncStub = sinon.stub().returns(Promise.resolve(mockRunner));
 
             // Stub process.exit to prevent test hanging
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI({
-                    createExecutor: asyncStub
+                    createRunner: asyncStub
                 });
 
                 program.exitOverride();
@@ -621,7 +621,7 @@ describe('createCLI', () => {
             const addCustomOptionsSpy = sinon.spy();
 
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 addCustomOptions: addCustomOptionsSpy
             });
 
@@ -635,7 +635,7 @@ describe('createCLI', () => {
          */
         it('should register custom options on the program', () => {
             const program = createCLI({
-                createExecutor: createExecutorStub,
+                createRunner: createRunnerStub,
                 addCustomOptions: (prog) => {
                     prog
                         .option('--database-url <url>', 'Firebase Database URL')
@@ -653,14 +653,14 @@ describe('createCLI', () => {
          * Validates that the extendFlags callback is invoked with config and flags
          */
         it('should call extendFlags callback when provided', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             const extendFlagsSpy = sinon.spy();
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI({
-                    createExecutor: createExecutorStub,
+                    createRunner: createRunnerStub,
                     addCustomOptions: (prog) => {
                         prog.option('--database-url <url>', 'Database URL');
                     },
@@ -685,16 +685,16 @@ describe('createCLI', () => {
          * Validates that config values are properly set from custom flags
          */
         it('should map custom flags to config via extendFlags', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             let capturedConfig: Config | undefined;
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI({
-                    createExecutor: (config) => {
+                    createRunner: (config) => {
                         capturedConfig = config;
-                        return createExecutorStub(config);
+                        return createRunnerStub(config);
                     },
                     addCustomOptions: (prog) => {
                         prog
@@ -732,16 +732,16 @@ describe('createCLI', () => {
          * Validates that custom flags override options.config
          */
         it('should give custom flags highest priority in config waterfall', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             let capturedConfig: Config | undefined;
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI({
-                    createExecutor: (config) => {
+                    createRunner: (config) => {
                         capturedConfig = config;
-                        return createExecutorStub(config);
+                        return createRunnerStub(config);
                     },
                     config: {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -774,7 +774,7 @@ describe('createCLI', () => {
          */
         it('should not fail when addCustomOptions is not provided', () => {
             expect(() => {
-                createCLI({createExecutor: createExecutorStub});
+                createCLI({createRunner: createRunnerStub});
             }).to.not.throw();
         });
 
@@ -783,14 +783,14 @@ describe('createCLI', () => {
          * Validates that extendFlags is optional
          */
         it('should not fail when extendFlags is not provided', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             // Stub process.exit to prevent test hanging
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI({
-                    createExecutor: createExecutorStub,
+                    createRunner: createRunnerStub,
                     addCustomOptions: (prog) => {
                         prog.option('--custom-flag <value>', 'Custom flag');
                     }
@@ -811,14 +811,14 @@ describe('createCLI', () => {
          * Validates that flags like --database-url become databaseUrl in flags object
          */
         it('should convert kebab-case flags to camelCase', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             let capturedFlags: any;
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI({
-                    createExecutor: createExecutorStub,
+                    createRunner: createRunnerStub,
                     addCustomOptions: (prog) => {
                         prog.option('--database-url <url>', 'Database URL');
                     },
@@ -855,14 +855,14 @@ describe('createCLI', () => {
          * Validates that TConfig generic provides type-safe config access in extendFlags
          */
         it('should support custom config type in extendFlags callback', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             let capturedConfig: FirebaseConfig | undefined;
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI<MockDB, MigrationScriptRunner<MockDB>, FirebaseConfig>({
-                    createExecutor: createExecutorStub,
+                    createRunner: createRunnerStub,
                     addCustomOptions: (prog) => {
                         prog
                             .option('--database-url <url>', 'Firebase Database URL')
@@ -893,23 +893,23 @@ describe('createCLI', () => {
         });
 
         /**
-         * Test: createExecutor receives custom config type
-         * Validates that TConfig generic provides type-safe config access in createExecutor
+         * Test: createRunner receives custom config type
+         * Validates that TConfig generic provides type-safe config access in createRunner
          */
-        it('should support custom config type in createExecutor callback', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+        it('should support custom config type in createRunner callback', async () => {
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             let capturedConfig: FirebaseConfig | undefined;
-            const customCreateExecutor = sinon.stub().callsFake((config: FirebaseConfig) => {
+            const customCreateRunner = sinon.stub().callsFake((config: FirebaseConfig) => {
                 capturedConfig = config;
-                return mockExecutor;
+                return mockRunner;
             });
 
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI<MockDB, MigrationScriptRunner<MockDB>, FirebaseConfig>({
-                    createExecutor: customCreateExecutor,
+                    createRunner: customCreateRunner,
                     addCustomOptions: (prog) => {
                         prog.option('--database-url <url>', 'Firebase Database URL');
                     },
@@ -926,7 +926,7 @@ describe('createCLI', () => {
                     '--database-url', 'https://test.firebaseio.com'
                 ]);
 
-                expect(customCreateExecutor.calledOnce).to.be.true;
+                expect(customCreateRunner.calledOnce).to.be.true;
                 expect(capturedConfig).to.exist;
                 expect(capturedConfig!.databaseUrl).to.equal('https://test.firebaseio.com');
                 expect(capturedConfig!.applicationCredentials).to.equal('default-credentials.json');
@@ -940,7 +940,7 @@ describe('createCLI', () => {
          * Validates that omitting TConfig generic defaults to base Config type
          */
         it('should default to base Config type when TConfig not specified', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             let capturedConfig: Config | undefined;
             const exitStub = sinon.stub(process, 'exit');
@@ -948,7 +948,7 @@ describe('createCLI', () => {
             try {
                 // No third generic parameter - defaults to Config
                 const program = createCLI<MockDB, MigrationScriptRunner<MockDB>>({
-                    createExecutor: createExecutorStub,
+                    createRunner: createRunnerStub,
                     extendFlags: (config, flags) => {
                         // config is typed as base Config
                         capturedConfig = config;
@@ -967,25 +967,25 @@ describe('createCLI', () => {
         });
 
         /**
-         * Test: Custom config with async executor
-         * Validates that TConfig works with async createExecutor (v0.8.2 feature)
+         * Test: Custom config with async runner
+         * Validates that TConfig works with async createRunner (v0.8.2 feature)
          */
-        it('should support custom config type with async createExecutor', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+        it('should support custom config type with async createRunner', async () => {
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             let capturedConfig: FirebaseConfig | undefined;
-            const asyncCreateExecutor = sinon.stub().callsFake(async (config: FirebaseConfig) => {
+            const asyncCreateRunner = sinon.stub().callsFake(async (config: FirebaseConfig) => {
                 capturedConfig = config;
                 // Simulate async initialization
                 await new Promise(resolve => setTimeout(resolve, 10));
-                return mockExecutor;
+                return mockRunner;
             });
 
             const exitStub = sinon.stub(process, 'exit');
 
             try {
                 const program = createCLI<MockDB, MigrationScriptRunner<MockDB>, FirebaseConfig>({
-                    createExecutor: asyncCreateExecutor,
+                    createRunner: asyncCreateRunner,
                     extendFlags: (config, flags) => {
                         config.databaseUrl = 'https://async-test.firebaseio.com';
                         config.applicationCredentials = './async-key.json';
@@ -996,7 +996,7 @@ describe('createCLI', () => {
 
                 await program.parseAsync(['node', 'test', 'migrate']);
 
-                expect(asyncCreateExecutor.calledOnce).to.be.true;
+                expect(asyncCreateRunner.calledOnce).to.be.true;
                 expect(capturedConfig).to.exist;
                 expect(capturedConfig!.databaseUrl).to.equal('https://async-test.firebaseio.com');
                 expect(capturedConfig!.applicationCredentials).to.equal('./async-key.json');

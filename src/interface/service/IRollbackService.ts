@@ -40,7 +40,7 @@ export interface IRollbackService<DB extends IDB> {
      * @example
      * ```typescript
      * try {
-     *   await executor.migrate();
+     *   await runner.migrate();
      * } catch (error) {
      *   // Rollback all attempted migrations
      *   await rollbackService.rollback(attemptedScripts, backupPath);

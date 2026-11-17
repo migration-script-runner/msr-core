@@ -667,7 +667,7 @@ Enable dry run mode to preview migrations without executing them. When enabled, 
 config.dryRun = true;
 
 // Run migration preview
-const result = await executor.migrate();
+const result = await runner.migrate();
 // Shows what would execute, but doesn't run anything
 ```
 
@@ -691,8 +691,8 @@ const config = new Config();
 config.dryRun = process.env.CI === 'true';
 config.validateBeforeRun = true;
 
-const executor = new MigrationScriptRunner({ handler , config });
-const result = await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+const result = await runner.migrate();
 
 if (!result.success) {
     console.error('Migrations would fail!');
@@ -705,12 +705,12 @@ if (!result.success) {
 ```typescript
 // Preview before running
 config.dryRun = true;
-await executor.migrate();
+await runner.migrate();
 // Review the output...
 
 // Then run for real
 config.dryRun = false;
-await executor.migrate();
+await runner.migrate();
 ```
 
 **3. Documentation and Planning**
@@ -718,7 +718,7 @@ await executor.migrate();
 ```typescript
 // Generate migration plan
 config.dryRun = true;
-const result = await executor.migrate();
+const result = await runner.migrate();
 
 // Log what would execute for documentation
 console.log(`Would execute ${result.executed.length} migrations`);
@@ -732,13 +732,13 @@ Dry run mode works with all migration methods:
 config.dryRun = true;
 
 // Preview all pending migrations
-await executor.migrate();
+await runner.migrate();
 
 // Preview migrations up to specific version
-await executor.migrate(202311020036);
+await runner.migrate(202311020036);
 
 // Preview rollback
-await executor.down(202311010001);
+await runner.down(202311010001);
 ```
 
 ### Related Settings
@@ -768,8 +768,8 @@ config.displayLimit = 20;
 config.beforeMigrateName = 'beforeMigrate';
 
 // Initialize and run
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ---

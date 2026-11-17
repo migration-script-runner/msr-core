@@ -48,40 +48,40 @@ graph TD
 
 ```mermaid
 sequenceDiagram
-    participant Executor as MigrationScriptRunner
+    participant Runner as MigrationScriptRunner
     participant Backup as BackupOrchestrator
     participant Schema as SchemaVersionOrchestrator
     participant Scanner as MigrationScanner
 
-    Executor->>Schema: init()
-    Schema-->>Executor: Schema table ready
+    Runner->>Schema: init()
+    Schema-->>Runner: Schema table ready
 
-    Executor->>Backup: createBackup()
-    Backup-->>Executor: Backup created
+    Runner->>Backup: createBackup()
+    Backup-->>Runner: Backup created
 
-    Executor->>Scanner: scan(folder)
-    Scanner-->>Executor: Pending migrations
+    Runner->>Scanner: scan(folder)
+    Scanner-->>Runner: Pending migrations
 ```
 
 #### Execution Loop
 
 ```mermaid
 sequenceDiagram
-    participant Executor as MigrationScriptRunner
+    participant Runner as MigrationScriptRunner
     participant Execution as MigrationExecutionService
     participant Schema as SchemaVersionOrchestrator
     participant Rollback as RollbackService
 
     loop For each pending migration
-        Executor->>Execution: execute(script)
-        Execution-->>Executor: Success or Error
+        Runner->>Execution: execute(script)
+        Execution-->>Runner: Success or Error
 
         alt Success
-            Executor->>Schema: add(script)
-            Schema-->>Executor: Saved
+            Runner->>Schema: add(script)
+            Schema-->>Runner: Saved
         else Error
-            Executor->>Rollback: rollback()
-            Rollback-->>Executor: Rolled back
+            Runner->>Rollback: rollback()
+            Rollback-->>Runner: Rolled back
         end
     end
 ```

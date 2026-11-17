@@ -38,11 +38,11 @@ import { SilentRenderStrategy } from '@migration-script-runner/core';
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
-await executor.migrate();  // No output produced
+await runner.migrate();  // No output produced
 ```
 
 ### In Tests
@@ -51,10 +51,10 @@ await executor.migrate();  // No output produced
 import { MigrationScriptRunner, SilentRenderStrategy, SilentLogger } from '@migration-script-runner/core';
 
 describe('Migration Tests', () => {
-    let executor: MigrationScriptRunner;
+    let runner: MigrationScriptRunner;
 
     beforeEach(() => {
-        executor = new MigrationScriptRunner({ handler,
+        runner = new MigrationScriptRunner({ handler,
             logger: new SilentLogger(),
             renderStrategy: new SilentRenderStrategy()
         });
@@ -62,7 +62,7 @@ describe('Migration Tests', () => {
 
     it('should execute migrations without output', async () => {
         // No console clutter during test execution
-        const result = await executor.migrate();
+        const result = await runner.migrate();
         expect(result.success).toBe(true);
     });
 });
@@ -76,11 +76,11 @@ import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-r
 class MyApplication {
     async initDatabase() {
         // Run migrations silently during app startup
-        const executor = new MigrationScriptRunner({ handler,
+        const runner = new MigrationScriptRunner({ handler,
             renderStrategy: new SilentRenderStrategy()
         });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         if (!result.success) {
             throw new Error('Database migration failed');
@@ -116,12 +116,12 @@ import { MigrationScriptRunner, SilentRenderStrategy, SilentLogger } from '@migr
 
 describe('MigrationScriptRunner', () => {
     it('should handle empty migration list', async () => {
-        const executor = new MigrationScriptRunner({ handler,
+        const runner = new MigrationScriptRunner({ handler,
             logger: new SilentLogger(),
             renderStrategy: new SilentRenderStrategy()
         });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // Clean output, only test results shown
         expect(result.executed).toHaveLength(0);
@@ -157,11 +157,11 @@ import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-r
 
 export class DatabaseManager {
     async initialize() {
-        const executor = new MigrationScriptRunner({ handler,
+        const runner = new MigrationScriptRunner({ handler,
             renderStrategy: new SilentRenderStrategy()
         });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // Library users don't see migration output
         // Only application logs are shown
@@ -181,11 +181,11 @@ import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-r
 
 // Cron job or scheduled task
 async function runScheduledMigrations() {
-    const executor = new MigrationScriptRunner({ handler,
+    const runner = new MigrationScriptRunner({ handler,
         renderStrategy: new SilentRenderStrategy()
     });
 
-    const result = await executor.migrate();
+    const result = await runner.migrate();
 
     // Only log important events, not migration tables
     if (result.executed.length > 0) {
@@ -203,13 +203,13 @@ import { MigrationScriptRunner, SilentRenderStrategy, FileLogger } from '@migrat
 
 async function deployApplication() {
     // Run migrations silently, log to file
-    const executor = new MigrationScriptRunner({ handler,
+    const runner = new MigrationScriptRunner({ handler,
         logger: new FileLogger({ logPath: './deploy.log' }),
         renderStrategy: new SilentRenderStrategy()
     });
 
     try {
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // Only log summary, not tables
         console.log(`Deployment: ${result.executed.length} migrations applied`);
@@ -231,11 +231,11 @@ import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-r
 
 // Lambda function
 export const handler = async (event) => {
-    const executor = new MigrationScriptRunner(dbHandler, config, {
+    const runner = new MigrationScriptRunner(dbHandler, config, {
         renderStrategy: new SilentRenderStrategy()
     });
 
-    const result = await executor.migrate();
+    const result = await runner.migrate();
 
     return {
         statusCode: result.success ? 200 : 500,
@@ -255,11 +255,11 @@ For end-to-end testing:
 describe('E2E Tests', () => {
     beforeAll(async () => {
         // Set up test database silently
-        const executor = new MigrationScriptRunner(testHandler, config, {
+        const runner = new MigrationScriptRunner(testHandler, config, {
             renderStrategy: new SilentRenderStrategy()
         });
 
-        await executor.migrate();
+        await runner.migrate();
     });
 
     it('should create users', async () => {
@@ -276,13 +276,13 @@ describe('E2E Tests', () => {
 
 ```typescript
 // Good: Complete silence
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger: new SilentLogger(),
     renderStrategy: new SilentRenderStrategy()
 });
 
 // Partial: Logger still produces output
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
     // Default ConsoleLogger still logs
 });
@@ -296,10 +296,10 @@ const renderStrategy = process.env.NODE_ENV === 'test'
     ? new SilentRenderStrategy()
     : new AsciiTableRenderStrategy();
 
-const executor = new MigrationScriptRunner({ handler,  renderStrategy });
+const runner = new MigrationScriptRunner({ handler,  renderStrategy });
 
 // Avoid: Silent in production (makes debugging hard)
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()  // Hard to debug
 });
 ```
@@ -308,11 +308,11 @@ const executor = new MigrationScriptRunner({ handler,
 
 ```typescript
 // Good: Silent but validate results
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
-const result = await executor.migrate();
+const result = await runner.migrate();
 
 if (!result.success) {
     console.error('Migrations failed:', result.errors);
@@ -320,7 +320,7 @@ if (!result.success) {
 }
 
 // Avoid: Silent and ignoring results
-await executor.migrate();  // Errors not handled
+await runner.migrate();  // Errors not handled
 ```
 
 ### 4. Document Why Silence is Needed
@@ -329,12 +329,12 @@ await executor.migrate();  // Errors not handled
 // Good: Clear intent
 // Use SilentRenderStrategy to avoid cluttering test output
 // Migration status is checked via result.success
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
 // Avoid: No explanation
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()  // Why?
 });
 ```
@@ -343,18 +343,18 @@ const executor = new MigrationScriptRunner({ handler,
 
 ```typescript
 // Good: Silent tables, but provide feedback
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
-const result = await executor.migrate();
+const result = await runner.migrate();
 
 if (result.executed.length > 0) {
     console.log(`✓ Applied ${result.executed.length} migrations`);
 }
 
 // Avoid: Complete silence with no feedback
-await executor.migrate();  // User has no idea what happened
+await runner.migrate();  // User has no idea what happened
 ```
 
 ## Performance

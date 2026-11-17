@@ -57,18 +57,18 @@ describe('MigrationService', () => {
 import { MigrationScriptRunner, SilentLogger } from 'msr-core';
 
 describe('Migration execution', () => {
-    let executor: MigrationScriptRunner;
+    let runner: MigrationScriptRunner;
 
     beforeEach(() => {
         // Silent logger prevents test output pollution
-        executor = new MigrationScriptRunner({ handler,
+        runner = new MigrationScriptRunner({ handler,
             logger: new SilentLogger()
         });
     });
 
     it('should handle migration errors', async () => {
         await expect(
-            executor.executeMigration(invalidScript, context)
+            runner.executeMigration(invalidScript, context)
         ).to.be.rejected;
     });
 });
@@ -153,14 +153,14 @@ When processing many migrations where individual log messages are overwhelming:
 import { MigrationScriptRunner, SilentLogger } from 'msr-core';
 
 async function batchExecute(scripts: MigrationScript[]) {
-    const executor = new MigrationScriptRunner({ handler,
+    const runner = new MigrationScriptRunner({ handler,
         logger: new SilentLogger()
     });
 
     console.log(`Processing ${scripts.length} migrations...`);
 
     for (const script of scripts) {
-        await executor.executeMigration(script, context);
+        await runner.executeMigration(script, context);
         // No log spam for each migration
     }
 

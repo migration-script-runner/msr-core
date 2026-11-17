@@ -39,7 +39,7 @@ export interface IMigrationContext {
  *   }
  * }
  *
- * const executor = new MigrationScriptRunner<IDB>({
+ * const runner = new MigrationScriptRunner<IDB>({
  *   handler,
  *   metricsCollectors: [new CustomMetricsCollector()]
  * }, config);

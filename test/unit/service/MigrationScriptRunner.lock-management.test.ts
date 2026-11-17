@@ -22,20 +22,20 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            const status = await executor.getLockStatus();
+            const status = await runner.getLockStatus();
             expect(status).to.be.null;
         });
 
         it('should return lock status when locking service is configured', async () => {
             const mockLockStatus: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date('2025-12-18T10:00:00Z'),
                 expiresAt: new Date('2025-12-18T10:10:00Z'),
                 processId: '12345'
@@ -66,13 +66,13 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            const status = await executor.getLockStatus();
+            const status = await runner.getLockStatus();
             expect(status).to.deep.equal(mockLockStatus);
         });
 
@@ -110,13 +110,13 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            const status = await executor.getLockStatus();
+            const status = await runner.getLockStatus();
             expect(status).to.deep.equal(mockLockStatus);
             expect(status?.isLocked).to.be.false;
         });
@@ -138,14 +138,14 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.forceReleaseLock();
+                await runner.forceReleaseLock();
                 expect.fail('Should have thrown');
             } catch (error) {
                 expect((error as Error).message).to.include('Locking service is not configured');
@@ -183,13 +183,13 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.forceReleaseLock();
+            await runner.forceReleaseLock();
             expect(forceReleaseWasCalled).to.be.true;
         });
 
@@ -221,14 +221,14 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.forceReleaseLock();
+                await runner.forceReleaseLock();
                 expect.fail('Should have thrown');
             } catch (error) {
                 expect((error as Error).message).to.equal('Database error: failed to release lock');

@@ -125,7 +125,7 @@ See: [Validation Guide](../customization/validation)
 - Test suites need to clean up gracefully
 - Applications should handle errors contextually
 
-**Implementation**: All executor methods return `MigrationResult` objects with `success`, `executed`, and `errors` properties. Your application decides how to handle the result.
+**Implementation**: All runner methods return `MigrationResult` objects with `success`, `executed`, and `errors` properties. Your application decides how to handle the result.
 
 See: [API Reference](../api/)
 

@@ -77,7 +77,7 @@ export class RollbackService<DB extends IDB> implements IRollbackService<DB> {
      * @example
      * ```typescript
      * try {
-     *   await executor.migrate();
+     *   await runner.migrate();
      * } catch (error) {
      *   // Rollback all attempted migrations
      *   await rollbackService.rollback(attemptedScripts, backupPath);

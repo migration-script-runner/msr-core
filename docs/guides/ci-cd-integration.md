@@ -531,15 +531,15 @@ stages:
 
 version: 2.1
 
-executors:
-  node-executor:
+runners:
+  node-runner:
     docker:
       - image: cimg/node:20.0
     working_directory: ~/project
 
 jobs:
   build:
-    executor: node-executor
+    runner: node-runner
     steps:
       - checkout
       - restore_cache:
@@ -562,7 +562,7 @@ jobs:
             - .
 
   test:
-    executor: node-executor
+    runner: node-runner
     steps:
       - attach_workspace:
           at: ~/project
@@ -571,7 +571,7 @@ jobs:
           command: npm test
 
   migrate:
-    executor: node-executor
+    runner: node-runner
     steps:
       - attach_workspace:
           at: ~/project
@@ -583,7 +583,7 @@ jobs:
           destination: logs/migration.log
 
   deploy:
-    executor: node-executor
+    runner: node-runner
     steps:
       - attach_workspace:
           at: ~/project

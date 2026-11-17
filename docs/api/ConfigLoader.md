@@ -157,13 +157,13 @@ const config = loader.load({}, {
 });
 
 // Use with MigrationScriptRunner
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
     handler,
     config: loader.load()
 });
 
-// Or pass loader to executor
-const executor = new MigrationScriptRunner({
+// Or pass loader to runner
+const runner = new MigrationScriptRunner({
     handler,
     configLoader: loader
 });
@@ -824,8 +824,8 @@ Unexpected token at line 5, column 3
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 // Automatically loads: defaults → file → env vars
-const executor = new MigrationScriptRunner({ handler });
-await executor.up();
+const runner = new MigrationScriptRunner({ handler });
+await runner.up();
 ```
 
 ---
@@ -846,8 +846,8 @@ const config = ConfigLoader.load({
     strictValidation: true
 });
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ---
@@ -1004,12 +1004,12 @@ const config = ConfigLoader.load({
     strictValidation: process.env.CI === 'true'
 });
 
-// Create executor
+// Create runner
 const handler = new PostgreSQLHandler(process.env.DATABASE_URL);
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 // Run migrations
-await executor.migrate();
+await runner.migrate();
 ```
 
 ### Development with .env File
@@ -1030,8 +1030,8 @@ MSR_BACKUP_DELETE_BACKUP=true
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 // v0.7.0+: Automatically loads from .env files
-const executor = new MigrationScriptRunner({ handler });
-await executor.up();
+const runner = new MigrationScriptRunner({ handler });
+await runner.up();
 
 // Or configure which .env files to load
 const config = new Config();
@@ -1039,8 +1039,8 @@ config.envFileSources = ['.env.local', '.env']; // Default
 // config.envFileSources = ['.env.production', '.env']; // Production
 // config.envFileSources = []; // Disable .env loading
 
-const executor = new MigrationScriptRunner({ handler, config });
-await executor.up();
+const runner = new MigrationScriptRunner({ handler, config });
+await runner.up();
 ```
 
 ### Custom Config Directory

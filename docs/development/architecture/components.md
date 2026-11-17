@@ -31,7 +31,7 @@ graph TB
     end
 
     subgraph "Orchestration Layer"
-        Executor[MigrationScriptRunner<br/>Main entry point]
+        Runner[MigrationScriptRunner<br/>Main entry point]
         Config[Config<br/>Settings]
     end
 
@@ -61,14 +61,14 @@ graph TB
         DB[(Your Database<br/>PostgreSQL MongoDB etc)]
     end
 
-    App --> Executor
-    Executor --> Config
-    Executor --> WorkflowOrch
-    Executor --> ValidationOrch
-    Executor --> ReportingOrch
-    Executor --> ErrorHandler
-    Executor --> HookExecutor
-    Executor --> RollbackManager
+    App --> Runner
+    Runner --> Config
+    Runner --> WorkflowOrch
+    Runner --> ValidationOrch
+    Runner --> ReportingOrch
+    Runner --> ErrorHandler
+    Runner --> HookExecutor
+    Runner --> RollbackManager
 
     WorkflowOrch --> Scanner
     WorkflowOrch --> ValidationOrch
@@ -113,7 +113,7 @@ graph TB
 
     style App fill:#e1f5ff
     style Scripts fill:#e1f5ff
-    style Executor fill:#fff3cd
+    style Runner fill:#fff3cd
     style Config fill:#fff3cd
     style WorkflowOrch fill:#ffeaa7
     style ValidationOrch fill:#ffeaa7
@@ -182,12 +182,12 @@ graph TB
 ```typescript
 // Example usage (public API unchanged)
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger: new SilentLogger(),  // Optional DI
     backupOrchestrator: customBackup  // Optional DI
 });
 
-const result = await executor.up();  // Delegates to workflowOrchestrator
+const result = await runner.up();  // Delegates to workflowOrchestrator
 ```
 
 ---

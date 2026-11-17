@@ -428,8 +428,8 @@ config.filePatterns = [
   /^V(\d{12})_.*\.up\.sql$/   // SQL migrations
 ];
 
-const executor = new MigrationScriptRunner({ handler , config });
-const result = await executor.up();
+const runner = new MigrationScriptRunner({ handler , config });
+const result = await runner.up();
 
 console.log(`Executed ${result.executed.length} migrations (TypeScript + SQL)`);
 ```
@@ -755,8 +755,8 @@ async function runMigrations() {
       /^V(\d{12})_.*\.up\.sql$/
     ];
 
-    const executor = new MigrationScriptRunner({ handler , config });
-    const result = await executor.up();
+    const runner = new MigrationScriptRunner({ handler , config });
+    const result = await runner.up();
 
     if (result.success) {
       console.log(`✅ Executed ${result.executed.length} migrations`);

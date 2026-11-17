@@ -147,28 +147,28 @@ import { ILockingProvider } from '@migration-script-runner/core';
 class PostgresLockingProvider implements ILockingProvider<PostgresDB> {
   constructor(private db: PostgresDB) {}
 
-  async acquireLock(executorId: string, timeout: number): Promise<boolean> {
+  async acquireLock(runnerId: string, timeout: number): Promise<boolean> {
     // Use SELECT FOR UPDATE NOWAIT or INSERT with ON CONFLICT
     const result = await this.db.query(`
-      INSERT INTO migration_locks (executor_id, locked_at, expires_at)
+      INSERT INTO migration_locks (runner_id, locked_at, expires_at)
       VALUES ($1, NOW(), NOW() + INTERVAL '${timeout}ms')
       ON CONFLICT (id) DO NOTHING
       RETURNING id
-    `, [executorId]);
+    `, [runnerId]);
     return result.rows.length > 0;
   }
 
-  async verifyLockOwnership(executorId: string): Promise<boolean> {
+  async verifyLockOwnership(runnerId: string): Promise<boolean> {
     const result = await this.db.query(
-      'SELECT executor_id FROM migration_locks WHERE id = 1'
+      'SELECT runner_id FROM migration_locks WHERE id = 1'
     );
-    return result.rows[0]?.executor_id === executorId;
+    return result.rows[0]?.runner_id === runnerId;
   }
 
-  async releaseLock(executorId: string): Promise<void> {
+  async releaseLock(runnerId: string): Promise<void> {
     await this.db.query(
-      'DELETE FROM migration_locks WHERE executor_id = $1',
-      [executorId]
+      'DELETE FROM migration_locks WHERE runner_id = $1',
+      [runnerId]
     );
   }
 
@@ -184,7 +184,7 @@ class PostgresLockingProvider implements ILockingProvider<PostgresDB> {
 
   async getLockStatus(): Promise<ILockStatus> {
     const result = await this.db.query(`
-      SELECT executor_id, locked_at, expires_at
+      SELECT runner_id, locked_at, expires_at
       FROM migration_locks WHERE id = 1
     `);
 
@@ -200,7 +200,7 @@ class PostgresLockingProvider implements ILockingProvider<PostgresDB> {
     const row = result.rows[0];
     return {
       isLocked: true,
-      lockedBy: row.executor_id,
+      lockedBy: row.runner_id,
       lockedAt: new Date(row.locked_at),
       expiresAt: new Date(row.expires_at)
     };
@@ -432,12 +432,12 @@ const pool = new Pool({
 // Create handler
 const handler = new PostgresHandler(pool, true);  // with backup
 
-// Create executor
+// Create runner
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 // Run migrations
-const result = await executor.up();
+const result = await runner.up();
 ```
 
 ---

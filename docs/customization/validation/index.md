@@ -47,10 +47,10 @@ const config = new Config();
 config.folder = './migrations';
 
 // Validation is enabled by default (validateBeforeRun = true)
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 try {
-    await executor.migrate();
+    await runner.migrate();
 } catch (error) {
     if (error.name === 'ValidationError') {
         // Handle validation failure
@@ -211,7 +211,7 @@ When validation fails, MSR throws a `ValidationError`:
 import { ValidationError } from '@migration-script-runner/core';
 
 try {
-    await executor.migrate();
+    await runner.migrate();
 } catch (error) {
     if (error instanceof ValidationError) {
         console.error(`Validation failed!`);
@@ -413,7 +413,7 @@ config.customValidators = validators;
 
 ```typescript
 try {
-    const result = await executor.migrate();
+    const result = await runner.migrate();
     if (!result.success) {
         process.exit(1);
     }

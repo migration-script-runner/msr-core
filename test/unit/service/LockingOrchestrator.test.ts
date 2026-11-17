@@ -63,25 +63,25 @@ describe('LockingOrchestrator', () => {
         it('should successfully acquire and verify lock on first attempt without hooks', async () => {
             getStatusStub.resolves({
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date(),
                 expiresAt: new Date()
             } as ILockStatus);
 
             const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            const result = await orchestrator.acquireLock(executorId);
+            const result = await orchestrator.acquireLock(runnerId);
 
             expect(result).to.be.true;
-            expect(acquireStub.calledOnceWith(executorId)).to.be.true;
-            expect(verifyStub.calledOnceWith(executorId)).to.be.true;
+            expect(acquireStub.calledOnceWith(runnerId)).to.be.true;
+            expect(verifyStub.calledOnceWith(runnerId)).to.be.true;
         });
 
         it('should successfully acquire and verify lock on first attempt with hooks', async () => {
             getStatusStub.resolves({
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date(),
                 expiresAt: new Date()
             } as ILockStatus);
@@ -92,12 +92,12 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger, hooks);
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            const result = await orchestrator.acquireLock(executorId);
+            const result = await orchestrator.acquireLock(runnerId);
 
             expect(result).to.be.true;
-            expect((hooks.onBeforeAcquireLock as SinonStub).calledOnceWith(executorId)).to.be.true;
+            expect((hooks.onBeforeAcquireLock as SinonStub).calledOnceWith(runnerId)).to.be.true;
             expect((hooks.onLockAcquired as SinonStub).calledOnce).to.be.true;
         });
 
@@ -112,9 +112,9 @@ describe('LockingOrchestrator', () => {
             } as ILockStatus);
 
             const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            const result = await orchestrator.acquireLock(executorId);
+            const result = await orchestrator.acquireLock(runnerId);
 
             expect(result).to.be.true;
             expect(acquireStub.callCount).to.equal(2);
@@ -131,9 +131,9 @@ describe('LockingOrchestrator', () => {
             } as ILockStatus);
 
             const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            const result = await orchestrator.acquireLock(executorId);
+            const result = await orchestrator.acquireLock(runnerId);
 
             expect(result).to.be.false;
             expect(acquireStub.callCount).to.equal(config.retryAttempts + 1);
@@ -144,9 +144,9 @@ describe('LockingOrchestrator', () => {
             verifyStub.resolves(false);
 
             const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await expect(orchestrator.acquireLock(executorId))
+            await expect(orchestrator.acquireLock(runnerId))
                 .to.be.rejectedWith(/Lock ownership verification failed/);
 
             expect(acquireStub.calledOnce).to.be.true;
@@ -169,11 +169,11 @@ describe('LockingOrchestrator', () => {
                 mockLogger,
                 hooks
             );
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await orchestrator.acquireLock(executorId);
+            await orchestrator.acquireLock(runnerId);
 
-            expect((hooks.onBeforeAcquireLock as SinonStub).calledOnceWith(executorId)).to.be.true;
+            expect((hooks.onBeforeAcquireLock as SinonStub).calledOnceWith(runnerId)).to.be.true;
             expect((hooks.onAcquireRetry as SinonStub).calledOnce).to.be.true;
             expect((hooks.onLockAcquired as SinonStub).calledOnce).to.be.true;
         });
@@ -186,7 +186,7 @@ describe('LockingOrchestrator', () => {
             acquireStub.resolves(false);
             getStatusStub.resolves({
                 isLocked: true,
-                lockedBy: 'other-executor',
+                lockedBy: 'other-runner',
                 lockedAt: new Date(),
                 expiresAt: new Date(Date.now() + 60000)
             } as ILockStatus);
@@ -197,9 +197,9 @@ describe('LockingOrchestrator', () => {
                 mockLogger,
                 hooks
             );
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            const result = await orchestrator.acquireLock(executorId);
+            const result = await orchestrator.acquireLock(runnerId);
 
             expect(result).to.be.false;
             expect((hooks.onLockAcquisitionFailed as SinonStub).calledOnce).to.be.true;
@@ -218,12 +218,12 @@ describe('LockingOrchestrator', () => {
                 mockLogger,
                 hooks
             );
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await expect(orchestrator.acquireLock(executorId))
+            await expect(orchestrator.acquireLock(runnerId))
                 .to.be.rejectedWith(/Lock ownership verification failed/);
 
-            expect((hooks.onOwnershipVerificationFailed as SinonStub).calledOnceWith(executorId)).to.be.true;
+            expect((hooks.onOwnershipVerificationFailed as SinonStub).calledOnceWith(runnerId)).to.be.true;
         });
 
         it('should handle errors during lock acquisition', async () => {
@@ -240,9 +240,9 @@ describe('LockingOrchestrator', () => {
                 mockLogger,
                 hooks
             );
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await expect(orchestrator.acquireLock(executorId))
+            await expect(orchestrator.acquireLock(runnerId))
                 .to.be.rejectedWith('Database connection failed');
 
             const hookStub = hooks.onLockError as SinonStub;
@@ -250,7 +250,7 @@ describe('LockingOrchestrator', () => {
             expect(hookStub.called).to.be.true;
             expect(hookStub.firstCall.args[0]).to.equal('acquire');
             expect(hookStub.firstCall.args[1]).to.equal(error);
-            expect(hookStub.firstCall.args[2]).to.equal(executorId);
+            expect(hookStub.firstCall.args[2]).to.equal(runnerId);
         });
 
         it('should handle errors in hook invocation during acquisition', async () => {
@@ -266,27 +266,27 @@ describe('LockingOrchestrator', () => {
                 mockLogger,
                 hooks
             );
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await expect(orchestrator.acquireLock(executorId))
+            await expect(orchestrator.acquireLock(runnerId))
                 .to.be.rejectedWith('Hook failed');
 
             const errorHookStub = hooks.onLockError as SinonStub;
             expect(errorHookStub.called).to.be.true;
             expect(errorHookStub.firstCall.args[0]).to.equal('acquire');
             expect(errorHookStub.firstCall.args[1]).to.equal(hookError);
-            expect(errorHookStub.firstCall.args[2]).to.equal(executorId);
+            expect(errorHookStub.firstCall.args[2]).to.equal(runnerId);
         });
     });
 
     describe('releaseLock', () => {
         it('should release lock successfully without hooks', async () => {
             const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await orchestrator.releaseLock(executorId);
+            await orchestrator.releaseLock(runnerId);
 
-            expect(releaseStub.calledOnceWith(executorId)).to.be.true;
+            expect(releaseStub.calledOnceWith(runnerId)).to.be.true;
         });
 
         it('should invoke hooks when releasing lock', async () => {
@@ -301,12 +301,12 @@ describe('LockingOrchestrator', () => {
                 mockLogger,
                 hooks
             );
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await orchestrator.releaseLock(executorId);
+            await orchestrator.releaseLock(runnerId);
 
-            expect((hooks.onBeforeReleaseLock as SinonStub).calledOnceWith(executorId)).to.be.true;
-            expect((hooks.onLockReleased as SinonStub).calledOnceWith(executorId)).to.be.true;
+            expect((hooks.onBeforeReleaseLock as SinonStub).calledOnceWith(runnerId)).to.be.true;
+            expect((hooks.onLockReleased as SinonStub).calledOnceWith(runnerId)).to.be.true;
         });
 
         it('should invoke onLockError hook when release fails', async () => {
@@ -323,9 +323,9 @@ describe('LockingOrchestrator', () => {
                 mockLogger,
                 hooks
             );
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await expect(orchestrator.releaseLock(executorId))
+            await expect(orchestrator.releaseLock(runnerId))
                 .to.be.rejectedWith('Failed to release');
 
             expect((hooks.onLockError as SinonStub).calledOnce).to.be.true;
@@ -343,9 +343,9 @@ describe('LockingOrchestrator', () => {
                 mockLogger,
                 hooks
             );
-            const executorId = 'test-executor-123';
+            const runnerId = 'test-runner-123';
 
-            await expect(orchestrator.releaseLock(executorId))
+            await expect(orchestrator.releaseLock(runnerId))
                 .to.be.rejectedWith('Failed to release');
         });
     });
@@ -379,7 +379,7 @@ describe('LockingOrchestrator', () => {
         it('should warn when lock is held before force releasing', async () => {
             const lockStatus: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'other-executor',
+                lockedBy: 'other-runner',
                 lockedAt: new Date(),
                 expiresAt: new Date()
             };
@@ -545,7 +545,7 @@ describe('LockingOrchestrator', () => {
         it('should return lock status without hooks', async () => {
             const expectedStatus: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor',
+                lockedBy: 'test-runner',
                 lockedAt: new Date(),
                 expiresAt: new Date()
             };

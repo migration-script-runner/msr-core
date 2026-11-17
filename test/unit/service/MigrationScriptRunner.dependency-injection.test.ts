@@ -69,11 +69,11 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 validateTransactionConfiguration: sinon.stub().returns([])
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 validationService: customValidationService
 , config: config });
 
-            expect((executor as any).core.validation).to.equal(customValidationService);
+            expect((runner as any).core.validation).to.equal(customValidationService);
         });
 
         /**
@@ -82,12 +82,12 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * a default MigrationValidationService instance is created.
          */
         it('should create default validationService when not provided', () => {
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
-            expect((executor as any).core.validation).to.exist;
-            expect((executor as any).core.validation).to.have.property('validateAll');
-            expect((executor as any).core.validation).to.have.property('validateMigratedFileIntegrity');
+            expect((runner as any).core.validation).to.exist;
+            expect((runner as any).core.validation).to.have.property('validateAll');
+            expect((runner as any).core.validation).to.have.property('validateMigratedFileIntegrity');
         });
 
         /**
@@ -102,11 +102,11 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 shouldCreateBackup: sinon.stub().returns(true)
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 rollbackService: customRollbackService
 , config: config });
 
-            expect((executor as any).core.rollback).to.equal(customRollbackService);
+            expect((runner as any).core.rollback).to.equal(customRollbackService);
         });
 
         /**
@@ -115,12 +115,12 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * a default RollbackService instance is created.
          */
         it('should create default rollbackService when not provided', () => {
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
-            expect((executor as any).core.rollback).to.exist;
-            expect((executor as any).core.rollback).to.have.property('rollback');
-            expect((executor as any).core.rollback).to.have.property('shouldCreateBackup');
+            expect((runner as any).core.rollback).to.exist;
+            expect((runner as any).core.rollback).to.have.property('rollback');
+            expect((runner as any).core.rollback).to.have.property('shouldCreateBackup');
         });
 
         /**
@@ -145,11 +145,11 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 getLoaders: sinon.stub().returns([customLoader])
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 loaderRegistry: customRegistry
 , config: config });
 
-            expect((executor as any).loaderRegistry).to.equal(customRegistry);
+            expect((runner as any).loaderRegistry).to.equal(customRegistry);
         });
 
         /**
@@ -159,10 +159,10 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * a default LoaderRegistry with TypeScriptLoader and SqlLoader is created.
          */
         it('should create default loaderRegistry when not provided', () => {
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
-            const registry = (executor as any).loaderRegistry as ILoaderRegistry<IDB>;
+            const registry = (runner as any).loaderRegistry as ILoaderRegistry<IDB>;
             expect(registry).to.exist;
             expect(registry.getLoaders()).to.have.lengthOf(2);
 
@@ -179,15 +179,15 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          */
         it('should create default ConfigLoader when configLoader not provided', () => {
             // Don't provide config or configLoader - will use default ConfigLoader
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger()
             });
 
-            // Verify executor was created successfully with auto-loaded config
-            expect(executor).to.exist;
-            expect((executor as any).config).to.exist;
-            expect((executor as any).config.folder).to.be.a('string');
+            // Verify runner was created successfully with auto-loaded config
+            expect(runner).to.exist;
+            expect((runner as any).config).to.exist;
+            expect((runner as any).config.folder).to.be.a('string');
         });
 
         /**
@@ -205,7 +205,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 applyEnvironmentVariables: sinon.stub()
             };
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger(),
                 configLoader: customConfigLoader
@@ -213,7 +213,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 
             // Verify custom configLoader was used
             expect(loadStub.called).to.be.true;
-            expect((executor as any).config.folder).to.equal('./custom-migrations');
+            expect((runner as any).config.folder).to.equal('./custom-migrations');
         });
     });
 
@@ -226,11 +226,11 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         it('should return undefined when transaction mode is NONE', () => {
             config.transaction.mode = 'NONE' as any;
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
             // Check that transaction manager was not created via factory
-            const transactionProvider = (executor as any).execution.transactionProvider;
+            const transactionProvider = (runner as any).execution.transactionProvider;
 
             expect(transactionProvider).to.be.undefined;
         });
@@ -252,13 +252,13 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 transactionProvider: customTxManager
             };
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler: handlerWithTx as any,
                 logger: new SilentLogger()
             , config: config });
 
             // Check that custom transaction manager was used via factory
-            const transactionProvider = (executor as any).execution.transactionProvider;
+            const transactionProvider = (runner as any).execution.transactionProvider;
 
             expect(transactionProvider).to.equal(customTxManager);
         });
@@ -282,13 +282,13 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 db: transactionalDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler: handlerWithTransactionalDB as any,
                 logger: new SilentLogger()
             , config: config });
 
             // Check that transaction manager was auto-created via factory
-            const transactionProvider = (executor as any).execution.transactionProvider;
+            const transactionProvider = (runner as any).execution.transactionProvider;
 
             expect(transactionProvider).to.exist;
             expect(transactionProvider.begin).to.be.a('function');
@@ -317,13 +317,13 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 
             config.transaction.mode = 'PER_MIGRATION' as any; // Enable transactions
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler: handlerWithCallbackDB as any,
                 logger: new SilentLogger()
             , config: config });
 
             // Check that transaction manager was auto-created via factory
-            const transactionProvider = (executor as any).execution.transactionProvider;
+            const transactionProvider = (runner as any).execution.transactionProvider;
 
             expect(transactionProvider).to.exist;
             expect(transactionProvider.begin).to.be.a('function');
@@ -365,11 +365,11 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 
             // Enable dry run mode
             config.dryRun = true;
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: capturingLogger
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: capturingLogger
 , config: config });
 
             // Mock hookExecutor.executeWithHooks to throw error immediately
-            (executor as any).orchestration.workflow.hookExecutor.executeWithHooks = sinon.stub().rejects(new Error('Execution failed'));
+            (runner as any).orchestration.workflow.hookExecutor.executeWithHooks = sinon.stub().rejects(new Error('Execution failed'));
 
             // Create scripts object with empty executed array
             const scripts = {
@@ -390,12 +390,12 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
             };
 
             // Stub migrationScanner and validation
-            sinon.stub((executor as any).core.scanner, 'scan').resolves(scripts);
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
+            sinon.stub((runner as any).core.scanner, 'scan').resolves(scripts);
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
 
             // Call through public API which triggers workflow orchestrator
             try {
-                await executor.up();
+                await runner.up();
                 expect.fail('Should have thrown error');
             } catch (error) {
                 // Expected error
@@ -417,13 +417,13 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * to the constructor, enabling external access to handler functionality.
          */
         it('should return the handler instance', () => {
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger(),
                 config: config
             });
 
-            const retrievedHandler = executor.getHandler();
+            const retrievedHandler = runner.getHandler();
 
             expect(retrievedHandler).to.equal(handler);
             expect(retrievedHandler.getName()).to.equal('TestHandler');
@@ -436,13 +436,13 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * enabling type-safe access to handler-specific functionality.
          */
         it('should preserve handler type information', () => {
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger(),
                 config: config
             });
 
-            const retrievedHandler = executor.getHandler();
+            const retrievedHandler = runner.getHandler();
 
             // Verify all handler properties are accessible
             expect(retrievedHandler).to.have.property('db');
@@ -469,16 +469,16 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 customMethod: () => 'custom-result'
             };
 
-            // Create executor with THandler generic
-            class CustomExecutor extends MigrationScriptRunner<IDB, CustomHandler> {}
+            // Create runner with THandler generic
+            class CustomRunner extends MigrationScriptRunner<IDB, CustomHandler> {}
 
-            const executor = new CustomExecutor({
+            const runner = new CustomRunner({
                 handler: customHandler,
                 logger: new SilentLogger(),
                 config: config
             });
 
-            const retrievedHandler = executor.getHandler();
+            const retrievedHandler = runner.getHandler();
 
             // Verify custom properties are accessible (TypeScript would catch type errors at compile time)
             expect(retrievedHandler.customProperty).to.equal('custom-value');
@@ -492,15 +492,15 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * enabling CLI commands and external integrations to access the handler.
          */
         it('should be accessible as a public method', () => {
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger(),
                 config: config
             });
 
             // Verify method exists and is callable
-            expect(executor.getHandler).to.be.a('function');
-            expect(executor.getHandler()).to.exist;
+            expect(runner.getHandler).to.be.a('function');
+            expect(runner.getHandler()).to.exist;
         });
     });
 
@@ -520,7 +520,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 renderDryRunTable: sinon.stub()
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 migrationRenderer: rendererStub as any
 , config: config });
 
@@ -543,7 +543,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 renderDryRunTable: sinon.stub()
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 migrationRenderer: rendererStub as any
 , config: config });
 
@@ -554,11 +554,11 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 
     describe('createInstance factory method (v0.8.2)', () => {
         /**
-         * Test: createInstance creates executor with async handler initialization
+         * Test: createInstance creates runner with async handler initialization
          * Validates that adapters can use the factory method to create instances
          * with asynchronous handler creation.
          */
-        it('should create executor instance with async handler initialization', async () => {
+        it('should create runner instance with async handler initialization', async () => {
             // Simulate async handler creation
             const createHandlerSpy = sinon.stub().resolves(handler);
 
@@ -584,14 +584,14 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
             expect(createHandlerSpy.calledOnce).to.be.true;
             expect(createHandlerSpy.firstCall.args[0]).to.equal(config);
 
-            // Verify executor was created
+            // Verify runner was created
             expect(runner).to.be.instanceOf(TestRunner);
             expect(runner).to.be.instanceOf(MigrationScriptRunner);
         });
 
         /**
          * Test: createInstance preserves handler type through THandler generic
-         * Validates that the created executor has correctly typed handler.
+         * Validates that the created runner has correctly typed handler.
          */
         it('should preserve handler type through THandler generic', async () => {
             // Custom handler interface
@@ -629,10 +629,10 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         });
 
         /**
-         * Test: createInstance propagates all options to executor
+         * Test: createInstance propagates all options to runner
          * Validates that logger, hooks, and other services are passed through.
          */
-        it('should propagate all options to executor', async () => {
+        it('should propagate all options to runner', async () => {
             const customLogger = new SilentLogger();
             const customHooks = {
                 onBeforeMigrate: sinon.stub()

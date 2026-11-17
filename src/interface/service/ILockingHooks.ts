@@ -18,13 +18,13 @@ import { ILockStatus } from './ILockingProvider';
  * ```typescript
  * // Metrics collection
  * const hooks: ILockingHooks = {
- *   async onLockAcquired(executorId, status) {
+ *   async onLockAcquired(runnerId, status) {
  *     await metrics.increment('locks.acquired');
- *     await auditLog.write({ event: 'lock_acquired', executorId });
+ *     await auditLog.write({ event: 'lock_acquired', runnerId });
  *   },
- *   async onLockAcquisitionFailed(executorId, currentOwner) {
+ *   async onLockAcquisitionFailed(runnerId, currentOwner) {
  *     await metrics.increment('locks.conflicts');
- *     await sendAlert(`Lock conflict: ${executorId} vs ${currentOwner}`);
+ *     await sendAlert(`Lock conflict: ${runnerId} vs ${currentOwner}`);
  *   }
  * };
  * ```
@@ -33,14 +33,14 @@ import { ILockStatus } from './ILockingProvider';
  * ```typescript
  * // Alerting and monitoring
  * const hooks: ILockingHooks = {
- *   async onLockError(operation, error, executorId) {
+ *   async onLockError(operation, error, runnerId) {
  *     await sendAlert({
  *       severity: 'high',
  *       message: `Lock ${operation} failed: ${error.message}`,
- *       executorId
+ *       runnerId
  *     });
  *   },
- *   async onAcquireRetry(executorId, attempt, currentOwner) {
+ *   async onAcquireRetry(runnerId, attempt, currentOwner) {
  *     console.warn(`Retry ${attempt}: Lock held by ${currentOwner}`);
  *   }
  * };
@@ -55,10 +55,10 @@ export interface ILockingHooks {
      * - Metrics start timing
      * - Validation checks
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      * @param timeout Lock timeout in milliseconds
      */
-    onBeforeAcquireLock?(executorId: string, timeout: number): Promise<void>;
+    onBeforeAcquireLock?(runnerId: string, timeout: number): Promise<void>;
 
     /**
      * Called after successfully acquiring and verifying the lock.
@@ -68,23 +68,23 @@ export interface ILockingHooks {
      * - Audit logging
      * - Notification of lock acquisition
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      * @param status Current lock status information
      */
-    onLockAcquired?(executorId: string, status: ILockStatus): Promise<void>;
+    onLockAcquired?(runnerId: string, status: ILockStatus): Promise<void>;
 
     /**
-     * Called when lock acquisition fails (already held by another executor).
+     * Called when lock acquisition fails (already held by another runner).
      *
      * Use for:
      * - Conflict metrics
      * - Alerting on lock contention
      * - Debugging concurrent execution attempts
      *
-     * @param executorId Unique identifier for this executor
-     * @param currentOwner Executor ID currently holding the lock
+     * @param runnerId Unique identifier for this runner
+     * @param currentOwner Runner ID currently holding the lock
      */
-    onLockAcquisitionFailed?(executorId: string, currentOwner: string): Promise<void>;
+    onLockAcquisitionFailed?(runnerId: string, currentOwner: string): Promise<void>;
 
     /**
      * Called before each retry attempt to acquire the lock.
@@ -94,11 +94,11 @@ export interface ILockingHooks {
      * - Progress logging
      * - Monitoring lock wait times
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      * @param attempt Retry attempt number (1-based)
-     * @param currentOwner Executor ID currently holding the lock
+     * @param currentOwner Runner ID currently holding the lock
      */
-    onAcquireRetry?(executorId: string, attempt: number, currentOwner: string): Promise<void>;
+    onAcquireRetry?(runnerId: string, attempt: number, currentOwner: string): Promise<void>;
 
     /**
      * Called when lock ownership verification fails after acquisition.
@@ -111,9 +111,9 @@ export interface ILockingHooks {
      * - Race condition detection
      * - Clock skew monitoring
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      */
-    onOwnershipVerificationFailed?(executorId: string): Promise<void>;
+    onOwnershipVerificationFailed?(runnerId: string): Promise<void>;
 
     /**
      * Called before releasing the lock.
@@ -123,9 +123,9 @@ export interface ILockingHooks {
      * - Lock hold time calculation
      * - Cleanup operations
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      */
-    onBeforeReleaseLock?(executorId: string): Promise<void>;
+    onBeforeReleaseLock?(runnerId: string): Promise<void>;
 
     /**
      * Called after successfully releasing the lock.
@@ -135,9 +135,9 @@ export interface ILockingHooks {
      * - Audit logging
      * - Notification of lock release
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      */
-    onLockReleased?(executorId: string): Promise<void>;
+    onLockReleased?(runnerId: string): Promise<void>;
 
     /**
      * Called when forcing lock release (regardless of ownership).
@@ -163,7 +163,7 @@ export interface ILockingHooks {
      *
      * @param operation Operation that failed (e.g., 'acquire', 'release', 'verify')
      * @param error Error that occurred
-     * @param executorId Executor ID (may be undefined for some operations)
+     * @param runnerId Runner ID (may be undefined for some operations)
      */
-    onLockError?(operation: string, error: Error, executorId?: string): Promise<void>;
+    onLockError?(operation: string, error: Error, runnerId?: string): Promise<void>;
 }

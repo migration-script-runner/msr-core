@@ -95,9 +95,9 @@ import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner({ handler });
+const runner = new MigrationScriptRunner({ handler });
 
-await executor.up();
+await runner.up();
 ```
 
 **2. Use environment variables** for deployment:
@@ -117,7 +117,7 @@ npm start
 
 ```typescript
 // Env vars are loaded automatically, but you can override
-const executor = new MigrationScriptRunner({ handler }, {
+const runner = new MigrationScriptRunner({ handler }, {
     dryRun: true  // Override for this specific run
 });
 ```
@@ -158,7 +158,7 @@ MSR_LOG_LEVEL=info
 That's it! MSR will automatically load these values:
 
 ```typescript
-const executor = new MigrationScriptRunner({ handler });
+const runner = new MigrationScriptRunner({ handler });
 // Configuration loaded from .env automatically
 ```
 
@@ -677,8 +677,8 @@ import 'dotenv/config';
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 // Environment variables loaded automatically
-const executor = new MigrationScriptRunner({ handler });
-await executor.up();
+const runner = new MigrationScriptRunner({ handler });
+await runner.up();
 ```
 
 ---
@@ -737,7 +737,7 @@ const config = ConfigLoader.load({
 // Load from specific directory
 const config = ConfigLoader.load({}, '/app');
 
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 ```
 
 See [ConfigLoader API Reference](../api/ConfigLoader) for detailed documentation.
@@ -1200,9 +1200,9 @@ import { DatabaseHandler } from './database';
 const handler = new DatabaseHandler();
 
 // Automatically loads: defaults → file → env vars
-const executor = new MigrationScriptRunner({ handler });
+const runner = new MigrationScriptRunner({ handler });
 
-await executor.migrate();
+await runner.migrate();
 ```
 
 ---

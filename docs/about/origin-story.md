@@ -267,7 +267,7 @@ interface IDatabaseMigrationHandler {
 }
 
 // Plug in any database
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 ```
 
 #### From JavaScript to TypeScript
@@ -335,7 +335,7 @@ migrations/
 Return results instead of calling `process.exit()`:
 
 ```typescript
-const result = await executor.up();
+const result = await runner.up();
 
 if (result.success) {
   console.log(`✅ Executed ${result.executed.length} migrations`);

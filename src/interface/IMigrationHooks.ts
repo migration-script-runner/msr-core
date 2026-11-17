@@ -57,7 +57,7 @@ import {IDB} from "./dao";
  *     }
  * }
  *
- * const executor = new MigrationScriptRunner<IDB>(handler, {
+ * const runner = new MigrationScriptRunner<IDB>(handler, {
  *     hooks: new SlackHooks(process.env.SLACK_WEBHOOK)
  * });
  * ```

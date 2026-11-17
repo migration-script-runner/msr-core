@@ -24,7 +24,7 @@ import { IDB } from '../interface/dao';
  *   new JsonMetricsCollector({ filePath: './metrics.json' })
  * ], logger);
  *
- * const executor = new MigrationScriptRunner<IDB>({
+ * const runner = new MigrationScriptRunner<IDB>({
  *   handler,
  *   hooks: hook
  * }, config);

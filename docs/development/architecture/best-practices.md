@@ -70,7 +70,7 @@ class CloudLogger implements ILogger {
     // ... implement other methods
 }
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger: new CloudLogger()
 });
 ```
@@ -88,7 +88,7 @@ class S3BackupOrchestrator implements IBackupOrchestrator {
     // ... implement restore, deleteBackup
 }
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     backupOrchestrator: new S3BackupOrchestrator()
 });
 ```
@@ -99,7 +99,7 @@ const executor = new MigrationScriptRunner({ handler,
 import { IRenderStrategy, JsonRenderStrategy } from '@migration-script-runner/core';
 
 // Use built-in JSON render strategy
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)  // pretty-printed JSON
 });
 
@@ -111,7 +111,7 @@ class CustomRenderStrategy implements IRenderStrategy {
     // ... implement other methods
 }
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new CustomRenderStrategy()
 });
 ```

@@ -138,8 +138,8 @@ describe('MigrationScriptRunner - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const result = await runner.migrate();
 
         const downCalls = (global as any).__cleanupDownCalls || [];
 
@@ -217,8 +217,8 @@ describe('MigrationScriptRunner - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const result = await runner.migrate();
 
         // Should fail
         expect(result.success).to.be.false;
@@ -304,8 +304,8 @@ describe('MigrationScriptRunner - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const result = await runner.migrate();
 
         const downCalls = (global as any).__bothStrategyDownCalls || [];
 

@@ -41,7 +41,7 @@ import {
   CsvMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new CsvMetricsCollector({
@@ -52,7 +52,7 @@ const executor = new MigrationScriptRunner({
   config 
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Output file** (`./metrics/migrations.csv`):

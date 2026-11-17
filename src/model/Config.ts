@@ -326,11 +326,11 @@ export class Config {
      *
      * // Full manual control
      * config.backupMode = BackupMode.MANUAL;
-     * const backupPath = await executor.createBackup();
+     * const backupPath = await runner.createBackup();
      * try {
-     *   await executor.migrate();
+     *   await runner.migrate();
      * } catch (error) {
-     *   await executor.restoreFromBackup(backupPath);
+     *   await runner.restoreFromBackup(backupPath);
      * }
      * ```
      *
@@ -623,8 +623,8 @@ export class Config {
      * const config = new Config();
      * config.dryRun = true;
      *
-     * const executor = new MigrationScriptRunner<DB>(handler, config);
-     * await executor.migrate(); // No changes made, only preview
+     * const runner = new MigrationScriptRunner<DB>(handler, config);
+     * await runner.migrate(); // No changes made, only preview
      * ```
      *
      * @example
@@ -635,7 +635,7 @@ export class Config {
      * config.validateBeforeRun = true;
      *
      * // Preview changes in CI, execute in deployment
-     * await executor.migrate();
+     * await runner.migrate();
      * ```
      */
     dryRun: boolean = false

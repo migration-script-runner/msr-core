@@ -59,8 +59,8 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * Validates that the default logger parameter works correctly
          */
         it('should use default ConsoleLogger when logger not provided', () => {
-            const executorWithDefaultLogger = new MigrationScriptRunner<IDB>({ handler , config: cfg });
-            expect(executorWithDefaultLogger).to.be.instanceOf(MigrationScriptRunner);
+            const runnerWithDefaultLogger = new MigrationScriptRunner<IDB>({ handler , config: cfg });
+            expect(runnerWithDefaultLogger).to.be.instanceOf(MigrationScriptRunner);
         })
 
         /**
@@ -69,10 +69,10 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          */
         it('should use custom logger when provided', () => {
             const customLogger = new SilentLogger();
-            const executorWithCustomLogger = new MigrationScriptRunner<IDB>({ handler: handler, logger: customLogger
+            const runnerWithCustomLogger = new MigrationScriptRunner<IDB>({ handler: handler, logger: customLogger
 , config: cfg });
             // Logger should be wrapped with LevelAwareLogger for level filtering
-            expect((executorWithCustomLogger as any).output.logger).to.be.instanceOf(LevelAwareLogger);
+            expect((runnerWithCustomLogger as any).output.logger).to.be.instanceOf(LevelAwareLogger);
         })
 
         /**
@@ -85,9 +85,9 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 restore: sinon.stub().resolves(),
                 deleteBackup: sinon.stub()
             };
-            const executorWithCustomBackup = new MigrationScriptRunner<IDB>({ handler: handler, backupOrchestrator: mockBackupOrchestrator
+            const runnerWithCustomBackup = new MigrationScriptRunner<IDB>({ handler: handler, backupOrchestrator: mockBackupOrchestrator
 , config: cfg });
-            expect((executorWithCustomBackup as any).core.backup).to.equal(mockBackupOrchestrator);
+            expect((runnerWithCustomBackup as any).core.backup).to.equal(mockBackupOrchestrator);
         })
 
         /**
@@ -101,9 +101,9 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 getAllMigratedScripts: sinon.stub().resolves([]),
                 remove: sinon.stub().resolves()
             };
-            const executorWithCustomSchema = new MigrationScriptRunner<IDB>({ handler: handler, schemaVersionOrchestrator: mockSchemaVersionOrchestrator
+            const runnerWithCustomSchema = new MigrationScriptRunner<IDB>({ handler: handler, schemaVersionOrchestrator: mockSchemaVersionOrchestrator
 , config: cfg });
-            expect((executorWithCustomSchema as any).core.schemaVersion).to.equal(mockSchemaVersionOrchestrator);
+            expect((runnerWithCustomSchema as any).core.schemaVersion).to.equal(mockSchemaVersionOrchestrator);
         })
 
         /**
@@ -119,9 +119,9 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 drawIgnored: sinon.stub(),
                 drawExecuted: sinon.stub()
             };
-            const executorWithCustomRenderer = new MigrationScriptRunner<IDB>({ handler: handler, migrationRenderer: mockRenderer
+            const runnerWithCustomRenderer = new MigrationScriptRunner<IDB>({ handler: handler, migrationRenderer: mockRenderer
 , config: cfg });
-            expect((executorWithCustomRenderer as any).output.renderer).to.equal(mockRenderer);
+            expect((runnerWithCustomRenderer as any).output.renderer).to.equal(mockRenderer);
             expect(mockRenderer.drawFiglet.calledOnce).to.be.true;
         })
 
@@ -134,9 +134,9 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 findMigrationScripts: sinon.stub().resolves([]),
                 findBeforeMigrateScript: sinon.stub().resolves(undefined)
             };
-            const executorWithCustomMigration = new MigrationScriptRunner<IDB>({ handler: handler, migrationService: mockMigrationService
+            const runnerWithCustomMigration = new MigrationScriptRunner<IDB>({ handler: handler, migrationService: mockMigrationService
 , config: cfg });
-            expect((executorWithCustomMigration as any).core.migration).to.equal(mockMigrationService);
+            expect((runnerWithCustomMigration as any).core.migration).to.equal(mockMigrationService);
         })
 
         /**
@@ -153,9 +153,9 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                     executed: []
                 })
             };
-            const executorWithCustomScanner = new MigrationScriptRunner<IDB>({ handler: handler, migrationScanner: mockMigrationScanner
+            const runnerWithCustomScanner = new MigrationScriptRunner<IDB>({ handler: handler, migrationScanner: mockMigrationScanner
 , config: cfg });
-            expect((executorWithCustomScanner as any).core.scanner).to.equal(mockMigrationScanner);
+            expect((runnerWithCustomScanner as any).core.scanner).to.equal(mockMigrationScanner);
         })
 
         /**
@@ -187,7 +187,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 findBeforeMigrateScript: sinon.stub().resolves(undefined)
             };
 
-            const executorWithAllCustom = new MigrationScriptRunner<IDB>({ handler: handler, logger: customLogger,
+            const runnerWithAllCustom = new MigrationScriptRunner<IDB>({ handler: handler, logger: customLogger,
                 backupOrchestrator: mockBackupOrchestrator,
                 schemaVersionOrchestrator: mockSchemaVersionOrchestrator,
                 migrationRenderer: mockRenderer,
@@ -195,11 +195,11 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 , config: cfg });
 
             // Logger should be wrapped with LevelAwareLogger for level filtering
-            expect((executorWithAllCustom as any).output.logger).to.be.instanceOf(LevelAwareLogger);
-            expect((executorWithAllCustom as any).core.backup).to.equal(mockBackupOrchestrator);
-            expect((executorWithAllCustom as any).core.schemaVersion).to.equal(mockSchemaVersionOrchestrator);
-            expect((executorWithAllCustom as any).output.renderer).to.equal(mockRenderer);
-            expect((executorWithAllCustom as any).core.migration).to.equal(mockMigrationService);
+            expect((runnerWithAllCustom as any).output.logger).to.be.instanceOf(LevelAwareLogger);
+            expect((runnerWithAllCustom as any).core.backup).to.equal(mockBackupOrchestrator);
+            expect((runnerWithAllCustom as any).core.schemaVersion).to.equal(mockSchemaVersionOrchestrator);
+            expect((runnerWithAllCustom as any).output.renderer).to.equal(mockRenderer);
+            expect((runnerWithAllCustom as any).core.migration).to.equal(mockMigrationService);
         })
 
         /**
@@ -208,15 +208,15 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          */
         it('should auto-load config using ConfigLoader when config not provided', () => {
             // Call constructor without config parameter - should use ConfigLoader.load()
-            const executorWithAutoConfig = new MigrationScriptRunner<IDB>({ handler: handler });
+            const runnerWithAutoConfig = new MigrationScriptRunner<IDB>({ handler: handler });
 
-            // Verify executor was created successfully
-            expect(executorWithAutoConfig).to.be.instanceOf(MigrationScriptRunner);
+            // Verify runner was created successfully
+            expect(runnerWithAutoConfig).to.be.instanceOf(MigrationScriptRunner);
 
             // Verify config was loaded (should have default values from ConfigLoader)
             // Note: config is private, so we cast to any for testing
-            expect((executorWithAutoConfig as any).config).to.exist;
-            expect((executorWithAutoConfig as any).config).to.be.instanceOf(Config);
+            expect((runnerWithAutoConfig as any).config).to.exist;
+            expect((runnerWithAutoConfig as any).config).to.be.instanceOf(Config);
         })
 
     })

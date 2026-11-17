@@ -23,7 +23,7 @@ import {Config} from "../model";
  * Use `IRunnerDependencies` instead, which includes the required handler.
  *
  * **Purpose:**
- * - Public API for adapter users to configure the executor
+ * - Public API for adapter users to configure the runner
  * - Used in factory methods (sync or async)
  * - Spread into `IRunnerDependencies` after creating handler
  *
@@ -187,7 +187,7 @@ export interface IRunnerOptions<
      * @example
      * ```typescript
      * // Add Slack notifications
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     hooks: new SlackNotificationHooks(webhookUrl)
      * });
@@ -211,13 +211,13 @@ export interface IRunnerOptions<
      * @example
      * ```typescript
      * // Single collector - console output
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     metricsCollectors: [new ConsoleMetricsCollector()]
      * });
      *
      * // Multiple collectors simultaneously
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     metricsCollectors: [
      *         new ConsoleMetricsCollector(),
@@ -264,13 +264,13 @@ export interface IRunnerOptions<
      * @example
      * ```typescript
      * // Use default loaders
-     * const executor = new MigrationScriptRunner<DB>(handler);
+     * const runner = new MigrationScriptRunner<DB>(handler);
      * // Automatically uses TypeScript and SQL loaders
      *
      * // Register custom loader
      * const registry = LoaderRegistry.createDefault();
      * registry.register(new PythonLoader());
-     * const executor = new MigrationScriptRunner<DB>(handler, {
+     * const runner = new MigrationScriptRunner<DB>(handler, {
      *     loaderRegistry: registry
      * });
      *

@@ -432,7 +432,7 @@ config.checksumAlgorithm = 'md5';
 
 ```typescript
 try {
-    await executor.migrate();
+    await runner.migrate();
 } catch (error) {
     if (error instanceof ValidationError) {
         // Log to monitoring system

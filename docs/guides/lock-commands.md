@@ -363,17 +363,17 @@ For programmatic access, use the API:
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler, config });
+const runner = new MigrationScriptRunner({ handler, config });
 
 // Check lock status
-const status = await executor.getLockStatus();
+const status = await runner.getLockStatus();
 if (status?.isLocked) {
   console.log(`Lock held by: ${status.lockedBy}`);
   console.log(`Expires at: ${status.expiresAt}`);
 }
 
 // Force release lock
-await executor.forceReleaseLock();
+await runner.forceReleaseLock();
 ```
 
 See [API Documentation](/api) for details.

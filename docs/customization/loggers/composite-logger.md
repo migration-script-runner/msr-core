@@ -50,8 +50,8 @@ const logger = new CompositeLogger([
   new FileLogger({ logPath: '/var/log/migrations.log' })
 ]);
 
-const executor = new MigrationScriptRunner({ handler,  logger });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler,  logger });
+await runner.migrate();
 ```
 
 Every log message will be written to both the console and the file.
@@ -185,8 +185,8 @@ describe('Migration Tests', () => {
     // Or use SilentLogger explicitly
     const silentLogger = new CompositeLogger([new SilentLogger()]);
 
-    const executor = new MigrationScriptRunner({ handler,  logger });
-    const result = await executor.migrate();
+    const runner = new MigrationScriptRunner({ handler,  logger });
+    const result = await runner.migrate();
 
     expect(result.success).to.be.true;
   });
@@ -522,9 +522,9 @@ const createLogger = (): CompositeLogger => {
 
 // Use the logger
 const logger = createLogger();
-const executor = new MigrationScriptRunner({ handler,  logger });
+const runner = new MigrationScriptRunner({ handler,  logger });
 
-const result = await executor.migrate();
+const result = await runner.migrate();
 
 if (result.success) {
   logger.info(`✅ Migrated ${result.executed.length} scripts`);

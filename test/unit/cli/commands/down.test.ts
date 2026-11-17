@@ -12,8 +12,8 @@ interface MockDB extends IDB {
 
 describe('down command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
-    let createExecutorStub: sinon.SinonStub;
+    let mockRunner: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
+    let createRunnerStub: sinon.SinonStub;
     let consoleLogStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
     let processExitStub: sinon.SinonStub;
@@ -22,13 +22,13 @@ describe('down command', () => {
         program = new Command();
         program.exitOverride(); // Prevent actual process exit in tests
 
-        // Create mock executor
-        mockExecutor = {
+        // Create mock runner
+        mockRunner = {
             down: sinon.stub(),
         } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
-        createExecutorStub = sinon.stub().returns(mockExecutor);
+        createRunnerStub = sinon.stub().returns(mockRunner);
 
         // Stub console and process.exit
         consoleLogStub = sinon.stub(console, 'log');
@@ -36,7 +36,7 @@ describe('down command', () => {
         processExitStub = sinon.stub(process, 'exit');
 
         // Add command
-        addDownCommand(program, createExecutorStub);
+        addDownCommand(program, createRunnerStub);
     });
 
     afterEach(() => {
@@ -92,7 +92,7 @@ describe('down command', () => {
          * Validates that down() is called with parsed target version
          */
         it('should roll back to target version successfully', async () => {
-            mockExecutor.down.resolves({
+            mockRunner.down.resolves({
                 success: true,
                 executed: [
                     {timestamp: 3, name: 'migration3'},
@@ -104,9 +104,9 @@ describe('down command', () => {
 
             await program.parseAsync(['node', 'test', 'down', '202501220100']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            expect(mockExecutor.down.calledOnce).to.be.true;
-            expect(mockExecutor.down.calledWith(202501220100)).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            expect(mockRunner.down.calledOnce).to.be.true;
+            expect(mockRunner.down.calledWith(202501220100)).to.be.true;
             expect(consoleLogStub.calledWith('✓ Successfully rolled back 2 migration(s) to version 202501220100')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -116,7 +116,7 @@ describe('down command', () => {
          * Validates correct message when already at target version
          */
         it('should report zero migrations when none rolled back', async () => {
-            mockExecutor.down.resolves({
+            mockRunner.down.resolves({
                 success: true,
                 executed: [],
                 migrated: [],
@@ -134,7 +134,7 @@ describe('down command', () => {
          * Validates correct singular message for one migration
          */
         it('should handle single migration rollback', async () => {
-            mockExecutor.down.resolves({
+            mockRunner.down.resolves({
                 success: true,
                 executed: [{timestamp: 2, name: 'migration2'}] as any,
                 migrated: [],
@@ -153,7 +153,7 @@ describe('down command', () => {
          * Validates error handling when rollback fails
          */
         it('should handle rollback failure with errors', async () => {
-            mockExecutor.down.resolves({
+            mockRunner.down.resolves({
                 success: false,
                 executed: [],
                 migrated: [],
@@ -174,7 +174,7 @@ describe('down command', () => {
          * Validates error handling when errors is undefined
          */
         it('should handle rollback failure without errors array', async () => {
-            mockExecutor.down.resolves({
+            mockRunner.down.resolves({
                 success: false,
                 executed: [],
                 migrated: [],
@@ -196,16 +196,16 @@ describe('down command', () => {
 
             expect(consoleErrorStub.calledWith('Error: Invalid target version "invalid". Must be a number.')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.GENERAL_ERROR)).to.be.true;
-            expect(mockExecutor.down.called).to.be.false;
+            expect(mockRunner.down.called).to.be.false;
         });
 
         /**
          * Test: Handles exception during rollback
-         * Validates error handling when executor throws
+         * Validates error handling when runner throws
          */
         it('should handle exception during rollback', async () => {
             const error = new Error('Unexpected database error');
-            mockExecutor.down.rejects(error);
+            mockRunner.down.rejects(error);
 
             await program.parseAsync(['node', 'test', 'down', '100']);
 
@@ -215,10 +215,10 @@ describe('down command', () => {
 
         /**
          * Test: Handles non-Error exception
-         * Validates error handling when executor throws non-Error object
+         * Validates error handling when runner throws non-Error object
          */
         it('should handle non-Error exception', async () => {
-            mockExecutor.down.callsFake(async () => {
+            mockRunner.down.callsFake(async () => {
                 throw 'String error';
             });
 
@@ -235,7 +235,7 @@ describe('down command', () => {
         it('should handle Error with empty message', async () => {
             const errorWithoutMessage = new Error();
             errorWithoutMessage.message = '';
-            mockExecutor.down.rejects(errorWithoutMessage);
+            mockRunner.down.rejects(errorWithoutMessage);
 
             await program.parseAsync(['node', 'test', 'down', '100']);
 
@@ -248,7 +248,7 @@ describe('down command', () => {
          * Validates handling of non-Error thrown values
          */
         it('should handle string exception', async () => {
-            mockExecutor.down.rejects('plain string error');
+            mockRunner.down.rejects('plain string error');
 
             await program.parseAsync(['node', 'test', 'down', '100']);
 
@@ -257,25 +257,25 @@ describe('down command', () => {
         });
     });
 
-    describe('Executor creation', () => {
+    describe('Runner creation', () => {
         /**
-         * Test: Creates executor when action runs
-         * Validates that factory is called to create executor
+         * Test: Creates runner when action runs
+         * Validates that factory is called to create runner
          */
-        it('should create executor when action runs', async () => {
-            mockExecutor.down.resolves({success: true, executed: [], migrated: [], ignored: []});
+        it('should create runner when action runs', async () => {
+            mockRunner.down.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             await program.parseAsync(['node', 'test', 'down', '100']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
         });
 
         /**
-         * Test: Does not create executor before action
+         * Test: Does not create runner before action
          * Validates that factory is not called during command setup
          */
-        it('should not create executor before action', () => {
-            expect(createExecutorStub.called).to.be.false;
+        it('should not create runner before action', () => {
+            expect(createRunnerStub.called).to.be.false;
         });
     });
 
@@ -285,11 +285,11 @@ describe('down command', () => {
          * Validates that the command can be invoked using the "rollback" alias
          */
         it('should work with "rollback" alias', async () => {
-            mockExecutor.down.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.down.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             await program.parseAsync(['node', 'test', 'rollback', '100']);
 
-            expect(mockExecutor.down.calledWith(100)).to.be.true;
+            expect(mockRunner.down.calledWith(100)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
     });
@@ -300,11 +300,11 @@ describe('down command', () => {
          * Validates that 0 is accepted as valid target version
          */
         it('should handle version 0 (rollback to beginning)', async () => {
-            mockExecutor.down.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.down.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             await program.parseAsync(['node', 'test', 'down', '0']);
 
-            expect(mockExecutor.down.calledWith(0)).to.be.true;
+            expect(mockRunner.down.calledWith(0)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
 
@@ -313,11 +313,11 @@ describe('down command', () => {
          * Validates that large version numbers are accepted
          */
         it('should handle very large version numbers', async () => {
-            mockExecutor.down.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.down.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             await program.parseAsync(['node', 'test', 'down', '999999999999']);
 
-            expect(mockExecutor.down.calledWith(999999999999)).to.be.true;
+            expect(mockRunner.down.calledWith(999999999999)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
     });

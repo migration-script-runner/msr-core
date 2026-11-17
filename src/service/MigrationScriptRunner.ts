@@ -15,7 +15,7 @@ import {OutputServices} from "./facade/OutputServices";
 import {OrchestrationServices} from "./facade/OrchestrationServices";
 
 /**
- * Main executor class for running database migrations.
+ * Main runner class for running database migrations.
  *
  * Orchestrates the entire migration workflow including:
  * - Automatic configuration loading (env vars → file → defaults)
@@ -45,18 +45,18 @@ import {OrchestrationServices} from "./facade/OrchestrationServices";
  * const handler = new MyDatabaseHandler();
  *
  * // Option 1: Minimal - just handler, uses waterfall config loading (backward compatible)
- * const executor = new MigrationScriptRunner<IDB>({ handler });
+ * const runner = new MigrationScriptRunner<IDB>({ handler });
  * // Loads config from: MSR_* env vars → ./msr.config.js → defaults
  *
  * // Option 2: With explicit config (backward compatible)
  * const config = new Config();
- * const executor = new MigrationScriptRunner<IDB>({ handler, config });
+ * const runner = new MigrationScriptRunner<IDB>({ handler, config });
  *
  * // Run all pending migrations
- * await executor.up();
+ * await runner.up();
  *
  * // List all migrations
- * await executor.list();
+ * await runner.list();
  *
  * // **New in v0.8.0:** Using handler type parameter for type-safe adapters
  * interface MyHandler extends IDatabaseMigrationHandler<IDB> {
@@ -144,37 +144,37 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Minimal - just handler, uses waterfall config loading
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler
      * });
      *
      * // With explicit config (v0.7.0+)
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     config: new Config({ folder: './migrations' })
      * });
      *
      * // With custom config loader (v0.7.0+)
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     configLoader: new CustomConfigLoader()
      * });
      *
      * // With JSON output for CI/CD
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     renderStrategy: new JsonRenderStrategy()
      * });
      *
      * // With silent output for testing
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     renderStrategy: new SilentRenderStrategy(),
      *     logger: new SilentLogger()
      * });
      *
      * // With mock services for testing
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: mockHandler,
      *     config: testConfig,
      *     backupOrchestrator: mockBackupOrchestrator,
@@ -192,9 +192,9 @@ export class MigrationScriptRunner<
                 '  2. Forgetting to create handler before passing to super()\n\n' +
                 'Solutions:\n' +
                 '  • For async initialization: Use a factory method pattern:\n' +
-                '    static async getInstance(options: IRunnerOptions<DB>): Promise<MyExecutor> {\n' +
+                '    static async getInstance(options: IRunnerOptions<DB>): Promise<MyRunner> {\n' +
                 '      const handler = await MyHandler.connect(options.config);\n' +
-                '      return new MyExecutor({ handler, ...options });\n' +
+                '      return new MyRunner({ handler, ...options });\n' +
                 '    }\n\n' +
                 '  • For sync initialization: Create handler before super():\n' +
                 '    constructor(options: IRunnerOptions<DB>) {\n' +
@@ -226,7 +226,7 @@ export class MigrationScriptRunner<
     }
 
     /**
-     * Factory method for creating executor instances with async handler initialization.
+     * Factory method for creating runner instances with async handler initialization.
      *
      * Provides a standardized pattern for database adapters that require asynchronous
      * initialization (e.g., Firebase, MongoDB, PostgreSQL with connection pooling).
@@ -244,10 +244,10 @@ export class MigrationScriptRunner<
      * @template TOptions - Options type extending IRunnerOptions (allows adapter-specific options)
      *
      * @param RunnerClass - Constructor of the runner subclass
-     * @param options - Executor options (can be adapter-specific interface extending IRunnerOptions)
+     * @param options - Runner options (can be adapter-specific interface extending IRunnerOptions)
      * @param createHandler - Async factory function for creating the handler
      *
-     * @returns Promise resolving to the executor instance
+     * @returns Promise resolving to the runner instance
      *
      * @since v0.8.2
      *
@@ -311,7 +311,7 @@ export class MigrationScriptRunner<
         // Create handler using adapter-provided factory
         const handler = await createHandler(options.config as TConfig);
 
-        // Construct executor with handler and options
+        // Construct runner with handler and options
         return new RunnerClass({
             handler,
             ...options
@@ -340,13 +340,13 @@ export class MigrationScriptRunner<
      *
      * @example
      * ```typescript
-     * const executor = new MigrationScriptRunner<DB>(handler, config);
+     * const runner = new MigrationScriptRunner<DB>(handler, config);
      *
      * // Run all pending migrations
-     * const result = await executor.up();
+     * const result = await runner.up();
      *
      * // Or migrate to specific version
-     * const result = await executor.up(202501220100);
+     * const result = await runner.up(202501220100);
      *
      * if (result.success) {
      *   console.log(`Executed ${result.executed.length} migrations`);
@@ -410,8 +410,8 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Basic usage - access handler properties
-     * const executor = new MigrationScriptRunner({ handler });
-     * const h = executor.getHandler();
+     * const runner = new MigrationScriptRunner({ handler });
+     * const h = runner.getHandler();
      * console.log(`${h.getName()} v${h.getVersion()}`);
      * ```
      *
@@ -421,14 +421,14 @@ export class MigrationScriptRunner<
      * import { createCLI } from '@migration-script-runner/core';
      *
      * const program = createCLI({
-     *   createExecutor: (config) => new MigrationScriptRunner({ handler, config }),
-     *   extendCLI: (program, createExecutor) => {
+     *   createRunner: (config) => new MigrationScriptRunner({ handler, config }),
+     *   extendCLI: (program, createRunner) => {
      *     program
      *       .command('vacuum')
      *       .description('Run VACUUM ANALYZE')
      *       .action(async () => {
-     *         const executor = createExecutor();
-     *         const handler = executor.getHandler();
+     *         const runner = await createRunner();
+     *         const handler = runner.getHandler();
      *         await handler.db.query('VACUUM ANALYZE');
      *         console.log('✓ Vacuum completed');
      *       });
@@ -473,12 +473,12 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Both of these are equivalent:
-     * await executor.migrate();
-     * await executor.up();
+     * await runner.migrate();
+     * await runner.up();
      *
      * // With target version:
-     * await executor.migrate(202501220100);
-     * await executor.up(202501220100);
+     * await runner.migrate(202501220100);
+     * await runner.up(202501220100);
      * ```
      */
     public async migrate(targetVersion?: number): Promise<IMigrationResult<DB>> {
@@ -493,13 +493,13 @@ export class MigrationScriptRunner<
      *
      * @example
      * ```typescript
-     * const executor = new MigrationScriptRunner<DB>(handler);
+     * const runner = new MigrationScriptRunner<DB>(handler);
      *
      * // List all migrations
-     * await executor.list();
+     * await runner.list();
      *
      * // List only the last 10 migrations
-     * await executor.list(10);
+     * await runner.list(10);
      * ```
      */
     public async list(number = 0) {
@@ -539,7 +539,7 @@ export class MigrationScriptRunner<
      * ```typescript
      * // In CI/CD pipeline
      * try {
-     *   await executor.validate();
+     *   await runner.validate();
      *   console.log('✓ All migrations are valid');
      * } catch (error) {
      *   console.error('❌ Migration validation failed:', error.message);
@@ -550,7 +550,7 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Pre-deployment validation
-     * const results = await executor.validate();
+     * const results = await runner.validate();
      * console.log(`Validated ${results.pending.length} pending and ${results.migrated.length} executed migrations`);
      * ```
      */
@@ -585,13 +585,13 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Manual backup workflow
-     * const backupPath = await executor.createBackup();
+     * const backupPath = await runner.createBackup();
      * console.log(`Backup created: ${backupPath}`);
      *
      * try {
-     *   await executor.migrate();
+     *   await runner.migrate();
      * } catch (error) {
-     *   await executor.restoreFromBackup(backupPath);
+     *   await runner.restoreFromBackup(backupPath);
      * }
      * ```
      */
@@ -610,10 +610,10 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Restore from specific backup
-     * await executor.restoreFromBackup('./backups/backup-2025-01-22.bkp');
+     * await runner.restoreFromBackup('./backups/backup-2025-01-22.bkp');
      *
      * // Restore from most recent backup (created by createBackup())
-     * await executor.restoreFromBackup();
+     * await runner.restoreFromBackup();
      * ```
      */
     public async restoreFromBackup(backupPath?: string): Promise<void> {
@@ -630,9 +630,9 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Manual cleanup after successful migration
-     * const backupPath = await executor.createBackup();
-     * await executor.migrate();
-     * executor.deleteBackup();
+     * const backupPath = await runner.createBackup();
+     * await runner.migrate();
+     * runner.deleteBackup();
      * ```
      */
     public deleteBackup(): void {
@@ -654,7 +654,7 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Roll back to a specific version
-     * const result = await executor.down(202501220100);
+     * const result = await runner.down(202501220100);
      * console.log(`Rolled back ${result.executed.length} migrations to version 202501220100`);
      * ```
      *
@@ -662,7 +662,7 @@ export class MigrationScriptRunner<
      * ```typescript
      * // Emergency rollback in production
      * try {
-     *   await executor.down(202501220100);
+     *   await runner.down(202501220100);
      *   console.log('✓ Database rolled back to version 202501220100');
      * } catch (error) {
      *   console.error('Rollback failed:', error);
@@ -679,7 +679,7 @@ export class MigrationScriptRunner<
      *
      * Returns information about the current lock holder, including:
      * - Whether a lock is currently held
-     * - Executor ID of the lock holder
+     * - Runner ID of the lock holder
      * - When the lock was acquired
      * - When the lock will expire
      *
@@ -687,7 +687,7 @@ export class MigrationScriptRunner<
      *
      * @example
      * ```typescript
-     * const status = await executor.getLockStatus();
+     * const status = await runner.getLockStatus();
      * if (status?.isLocked) {
      *   console.log(`Lock held by: ${status.lockedBy}`);
      *   console.log(`Acquired at: ${status.lockedAt}`);
@@ -728,11 +728,11 @@ export class MigrationScriptRunner<
      * @example
      * ```typescript
      * // Check status first
-     * const status = await executor.getLockStatus();
+     * const status = await runner.getLockStatus();
      * if (status?.isLocked) {
      *   console.log(`Warning: Lock held by ${status.lockedBy}`);
      *   // Only proceed if you're sure it's safe
-     *   await executor.forceReleaseLock();
+     *   await runner.forceReleaseLock();
      *   console.log('Lock forcibly released');
      * }
      * ```

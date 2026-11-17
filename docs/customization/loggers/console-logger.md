@@ -49,11 +49,11 @@ await service.readMigrationScripts(config);
 ```typescript
 import { MigrationScriptRunner, ConsoleLogger } from 'msr-core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger: new ConsoleLogger()
 });
 
-await executor.executeMigration(script, context);
+await runner.executeMigration(script, context);
 // Output: [INFO] Executing migration V202311020036_add_users_table.ts
 ```
 

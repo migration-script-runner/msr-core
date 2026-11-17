@@ -63,12 +63,12 @@ class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
   }
 }
 
-// Create CLI with async executor
+// Create CLI with async runner
 const program = createCLI({
   name: 'msr-mongodb',
   description: 'MongoDB Migration Runner',
   version: '1.0.0',
-  createExecutor: async (config) => {
+  createRunner: async (config) => {
     return MongoRunner.getInstance({config});
   }
 });
@@ -92,15 +92,15 @@ import {MongoRunner} from './MongoRunner';
 
 const program = createCLI({
   name: 'msr-mongodb',
-  createExecutor: async (config) => MongoRunner.getInstance({config}),
+  createRunner: async (config) => MongoRunner.getInstance({config}),
 
   // Add custom commands with full type safety
-  extendCLI: (program, createExecutor) => {
+  extendCLI: (program, createRunner) => {
     program
       .command('mongo:stats')
       .description('Show database statistics')
       .action(async () => {
-        const adapter = await createExecutor(); // ✓ Typed as MongoRunner!
+        const adapter = await createRunner(); // ✓ Typed as MongoRunner!
         const stats = await adapter.getHandler().getStats(); // ✓ Type-safe!
         console.table(stats);
         process.exit(0);
@@ -121,7 +121,7 @@ import {SimpleHandler} from './SimpleHandler';
 
 const program = createCLI({
   name: 'msr-simple',
-  createExecutor: (config) => {
+  createRunner: (config) => {
     const handler = new SimpleHandler();  // Synchronous
     return new MigrationScriptRunner({handler, config});
   }
@@ -180,7 +180,7 @@ class MyRunner extends MigrationScriptRunner<IDB, MyHandler, AppConfig> {
   }
 }
 
-// 3. Pass config instance to executor
+// 3. Pass config instance to runner
 const config = new AppConfig();
 config.databaseUrl = 'https://my-db.example.com';
 config.connectionPoolSize = 20;
@@ -208,7 +208,7 @@ class FirebaseConfig extends Config {
 const program = createCLI<IDB, MyHandler, FirebaseConfig>({
   name: 'msr-firebase',
   version: '1.0.0',
-  createExecutor: (config: FirebaseConfig) => {
+  createRunner: (config: FirebaseConfig) => {
     // config is typed as FirebaseConfig
     const handler = new MyHandler({
       databaseUrl: config.databaseUrl,
@@ -283,7 +283,7 @@ class FirebaseConfigLoader implements IConfigLoader<FirebaseConfig> {
   }
 }
 
-// Use custom loader in executor
+// Use custom loader in runner
 const adapter = new MyRunner({
   handler: new MyHandler(),
   configLoader: new FirebaseConfigLoader()  // Custom loader
@@ -396,7 +396,7 @@ The `createCLI()` function accepts a `CLIOptions` object:
 
 ### Required Options
 
-#### `createExecutor`
+#### `createRunner`
 
 Factory function that receives the final merged configuration and returns a `MigrationScriptRunner` instance (your adapter).
 
@@ -404,7 +404,7 @@ Factory function that receives the final merged configuration and returns a `Mig
 
 **Example**:
 ```typescript
-createExecutor: (config) => {
+createRunner: (config) => {
   // Initialize your database handler with the merged config
   const handler = new PostgresHandler({
     connectionString: config.postgresUri,
@@ -475,7 +475,7 @@ const customLoader = new ConfigLoader<Config>();
 // Customize loader as needed
 
 const program = createCLI({
-  createExecutor: (config) => new MyRunner({config}),
+  createRunner: (config) => new MyRunner({config}),
   configLoader: customLoader,
 });
 ```
@@ -484,7 +484,7 @@ const program = createCLI({
 
 Optional callback to add custom commands with full type safety. Called after base commands are registered.
 
-**Type**: `(program: Command, createExecutor: () => TRunner) => void`
+**Type**: `(program: Command, createRunner: () => TRunner) => void`
 
 **Benefits**:
 - ✅ Full TypeScript type inference - no casting needed
@@ -511,14 +511,14 @@ class PostgresRunner extends MigrationScriptRunner<IPostgresDB, PostgresHandler>
 }
 
 const program = createCLI({
-  createExecutor: (config) => new PostgresRunner({handler, config}),
+  createRunner: (config) => new PostgresRunner({handler, config}),
 
-  extendCLI: (program, createExecutor) => {
+  extendCLI: (program, createRunner) => {
     program
       .command('vacuum')
       .description('Run VACUUM ANALYZE')
       .action(async () => {
-        const adapter = createExecutor(); // ✓ Typed as PostgresRunner!
+        const adapter = await createRunner(); // ✓ Typed as PostgresRunner!
         await adapter.vacuum(); // ✓ TypeScript knows about vacuum()
         console.log('✓ Vacuum completed');
         process.exit(0);
@@ -528,7 +528,7 @@ const program = createCLI({
       .command('connection-info')
       .description('Display connection information')
       .action(async () => {
-        const adapter = createExecutor();
+        const adapter = await createRunner();
         const info = adapter.getConnectionInfo(); // ✓ Full type safety
         console.log(`Host: ${info.host}:${info.port}`);
         process.exit(0);
@@ -541,7 +541,7 @@ const program = createCLI({
 > **v0.8.0+**: Use the second generic parameter (`THandler`) for type-safe handler access in your adapter. This eliminates the need for casting and provides full IDE autocomplete for handler-specific properties.
 
 {: .note }
-> The `createExecutor` function passed to `extendCLI` returns your adapter with the exact type you specified, enabling full IntelliSense and compile-time checking.
+> The `createRunner` function passed to `extendCLI` returns your adapter with the exact type you specified, enabling full IntelliSense and compile-time checking.
 
 #### `addCustomOptions` & `extendFlags` (NEW in v0.8.3)
 
@@ -590,7 +590,7 @@ const program = createCLI({
     }
   },
 
-  createExecutor: async (config) => {
+  createRunner: async (config) => {
     // config now contains databaseUrl, applicationCredentials, and connectionTimeout
     return FirebaseRunner.getInstance({ config });
   }
@@ -634,7 +634,7 @@ const program = createCLI({
     }
   },
 
-  createExecutor: (config) => new MongoRunner({ config })
+  createRunner: (config) => new MongoRunner({ config })
 });
 ```
 
@@ -823,17 +823,17 @@ class PostgresRunner extends MigrationScriptRunner<IPostgresDB> {
 
 const program = createCLI({
   name: 'msr-postgres',
-  createExecutor: (config) => new PostgresRunner({handler, config}),
+  createRunner: (config) => new PostgresRunner({handler, config}),
 
   // Add custom commands with full type safety
-  extendCLI: (program, createExecutor) => {
+  extendCLI: (program, createRunner) => {
     program
       .command('vacuum')
       .description('Run VACUUM on database')
       .option('--full', 'Run VACUUM FULL')
       .option('--analyze', 'Run VACUUM ANALYZE')
       .action(async (options) => {
-        const adapter = createExecutor(); // ✓ Typed as PostgresRunner!
+        const adapter = await createRunner(); // ✓ Typed as PostgresRunner!
         await adapter.vacuum(options); // ✓ TypeScript knows about vacuum()
         console.log('✓ VACUUM completed');
         process.exit(0);
@@ -843,7 +843,7 @@ const program = createCLI({
       .command('stats')
       .description('Show database statistics')
       .action(async () => {
-        const adapter = createExecutor(); // Config already merged
+        const adapter = await createRunner(); // Config already merged
         const stats = await adapter.getStats();
         console.table(stats);
         process.exit(0);
@@ -856,9 +856,9 @@ program.parse(process.argv);
 
 **Benefits of `extendCLI`:**
 - ✅ **Full type safety** - No type casting needed, TypeScript infers your adapter type
-- ✅ **Config merging** - `createExecutor()` already has CLI flags merged
+- ✅ **Config merging** - `createRunner()` already has CLI flags merged
 - ✅ **Clean API** - All custom commands in one place
-- ✅ **Reusability** - `createExecutor` function handles all config loading
+- ✅ **Reusability** - `createRunner` function handles all config loading
 
 ### Alternative: Manual Command Registration
 
@@ -867,7 +867,7 @@ You can also add commands to the returned program manually, but you'll need to h
 ```typescript
 const program = createCLI({
   name: 'msr-postgres',
-  createExecutor: (config) => new PostgresRunner({handler, config}),
+  createRunner: (config) => new PostgresRunner({handler, config}),
 });
 
 // Manually add command after createCLI
@@ -909,14 +909,14 @@ class PostgresRunner extends MigrationScriptRunner<IPostgresDB, PostgresHandler>
 
 const program = createCLI({
   name: 'msr-postgres',
-  createExecutor: (config) => new PostgresRunner({handler: postgresHandler, config}),
+  createRunner: (config) => new PostgresRunner({handler: postgresHandler, config}),
 
-  extendCLI: (program, createExecutor) => {
+  extendCLI: (program, createRunner) => {
     program
       .command('vacuum')
       .description('Run VACUUM ANALYZE')
       .action(async () => {
-        const adapter = createExecutor();
+        const adapter = await createRunner();
         const handler = adapter.getHandler(); // ✓ Typed as PostgresHandler!
 
         // Direct database operation without adapter method
@@ -929,7 +929,7 @@ const program = createCLI({
       .command('connection-info')
       .description('Display database connection details')
       .action(async () => {
-        const adapter = createExecutor();
+        const adapter = await createRunner();
         const handler = adapter.getHandler();
 
         // Access handler properties with full type safety
@@ -944,7 +944,7 @@ const program = createCLI({
       .command('query <sql>')
       .description('Execute a raw SQL query')
       .action(async (sql: string) => {
-        const adapter = createExecutor();
+        const adapter = await createRunner();
         const handler = adapter.getHandler();
 
         try {
@@ -996,11 +996,11 @@ class PostgresRunner extends MigrationScriptRunner<IPostgresDB, PostgresHandler>
 }
 
 // Approach 2: Using getHandler() (better for simple CLI operations)
-extendCLI: (program, createExecutor) => {
+extendCLI: (program, createRunner) => {
   program
     .command('vacuum')
     .action(async () => {
-      const adapter = createExecutor();
+      const adapter = await createRunner();
       const handler = adapter.getHandler();
 
       // Direct operation - no adapter method needed
@@ -1056,7 +1056,7 @@ export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseH
 
     static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
         return MigrationScriptRunner.createInstance(
-            FirebaseRunner,                                    // Executor class
+            FirebaseRunner,                                    // Runner class
             options,                                           // Options (IRunnerOptions or extension)
             (config) => FirebaseHandler.getInstance(config)    // Handler factory function
         );
@@ -1072,7 +1072,7 @@ export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseH
 
 ### Type Parameters
 
-The `createInstance` method supports all executor generics:
+The `createInstance` method supports all runner generics:
 
 ```typescript
 protected static async createInstance<
@@ -1206,7 +1206,7 @@ static async getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
 
 ### CLI Integration
 
-Use the factory method with async executor support (v0.8.2) and custom config type (v0.8.4):
+Use the factory method with async runner support (v0.8.2) and custom config type (v0.8.4):
 
 ```typescript
 import {createCLI} from '@migration-script-runner/core';
@@ -1236,7 +1236,7 @@ const program = createCLI<IFirebaseDB, FirebaseRunner, FirebaseConfig>({
     },
 
     // ✅ config is typed as FirebaseConfig - no casting needed!
-    createExecutor: async (config) => {
+    createRunner: async (config) => {
         return FirebaseRunner.getInstance({ config });
     }
 });
@@ -1247,7 +1247,7 @@ program.parse(process.argv);
 **Before v0.8.4 (required type casting):**
 ```typescript
 const program = createCLI({
-    createExecutor: async (config) => {
+    createRunner: async (config) => {
         // ❌ Required cast because config was typed as base Config
         return FirebaseRunner.getInstance({
             config: config as FirebaseConfig
@@ -1260,7 +1260,7 @@ const program = createCLI({
 ```typescript
 // ✅ Third generic parameter provides type safety
 const program = createCLI<IFirebaseDB, FirebaseRunner, FirebaseConfig>({
-    createExecutor: async (config) => {
+    createRunner: async (config) => {
         // ✅ config is automatically typed as FirebaseConfig!
         return FirebaseRunner.getInstance({ config });
     }
@@ -1387,18 +1387,18 @@ const program = createCLI<MongoDBInterface, MongoRunner>({
   },
 
   // Async factory using getInstance (v0.8.2+)
-  createExecutor: async (config) => {
+  createRunner: async (config) => {
     return MongoRunner.getInstance({config});
   },
 
   // Add MongoDB-specific commands with full type safety
-  extendCLI: (program, createExecutor) => {
+  extendCLI: (program, createRunner) => {
     program
       .command('mongo:indexes')
       .description('Show all indexes in database')
       .action(async () => {
         try {
-          const adapter = await createExecutor(); // ✓ Typed as MongoRunner!
+          const adapter = await createRunner(); // ✓ Typed as MongoRunner!
           const indexes = await adapter.getIndexes(); // ✓ TypeScript knows this method!
 
           for (const {collection, indexes: collIndexes} of indexes) {
@@ -1418,7 +1418,7 @@ const program = createCLI<MongoDBInterface, MongoRunner>({
       .description('List all collections')
       .action(async () => {
         try {
-          const adapter = await createExecutor(); // ✓ Async executor support!
+          const adapter = await createRunner(); // ✓ Async runner support!
           const collections = await adapter.getCollections();
           console.table(collections);
           process.exit(0);
@@ -1481,7 +1481,7 @@ The CLI automatically handles errors and exits with appropriate exit codes:
 
 ```typescript
 const program = createCLI({
-  createExecutor: (config) => new MyRunner({config}),
+  createRunner: (config) => new MyRunner({config}),
 });
 
 // Add custom error handling
@@ -1499,7 +1499,7 @@ program.parse(process.argv);
 
 ### Unit Testing
 
-Test your CLI by mocking the executor:
+Test your CLI by mocking the runner:
 
 ```typescript
 import {expect} from 'chai';
@@ -1508,10 +1508,10 @@ import {createCLI} from '@migration-script-runner/core';
 
 describe('CLI', () => {
   it('should create program with custom commands', () => {
-    const createExecutorStub = sinon.stub();
+    const createRunnerStub = sinon.stub();
 
     const program = createCLI({
-      createExecutor: createExecutorStub,
+      createRunner: createRunnerStub,
     });
 
     program.command('custom').action(() => {});
@@ -1531,19 +1531,19 @@ import {createCLI} from '@migration-script-runner/core';
 
 describe('CLI Integration', () => {
   it('should execute migrate command', async () => {
-    const mockExecutor = {
+    const mockRunner = {
       migrate: sinon.stub().resolves({success: true, executed: []}),
     };
 
     const program = createCLI({
-      createExecutor: () => mockExecutor as any,
+      createRunner: () => mockRunner as any,
     });
 
     program.exitOverride(); // Prevent process.exit in tests
 
     await program.parseAsync(['node', 'test', 'migrate']);
 
-    expect(mockExecutor.migrate.calledOnce).to.be.true;
+    expect(mockRunner.migrate.calledOnce).to.be.true;
   });
 });
 ```
@@ -1552,7 +1552,7 @@ describe('CLI Integration', () => {
 
 ## Best Practices
 
-1. **Initialize Handlers in createExecutor**: Use the config parameter to initialize your database handler with the correct settings.
+1. **Initialize Handlers in createRunner**: Use the config parameter to initialize your database handler with the correct settings.
 
 2. **Provide Sensible Defaults**: Use the `config` option to set default values for your adapter.
 
@@ -1739,13 +1739,13 @@ See [Async Adapter Initialization](#async-adapter-initialization-v082) for detai
 ```typescript
 const program = createCLI<IDB, MyRunner>({
     name: 'my-cli',
-    createExecutor: async (config) => MyRunner.getInstance({ config }),
+    createRunner: async (config) => MyRunner.getInstance({ config }),
 
-    extendCLI: (program, createExecutor) => {
+    extendCLI: (program, createRunner) => {
         program
             .command('custom:command')
             .action(async () => {
-                const adapter = await createExecutor();  // ✅ Typed!
+                const adapter = await createRunner();  // ✅ Typed!
                 const handler = adapter.getHandler();    // ✅ Access handler
                 // Your custom logic
             });

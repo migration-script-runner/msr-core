@@ -9,7 +9,7 @@ import {IDB} from '../../interface';
  * Displays the current migration lock status including who holds it and when it expires.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptRunner
+ * @param createRunner - Factory function to create MigrationScriptRunner
  *
  * @example
  * ```bash
@@ -22,15 +22,15 @@ import {IDB} from '../../interface';
  */
 export function addLockStatusCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptRunner<DB>>
+    createRunner: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     program
         .command('lock:status')
         .description('Display current migration lock status')
         .action(async () => {
             try {
-                const executor = await createExecutor();
-                const status = await executor.getLockStatus();
+                const runner = await createRunner();
+                const status = await runner.getLockStatus();
 
                 if (!status) {
                     console.log('\nLock Status: NOT CONFIGURED');

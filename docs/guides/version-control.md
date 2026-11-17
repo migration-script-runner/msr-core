@@ -52,11 +52,11 @@ import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 // Migrate to specific version
 const targetVersion = 202501220300;
-const result = await executor.up(targetVersion);
+const result = await runner.up(targetVersion);
 
 if (result.success) {
   console.log(`✅ Database migrated to version ${targetVersion}`);
@@ -82,7 +82,7 @@ If the database is already at or beyond the target version, `up()` returns early
 
 ```typescript
 // Database already at version 202501220300 or higher
-const result = await executor.up(202501220300);
+const result = await runner.up(202501220300);
 
 console.log(result.executed.length); // 0 - no migrations executed
 console.log(result.success);         // true
@@ -99,7 +99,7 @@ The `down(targetVersion)` method rolls back migrations newer than the target ver
 ```typescript
 // Roll back to version 202501220100
 const targetVersion = 202501220100;
-const result = await executor.down(targetVersion);
+const result = await runner.down(targetVersion);
 
 if (result.success) {
   console.log(`✅ Rolled back to version ${targetVersion}`);
@@ -161,14 +161,14 @@ Deploy migrations in controlled batches with monitoring between stages:
 
 ```typescript
 // Week 1: Deploy first batch
-const result1 = await executor.up(202501220300);
+const result1 = await runner.up(202501220300);
 console.log(`Deployed ${result1.executed.length} migrations`);
 
 // Monitor for issues, collect metrics
 await monitorForWeek();
 
 // Week 2: Deploy second batch
-const result2 = await executor.up(202501290500);
+const result2 = await runner.up(202501290500);
 console.log(`Deployed ${result2.executed.length} more migrations`);
 ```
 
@@ -181,7 +181,7 @@ Quickly rollback to a known-good version when issues are detected:
 // Issue detected in latest migrations
 // Roll back to previous stable version
 
-const result = await executor.down(202501220300);
+const result = await runner.down(202501220300);
 
 if (result.success) {
   console.log('✅ Emergency rollback complete');
@@ -198,7 +198,7 @@ Test migrations up to specific versions before full deployment:
 
 ```typescript
 // Test environment: apply migrations up to version under test
-await executor.up(202501220300);
+await runner.up(202501220300);
 
 // Run integration tests
 const testResults = await runIntegrationTests();
@@ -207,7 +207,7 @@ if (testResults.pass) {
   console.log('✅ Tests passed - safe to deploy to production');
 } else {
   // Roll back and fix issues
-  await executor.down(0);
+  await runner.down(0);
   console.log('❌ Tests failed - migrations rolled back');
 }
 ```
@@ -218,7 +218,7 @@ Maintain version parity between blue and green environments:
 
 ```typescript
 // Green environment (new version)
-await greenExecutor.up(202501290500);
+await greenRunner.up(202501290500);
 
 // Verify green is healthy
 if (await verifyGreenEnvironment()) {
@@ -226,11 +226,11 @@ if (await verifyGreenEnvironment()) {
   await switchTraffic('green');
 
   // Upgrade blue to match
-  await blueExecutor.up(202501290500);
+  await blueRunner.up(202501290500);
 } else {
   // Rollback green to match blue
   const blueVersion = await getBlueVersion();
-  await greenExecutor.downTo(blueVersion);
+  await greenRunner.downTo(blueVersion);
 }
 ```
 
@@ -240,10 +240,10 @@ Verify migrations are properly reversible:
 
 ```typescript
 // Start from clean state
-await executor.down(0);
+await runner.down(0);
 
 // Apply migrations
-const upResult = await executor.up(202501220300);
+const upResult = await runner.up(202501220300);
 console.log(`Applied ${upResult.executed.length} migrations`);
 
 // Verify database state
@@ -251,7 +251,7 @@ const stateAfterUp = await captureDatabaseState();
 expect(stateAfterUp).toMatchSnapshot();
 
 // Roll back
-const downResult = await executor.down(0);
+const downResult = await runner.down(0);
 console.log(`Rolled back ${downResult.executed.length} migrations`);
 
 // Verify clean state
@@ -267,7 +267,7 @@ To roll back all migrations and return to an empty database, use version 0:
 
 ```typescript
 // Rollback everything
-const result = await executor.down(0);
+const result = await runner.down(0);
 
 if (result.success) {
   console.log('✅ All migrations rolled back');
@@ -296,7 +296,7 @@ Version control methods work seamlessly with MSR's rollback strategies:
 config.rollbackStrategy = RollbackStrategy.BACKUP;
 
 // up() creates backup before execution
-const result = await executor.up(202501220300);
+const result = await runner.up(202501220300);
 
 // If any migration fails, database is restored from backup
 // Executed migrations are rolled back automatically
@@ -308,7 +308,7 @@ const result = await executor.up(202501220300);
 config.rollbackStrategy = RollbackStrategy.DOWN;
 
 // up() does not create backup
-const result = await executor.up(202501220300);
+const result = await runner.up(202501220300);
 
 // If any migration fails, down() methods are called in reverse
 // No backup file is created or restored
@@ -320,7 +320,7 @@ const result = await executor.up(202501220300);
 config.rollbackStrategy = RollbackStrategy.BOTH;
 
 // up() creates backup before execution
-const result = await executor.up(202501220300);
+const result = await runner.up(202501220300);
 
 // If migration fails:
 // 1. First tries down() methods in reverse
@@ -355,7 +355,7 @@ This immediate save pattern prevents inconsistencies where the migration trackin
 If a migration fails during `up()`, the behavior depends on the rollback strategy:
 
 ```typescript
-const result = await executor.up(202501220300);
+const result = await runner.up(202501220300);
 
 if (!result.success) {
   console.error('Migration failed:', result.errors);
@@ -374,7 +374,7 @@ If a migration's `down()` method fails during `down()`, the rollback stops:
 
 ```typescript
 try {
-  const result = await executor.down(202501220100);
+  const result = await runner.down(202501220100);
 } catch (error) {
   console.error('Rollback failed:', error);
 
@@ -431,11 +431,11 @@ Verify migrations can be applied and rolled back:
 describe('Migration V202501220100', () => {
   it('should apply and rollback correctly', async () => {
     // Apply
-    await executor.up(202501220100);
+    await runner.up(202501220100);
     expect(await tableExists('users')).toBe(true);
 
     // Rollback
-    await executor.down(0);
+    await runner.down(0);
     expect(await tableExists('users')).toBe(false);
   });
 });
@@ -450,11 +450,11 @@ Integrate version control with your deployment pipeline:
 const targetVersion = parseInt(process.env.TARGET_VERSION || '0');
 
 if (targetVersion > 0) {
-  const result = await executor.up(targetVersion);
+  const result = await runner.up(targetVersion);
   process.exit(result.success ? 0 : 1);
 } else {
   // No target specified - run all pending migrations
-  const result = await executor.migrate();
+  const result = await runner.migrate();
   process.exit(result.success ? 0 : 1);
 }
 ```

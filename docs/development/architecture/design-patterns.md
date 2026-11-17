@@ -183,7 +183,7 @@ classDiagram
         +renderMigrated(scripts) void
     }
 
-    %% Main executor uses facades (v0.7.0 Facade Pattern)
+    %% Main runner uses facades (v0.7.0 Facade Pattern)
     MigrationScriptRunner *-- CoreServices : contains
     MigrationScriptRunner *-- ExecutionServices : contains
     MigrationScriptRunner *-- OutputServices : contains
@@ -285,7 +285,7 @@ class MigrationScriptRunner {
 
 ```typescript
 // ✅ PUBLIC - Users can inject service implementations via dependencies:
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
     handler,
     logger: customLogger,           // Injected service
     backupOrchestrator: customBackup,    // Injected service
@@ -293,12 +293,12 @@ const executor = new MigrationScriptRunner({
 });
 
 // ❌ NOT EXPOSED - Services grouped in protected facades (v0.7.0):
-// executor.backupOrchestrator         // REMOVED in v0.7.0
-// executor.migrationScanner      // REMOVED in v0.7.0
-// executor.validationService     // REMOVED in v0.7.0
+// runner.backupOrchestrator         // REMOVED in v0.7.0
+// runner.migrationScanner      // REMOVED in v0.7.0
+// runner.validationService     // REMOVED in v0.7.0
 
 // ✅ ADAPTERS - Can extend and access protected facades:
-class CustomExecutor extends MigrationScriptRunner {
+class CustomRunner extends MigrationScriptRunner {
     async customOperation() {
         const scripts = await this.core.scanner.scan();      // Protected access
         this.output.logger.info('Custom operation');         // Protected access
@@ -310,7 +310,7 @@ class CustomExecutor extends MigrationScriptRunner {
 **Benefits:**
 - **Better Encapsulation**: Services not exposed as public API
 - **Adapter Extensibility**: Protected facades allow adapter customization
-- **v0.7.0 Breaking Change**: Direct service access removed (e.g., `executor.backupOrchestrator` no longer works)
+- **v0.7.0 Breaking Change**: Direct service access removed (e.g., `runner.backupOrchestrator` no longer works)
 - **Workflow Ownership**: `executeBeforeMigrate()` now owned by `MigrationWorkflowOrchestrator` (eliminates circular dependency)
 
 This design keeps the public API minimal while enabling adapter extensibility through protected facades.
@@ -384,7 +384,7 @@ export class ExecutionServices<DB extends IDB> {
     ) {}
 }
 
-// Executor uses facades (protected for adapter extensibility)
+// Runner uses facades (protected for adapter extensibility)
 export class MigrationScriptRunner<DB extends IDB> {
     protected readonly core: CoreServices<DB>;
     protected readonly execution: ExecutionServices<DB>;
@@ -427,7 +427,7 @@ export class MigrationScriptRunner<DB extends IDB> {
 Facades are **protected** (not private) to allow adapters to extend MigrationScriptRunner and access internal services:
 
 ```typescript
-export class CustomMigrationExecutor<DB extends IDB> extends MigrationScriptRunner<DB> {
+export class CustomMigrationRunner<DB extends IDB> extends MigrationScriptRunner<DB> {
     public async migrateWithMetrics(): Promise<IMigrationResult<DB>> {
         // Access facade services
         const scripts = await this.core.scanner.scan();
@@ -446,7 +446,7 @@ export class CustomMigrationExecutor<DB extends IDB> extends MigrationScriptRunn
 
 ## Factory Pattern
 
-**New in v0.7.0:** MSR uses the **Factory Pattern** to extract service initialization logic from the executor constructor into a dedicated factory function.
+**New in v0.7.0:** MSR uses the **Factory Pattern** to extract service initialization logic from the runner constructor into a dedicated factory function.
 
 ### Pattern Overview
 
@@ -478,7 +478,7 @@ createMigrationServices() Factory
 │
 └── Build OrchestrationServices facade
     ├── Create error handler
-    ├── Create hook executor
+    ├── Create hook runner
     ├── Create validation orchestrator
     ├── Create reporting orchestrator
     ├── Create rollback manager
@@ -490,7 +490,7 @@ createMigrationServices() Factory
 1. **Separation of Concerns**: Construction logic separate from business logic
 2. **Testability**: Factory can be tested independently
 3. **Maintainability**: Changes to initialization in one place
-4. **Reduced Constructor Complexity**: Executor constructor delegates to factory
+4. **Reduced Constructor Complexity**: Runner constructor delegates to factory
 5. **Reusability**: Factory logic can be reused in testing
 
 ### Implementation
@@ -539,7 +539,7 @@ export function createMigrationServices<DB extends IDB>(
 }
 ```
 
-**Simplified Executor Constructor:**
+**Simplified Runner Constructor:**
 ```typescript
 export class MigrationScriptRunner<DB extends IDB> {
     constructor(dependencies: IRunnerDependencies<DB>) {
@@ -707,7 +707,7 @@ The Facade and Factory patterns work together:
 
 1. **Factory creates facades**: `createMigrationServices()` builds all 4 facades
 2. **Facades group services**: Each facade contains related services
-3. **Executor consumes facades**: MigrationScriptRunner stores 4 facades instead of 21+ services
+3. **Runner consumes facades**: MigrationScriptRunner stores 4 facades instead of 21+ services
 4. **Protected access for adapters**: Facades are protected for extensibility
 
 **Result**: Clean, maintainable architecture with clear separation of concerns.
@@ -726,11 +726,11 @@ MSR supports optional dependency injection for all services, enabling:
 ```typescript
 // Default (uses built-in dependencies)
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 // Uses: ConsoleLogger, BackupOrchestrator, SchemaVersionOrchestrator, etc.
 
 // Custom dependencies
-const executor2 = new MigrationScriptRunner({ handler,
+const runner2 = new MigrationScriptRunner({ handler,
     logger: new SilentLogger(),          // Custom logger
     backupOrchestrator: new S3BackupOrchestrator(), // Custom backup
     renderStrategy: new JsonRenderStrategy()  // Custom render strategy
@@ -743,41 +743,41 @@ This diagram shows the dependency injection hierarchy and how services are compo
 
 ```mermaid
 graph TD
-    Executor[MigrationScriptRunner]
+    Runner[MigrationScriptRunner]
 
-    Executor --> Logger[ILogger<br/>default: ConsoleLogger]
+    Runner --> Logger[ILogger<br/>default: ConsoleLogger]
 
-    Executor --> Backup[IBackupOrchestrator<br/>default: BackupOrchestrator]
+    Runner --> Backup[IBackupOrchestrator<br/>default: BackupOrchestrator]
     Backup --> Logger2[ILogger]
 
-    Executor --> Schema[ISchemaVersionOrchestrator<br/>default: SchemaVersionOrchestrator]
+    Runner --> Schema[ISchemaVersionOrchestrator<br/>default: SchemaVersionOrchestrator]
     Schema --> DAO[ISchemaVersionDAO<br/>from handler]
 
-    Executor --> Migration[IMigrationService<br/>default: MigrationService]
+    Runner --> Migration[IMigrationService<br/>default: MigrationService]
     Migration --> Logger3[ILogger]
 
-    Executor --> Renderer[IMigrationRenderer<br/>default: MigrationRenderer]
+    Runner --> Renderer[IMigrationRenderer<br/>default: MigrationRenderer]
     Renderer --> Strategy[IRenderStrategy<br/>default: AsciiTableRenderStrategy]
     Strategy --> Logger4[ILogger]
 
-    Executor --> Scanner[IMigrationScanner<br/>default: MigrationScanner]
+    Runner --> Scanner[IMigrationScanner<br/>default: MigrationScanner]
     Scanner --> Migration2[IMigrationService]
     Scanner --> Schema2[ISchemaVersionOrchestrator]
     Scanner --> Selector[MigrationScriptSelector]
     Scanner --> Handler[IDatabaseMigrationHandler]
 
-    Executor --> Selector2[MigrationScriptSelector<br/>always created]
+    Runner --> Selector2[MigrationScriptSelector<br/>always created]
     Selector2 --> Stateless[stateless, no dependencies]
 
-    Executor --> Runner[MigrationRunner<br/>always created]
+    Runner --> Runner[MigrationRunner<br/>always created]
     Runner --> Handler2[IDatabaseMigrationHandler]
     Runner --> Schema3[ISchemaVersionOrchestrator]
     Runner --> Logger5[ILogger]
 
-    Executor --> Rollback[RollbackService<br/>always created]
+    Runner --> Rollback[RollbackService<br/>always created]
     Rollback --> Backup2[BackupOrchestrator]
 
-    style Executor fill:#fff3cd
+    style Runner fill:#fff3cd
     style Logger fill:#d4edda
     style Backup fill:#d4edda
     style Schema fill:#d4edda
@@ -835,7 +835,7 @@ class CloudLogger implements ILogger {
     // ... implement other methods
 }
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger: new CloudLogger()
 });
 ```
@@ -853,7 +853,7 @@ class S3BackupOrchestrator implements IBackupOrchestrator {
     // ... implement restore, deleteBackup
 }
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     backupOrchestrator: new S3BackupOrchestrator()
 });
 ```
@@ -864,7 +864,7 @@ const executor = new MigrationScriptRunner({ handler,
 import { IRenderStrategy, JsonRenderStrategy } from '@migration-script-runner/core';
 
 // Use built-in JSON render strategy
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)  // pretty-printed JSON
 });
 
@@ -876,7 +876,7 @@ class CustomRenderStrategy implements IRenderStrategy {
     // ... implement other methods
 }
 
-const executor2 = new MigrationScriptRunner({ handler,
+const runner2 = new MigrationScriptRunner({ handler,
     renderStrategy: new CustomRenderStrategy()
 });
 ```

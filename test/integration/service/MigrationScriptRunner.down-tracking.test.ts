@@ -132,8 +132,8 @@ describe('MigrationScriptRunner - Track Executed Scripts for Rollback', () => {
         // Clear global tracker
         (global as any).__testDownCalls = [];
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const result = await runner.migrate();
 
         // Get down calls from global tracker
         const calls = (global as any).__testDownCalls || [];
@@ -221,8 +221,8 @@ describe('MigrationScriptRunner - Track Executed Scripts for Rollback', () => {
 
         (global as any).__testDownCalls2 = [];
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const result = await runner.migrate();
 
         const calls = (global as any).__testDownCalls2 || [];
 
@@ -298,8 +298,8 @@ describe('MigrationScriptRunner - Track Executed Scripts for Rollback', () => {
 
         (global as any).__testDownCalls3 = [];
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const result = await runner.migrate();
 
         const calls = (global as any).__testDownCalls3 || [];
 

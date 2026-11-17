@@ -34,7 +34,7 @@ import { ILogger } from '../interface/ILogger';
  *   config.locking,
  *   logger,
  *   {
- *     async onLockAcquired(executorId, status) {
+ *     async onLockAcquired(runnerId, status) {
  *       await metrics.increment('locks.acquired');
  *     },
  *     async onLockError(operation, error) {
@@ -44,14 +44,14 @@ import { ILogger } from '../interface/ILogger';
  * );
  *
  * // Use orchestrator for all lock operations
- * const executorId = generateExecutorId();
+ * const runnerId = generateRunnerId();
  * try {
- *   const acquired = await orchestrator.acquireLock(executorId);
+ *   const acquired = await orchestrator.acquireLock(runnerId);
  *   if (acquired) {
  *     await runMigrations();
  *   }
  * } finally {
- *   await orchestrator.releaseLock(executorId);
+ *   await orchestrator.releaseLock(runnerId);
  * }
  * ```
  */
@@ -85,40 +85,40 @@ export class LockingOrchestrator<DB extends IDB> implements ILockingOrchestrator
      * - Waits config.retryDelay milliseconds between retries
      * - Calls onAcquireRetry hook on each retry
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      * @returns true if lock acquired and verified, false if locked by another
      * @throws Error if database operation fails
      */
-    async acquireLock(executorId: string): Promise<boolean> {
+    async acquireLock(runnerId: string): Promise<boolean> {
         try {
             // Hook: before acquire
-            await this.hooks?.onBeforeAcquireLock?.(executorId, this.config.timeout);
+            await this.hooks?.onBeforeAcquireLock?.(runnerId, this.config.timeout);
 
-            this.logger.info(`Attempting to acquire lock: ${executorId}`);
+            this.logger.info(`Attempting to acquire lock: ${runnerId}`);
 
             // Retry logic
             for (let attempt = 0; attempt <= this.config.retryAttempts; attempt++) {
                 try {
                     // Delegate to adapter for database-specific acquisition
-                    const acquired = await this.lockingProvider.acquireLock(executorId);
+                    const acquired = await this.lockingProvider.acquireLock(runnerId);
 
                     if (acquired) {
                         // Two-phase locking: verify ownership after acquisition
-                        const verified = await this.lockingProvider.verifyLockOwnership(executorId);
+                        const verified = await this.lockingProvider.verifyLockOwnership(runnerId);
 
                         if (!verified) {
                             this.logger.error('Lock ownership verification failed');
-                            await this.hooks?.onOwnershipVerificationFailed?.(executorId);
+                            await this.hooks?.onOwnershipVerificationFailed?.(runnerId);
                             throw new Error(
-                                'Lock ownership verification failed. Lock was acquired but is no longer owned by this executor. ' +
+                                'Lock ownership verification failed. Lock was acquired but is no longer owned by this runner. ' +
                                 'This may indicate a race condition or clock skew between servers.'
                             );
                         }
 
                         // Success: acquired and verified
                         const status = await this.lockingProvider.getLockStatus();
-                        this.logger.info(`✓ Lock acquired: ${executorId}`);
-                        await this.hooks?.onLockAcquired?.(executorId, status!);
+                        this.logger.info(`✓ Lock acquired: ${runnerId}`);
+                        await this.hooks?.onLockAcquired?.(runnerId, status!);
 
                         return true;
                     }
@@ -129,19 +129,19 @@ export class LockingOrchestrator<DB extends IDB> implements ILockingOrchestrator
                         this.logger.warn(
                             `Lock held by ${currentOwner}, retrying... (${attempt + 1}/${this.config.retryAttempts})`
                         );
-                        await this.hooks?.onAcquireRetry?.(executorId, attempt + 1, currentOwner);
+                        await this.hooks?.onAcquireRetry?.(runnerId, attempt + 1, currentOwner);
                         await this.sleep(this.config.retryDelay);
                     } else {
                         // Max retries exceeded
                         const currentOwner = (await this.lockingProvider.getLockStatus())?.lockedBy || 'unknown';
                         this.logger.error(`Failed to acquire lock after ${this.config.retryAttempts} attempts`);
-                        await this.hooks?.onLockAcquisitionFailed?.(executorId, currentOwner);
+                        await this.hooks?.onLockAcquisitionFailed?.(runnerId, currentOwner);
                         return false;
                     }
                 } catch (error) {
                     // Database error during acquire/verify
                     this.logger.error(`Lock acquisition error: ${error}`);
-                    await this.hooks?.onLockError?.('acquire', error as Error, executorId);
+                    await this.hooks?.onLockError?.('acquire', error as Error, runnerId);
                     throw error;
                 }
             }
@@ -151,7 +151,7 @@ export class LockingOrchestrator<DB extends IDB> implements ILockingOrchestrator
         } catch (error) {
             // Hook invocation error or unexpected error
             this.logger.error(`Lock acquisition failed: ${error}`);
-            await this.hooks?.onLockError?.('acquire', error as Error, executorId);
+            await this.hooks?.onLockError?.('acquire', error as Error, runnerId);
             throw error;
         }
     }
@@ -160,24 +160,24 @@ export class LockingOrchestrator<DB extends IDB> implements ILockingOrchestrator
      * Release the migration lock.
      *
      * Should be called in a finally block to ensure cleanup.
-     * Only releases if the executor still owns the lock.
+     * Only releases if the runner still owns the lock.
      *
-     * @param executorId Unique identifier for this executor
+     * @param runnerId Unique identifier for this runner
      * @throws Error if database operation fails
      */
-    async releaseLock(executorId: string): Promise<void> {
+    async releaseLock(runnerId: string): Promise<void> {
         try {
-            await this.hooks?.onBeforeReleaseLock?.(executorId);
-            this.logger.info(`Releasing lock: ${executorId}`);
+            await this.hooks?.onBeforeReleaseLock?.(runnerId);
+            this.logger.info(`Releasing lock: ${runnerId}`);
 
             // Delegate to adapter
-            await this.lockingProvider.releaseLock(executorId);
+            await this.lockingProvider.releaseLock(runnerId);
 
-            this.logger.info(`✓ Lock released: ${executorId}`);
-            await this.hooks?.onLockReleased?.(executorId);
+            this.logger.info(`✓ Lock released: ${runnerId}`);
+            await this.hooks?.onLockReleased?.(runnerId);
         } catch (error) {
             this.logger.error(`Failed to release lock: ${error}`);
-            await this.hooks?.onLockError?.('release', error as Error, executorId);
+            await this.hooks?.onLockError?.('release', error as Error, runnerId);
             throw error;
         }
     }

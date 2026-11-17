@@ -38,14 +38,14 @@ export interface LoggerMetricsCollectorConfig {
  * ```typescript
  * const logger = new FileLogger('./logs/metrics.log');
  *
- * const executor = new MigrationScriptRunner<IDB>({
+ * const runner = new MigrationScriptRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new LoggerMetricsCollector({ logger })
  *   ]
  * }, config);
  *
- * await executor.up();
+ * await runner.up();
  * // Metrics written to ./logs/metrics.log
  * ```
  *

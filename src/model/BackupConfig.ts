@@ -168,7 +168,7 @@ export class BackupConfig {
      *
      * // Manual restore workflow
      * config.backupMode = BackupMode.MANUAL;
-     * await executor.restoreFromBackup('./backups/specific-backup.bkp');
+     * await runner.restoreFromBackup('./backups/specific-backup.bkp');
      * ```
      *
      * @see BackupMode.RESTORE_ONLY for automatic restore mode

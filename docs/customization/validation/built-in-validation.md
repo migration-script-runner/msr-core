@@ -636,8 +636,8 @@ config.transaction.timeout = 30000;  // 30 seconds
 config.transaction.timeout = 10000;  // 10 seconds
 
 // Option 4: Run migrations in smaller batches
-await executor.up(202501220500);  // First batch
-await executor.up(202501220800);  // Second batch
+await runner.up(202501220500);  // First batch
+await runner.up(202501220800);  // Second batch
 ```
 
 ---
@@ -810,11 +810,11 @@ Run validation without executing:
 ```typescript
 import { MigrationScriptRunner, ValidationError } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 try {
     // This will validate but not execute if you catch the error early
-    const result = await executor.migrate();
+    const result = await runner.migrate();
 } catch (error) {
     if (error instanceof ValidationError) {
         console.log('Validation failed (as expected for testing)');

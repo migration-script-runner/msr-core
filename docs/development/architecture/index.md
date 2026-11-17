@@ -29,7 +29,7 @@ graph TB
     end
 
     subgraph "MSR Core - Orchestration"
-        Executor[MigrationScriptRunner<br/>Main orchestrator]
+        Runner[MigrationScriptRunner<br/>Main orchestrator]
         Config[Config<br/>Settings and Options]
     end
 
@@ -48,15 +48,15 @@ graph TB
         Logger[ILogger<br/>Console File Silent]
     end
 
-    Executor --> Config
-    Executor --> Handler
-    Executor --> Scanner
-    Executor --> Validator
-    Executor --> Backup
-    Executor --> SchemaVersion
-    Executor --> Execution
-    Executor --> Rollback
-    Executor --> Renderer
+    Runner --> Config
+    Runner --> Handler
+    Runner --> Scanner
+    Runner --> Validator
+    Runner --> Backup
+    Runner --> SchemaVersion
+    Runner --> Execution
+    Runner --> Rollback
+    Runner --> Renderer
 
     Handler --> UserDB
     Execution --> Migrations
@@ -71,7 +71,7 @@ graph TB
     style Handler fill:#e1f5ff
     style Migrations fill:#e1f5ff
     style UserDB fill:#e1f5ff
-    style Executor fill:#fff3cd
+    style Runner fill:#fff3cd
     style Config fill:#fff3cd
     style Scanner fill:#d4edda
     style Validator fill:#d4edda
@@ -86,7 +86,7 @@ graph TB
 
 **Architecture Layers:**
 - **Blue**: User-implemented components (database handler, migrations, your database)
-- **Yellow**: Orchestration layer (executor and configuration)
+- **Yellow**: Orchestration layer (runner and configuration)
 - **Green**: Service layer (specialized operations)
 - **Red**: Output layer (rendering and logging)
 

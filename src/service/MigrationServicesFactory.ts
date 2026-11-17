@@ -277,7 +277,7 @@ function createOrchestrationServices<DB extends IDB>(
         rollbackService: core.rollback
     });
 
-    // Create hook executor
+    // Create hook runner
     const hookExecutor = new MigrationHookExecutor<DB>({
         runner: execution.runner,
         hooks: hooks

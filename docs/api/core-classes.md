@@ -39,7 +39,7 @@ interface IMyDatabase extends IDB {
 // Basic usage - handler type inferred
 const handler = new MyDatabaseHandler();  // implements IDatabaseMigrationHandler<IMyDatabase>
 const config = new Config();
-const executor = new MigrationScriptRunner<IMyDatabase>({ handler , config });
+const runner = new MigrationScriptRunner<IMyDatabase>({ handler , config });
 
 // v0.8.0: Type-safe adapter with handler generic (for custom adapters)
 class MyRunner extends MigrationScriptRunner<IMyDatabase, MyDatabaseHandler> {
@@ -144,7 +144,7 @@ Get the database migration handler instance.
 > **NEW in v0.8.1:** Provides external access to the handler for CLI operations and custom commands.
 
 ```typescript
-executor.getHandler(): THandler
+runner.getHandler(): THandler
 ```
 
 **Returns:** `THandler` - The database migration handler instance, fully typed according to the THandler generic parameter
@@ -163,8 +163,8 @@ executor.getHandler(): THandler
 
 **Example (Basic Handler Access):**
 ```typescript
-const executor = new MigrationScriptRunner({ handler, config });
-const h = executor.getHandler();
+const runner = new MigrationScriptRunner({ handler, config });
+const h = runner.getHandler();
 
 console.log(`Database: ${h.getName()}`);
 console.log(`Version: ${h.getVersion()}`);
@@ -175,14 +175,14 @@ console.log(`Version: ${h.getVersion()}`);
 import { createCLI } from '@migration-script-runner/core';
 
 const program = createCLI({
-  createExecutor: (config) => new MigrationScriptRunner({ handler, config }),
-  extendCLI: (program, createExecutor) => {
+  createRunner: (config) => new MigrationScriptRunner({ handler, config }),
+  extendCLI: (program, createRunner) => {
     program
       .command('vacuum')
       .description('Run VACUUM ANALYZE on database')
       .action(async () => {
-        const executor = createExecutor();
-        const handler = executor.getHandler();
+        const runner = await createRunner();
+        const handler = runner.getHandler();
 
         // Direct database operation
         await handler.db.query('VACUUM ANALYZE');
@@ -193,8 +193,8 @@ const program = createCLI({
       .command('connection-info')
       .description('Display database connection details')
       .action(async () => {
-        const executor = createExecutor();
-        const handler = executor.getHandler();
+        const runner = await createRunner();
+        const handler = runner.getHandler();
 
         console.log(`Database: ${handler.getName()}`);
         console.log(`Version: ${handler.getVersion()}`);
@@ -235,7 +235,7 @@ console.log(`Connected to ${info.host}:${info.port}`);
 
 ##### createInstance() (Static Factory Method)
 
-Factory method for creating executor instances with async handler initialization.
+Factory method for creating runner instances with async handler initialization.
 
 {: .new }
 > **NEW in v0.8.2:** Standardized pattern for database adapters requiring asynchronous initialization.
@@ -256,7 +256,7 @@ protected static async createInstance<
 
 **Parameters:**
 - `RunnerClass`: Constructor of the runner subclass
-- `options`: Executor options (can be adapter-specific interface extending `IRunnerOptions`)
+- `options`: Runner options (can be adapter-specific interface extending `IRunnerOptions`)
 - `createHandler`: Async factory function for creating the handler
 
 **Returns:** `Promise<TRunner>` - Instance of the runner subclass
@@ -322,7 +322,7 @@ export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
 Execute all pending migrations and return a structured result.
 
 ```typescript
-await executor.migrate(): Promise<IMigrationResult>
+await runner.migrate(): Promise<IMigrationResult>
 ```
 
 **Returns:** `Promise<IMigrationResult>` containing:
@@ -336,7 +336,7 @@ await executor.migrate(): Promise<IMigrationResult>
 ```typescript
 import { IMigrationResult } from '@migration-script-runner/core';
 
-const result: IMigrationResult = await executor.migrate();
+const result: IMigrationResult = await runner.migrate();
 
 if (result.success) {
   console.log(`✅ Successfully executed ${result.executed.length} migrations`);
@@ -352,7 +352,7 @@ if (result.success) {
 
 **Example (CLI Usage):**
 ```typescript
-const result = await executor.migrate();
+const result = await runner.migrate();
 process.exit(result.success ? 0 : 1);
 ```
 
@@ -366,7 +366,7 @@ process.exit(result.success ? 0 : 1);
 Display all migrations with their execution status.
 
 ```typescript
-await executor.list(number?: number): Promise<void>
+await runner.list(number?: number): Promise<void>
 ```
 
 **Parameters:**
@@ -381,10 +381,10 @@ await executor.list(number?: number): Promise<void>
 **Example:**
 ```typescript
 // List all migrations
-await executor.list();
+await runner.list();
 
 // List only the last 10 migrations
-await executor.list(10);
+await runner.list(10);
 
 // Outputs:
 // +-------------+------------------+----------+----------+
@@ -402,10 +402,10 @@ Execute all pending migrations or migrate to a specific target version.
 
 ```typescript
 // Execute all pending migrations
-await executor.up(): Promise<IMigrationResult>
+await runner.up(): Promise<IMigrationResult>
 
 // Execute migrations up to a specific target version
-await executor.up(targetVersion: number): Promise<IMigrationResult>
+await runner.up(targetVersion: number): Promise<IMigrationResult>
 ```
 
 **Parameters:**
@@ -432,7 +432,7 @@ await executor.up(targetVersion: number): Promise<IMigrationResult>
 
 **Example (Execute All Migrations):**
 ```typescript
-const result = await executor.up();
+const result = await runner.up();
 
 if (result.success) {
   console.log(`✅ Executed ${result.executed.length} migrations`);
@@ -446,7 +446,7 @@ if (result.success) {
 ```typescript
 // Deploy up to specific version in production
 const targetVersion = 202501220100;
-const result = await executor.up(targetVersion);
+const result = await runner.up(targetVersion);
 
 if (result.success) {
   console.log(`✅ Database migrated to version ${targetVersion}`);
@@ -461,10 +461,10 @@ if (result.success) {
 ```typescript
 // Deploy only migrations up to a specific point
 // Useful for testing or staged deployments
-const result = await executor.up(202501220300);
+const result = await runner.up(202501220300);
 
 // Later, continue to next version
-const result2 = await executor.up(202501220500);
+const result2 = await runner.up(202501220500);
 ```
 
 {: .note }
@@ -477,7 +477,7 @@ const result2 = await executor.up(202501220500);
 Validate pending and executed migrations without running them.
 
 ```typescript
-await executor.validate(): Promise<{pending: IValidationResult[], migrated: IValidationIssue[]}>
+await runner.validate(): Promise<{pending: IValidationResult[], migrated: IValidationIssue[]}>
 ```
 
 **Returns:** Object containing:
@@ -496,7 +496,7 @@ await executor.validate(): Promise<{pending: IValidationResult[], migrated: IVal
 **Example (CI/CD Pipeline):**
 ```typescript
 try {
-  await executor.validate();
+  await runner.validate();
   console.log('✓ All migrations are valid');
 } catch (error) {
   console.error('❌ Migration validation failed:', error.message);
@@ -511,7 +511,7 @@ try {
 Manually create a database backup.
 
 ```typescript
-await executor.createBackup(): Promise<string>
+await runner.createBackup(): Promise<string>
 ```
 
 **Returns:** `Promise<string>` - Absolute path to the created backup file
@@ -529,28 +529,28 @@ import { BackupMode } from '@migration-script-runner/core';
 config.backupMode = BackupMode.MANUAL;
 
 // Create backup manually
-const backupPath = await executor.createBackup();
+const backupPath = await runner.createBackup();
 console.log(`Backup created: ${backupPath}`);
 
 try {
-  await executor.up();
-  executor.deleteBackup();
+  await runner.up();
+  runner.deleteBackup();
 } catch (error) {
   // Restore from backup on failure
-  await executor.restoreFromBackup(backupPath);
+  await runner.restoreFromBackup(backupPath);
 }
 ```
 
 **Example (Custom Backup Timing):**
 ```typescript
 // Create backup before risky operation
-const preUpdateBackup = await executor.createBackup();
+const preUpdateBackup = await runner.createBackup();
 
 // Perform operation
 await performRiskyUpdate();
 
 // Create another backup after
-const postUpdateBackup = await executor.createBackup();
+const postUpdateBackup = await runner.createBackup();
 ```
 
 ---
@@ -560,7 +560,7 @@ const postUpdateBackup = await executor.createBackup();
 Restore database from a backup file.
 
 ```typescript
-await executor.restoreFromBackup(backupPath?: string): Promise<void>
+await runner.restoreFromBackup(backupPath?: string): Promise<void>
 ```
 
 **Parameters:**
@@ -573,25 +573,25 @@ await executor.restoreFromBackup(backupPath?: string): Promise<void>
 
 **Example (Restore from Specific Backup):**
 ```typescript
-await executor.restoreFromBackup('./backups/backup-2025-01-22.bkp');
+await runner.restoreFromBackup('./backups/backup-2025-01-22.bkp');
 ```
 
 **Example (Restore from Most Recent):**
 ```typescript
-const backupPath = await executor.createBackup();
+const backupPath = await runner.createBackup();
 // ... migrations fail ...
-await executor.restoreFromBackup(); // Uses backupPath automatically
+await runner.restoreFromBackup(); // Uses backupPath automatically
 ```
 
 **Example (Conditional Restore):**
 ```typescript
-const backupPath = await executor.createBackup();
+const backupPath = await runner.createBackup();
 try {
-  await executor.up();
+  await runner.up();
 } catch (error) {
   // Only restore for certain error types
   if (shouldRestore(error)) {
-    await executor.restoreFromBackup(backupPath);
+    await runner.restoreFromBackup(backupPath);
   }
 }
 ```
@@ -603,7 +603,7 @@ try {
 Delete the backup file from disk.
 
 ```typescript
-executor.deleteBackup(): void
+runner.deleteBackup(): void
 ```
 
 **Behavior:**
@@ -613,19 +613,19 @@ executor.deleteBackup(): void
 
 **Example (Manual Cleanup):**
 ```typescript
-const backupPath = await executor.createBackup();
-await executor.up();
-executor.deleteBackup(); // Clean up after success
+const backupPath = await runner.createBackup();
+await runner.up();
+runner.deleteBackup(); // Clean up after success
 ```
 
 **Example (Conditional Cleanup):**
 ```typescript
 config.backup.deleteBackup = true;
-const backupPath = await executor.createBackup();
+const backupPath = await runner.createBackup();
 
 try {
-  await executor.up();
-  executor.deleteBackup(); // Auto-respects config
+  await runner.up();
+  runner.deleteBackup(); // Auto-respects config
 } catch (error) {
   // Keep backup for investigation
   console.log(`Backup preserved at: ${backupPath}`);
@@ -639,7 +639,7 @@ try {
 Roll back migrations to a specific target version.
 
 ```typescript
-await executor.down(targetVersion: number): Promise<IMigrationResult>
+await runner.down(targetVersion: number): Promise<IMigrationResult>
 ```
 
 **Parameters:**
@@ -670,7 +670,7 @@ await executor.down(targetVersion: number): Promise<IMigrationResult>
 ```typescript
 // Current database version: 202501220300
 // Rollback to version 202501220100
-const result = await executor.down(202501220100);
+const result = await runner.down(202501220100);
 
 if (result.success) {
   console.log(`✅ Rolled back to version 202501220100`);
@@ -684,7 +684,7 @@ if (result.success) {
 **Example (Complete Rollback):**
 ```typescript
 // Rollback all migrations (return to empty database)
-const result = await executor.down(0);
+const result = await runner.down(0);
 
 if (result.success) {
   console.log('✅ All migrations rolled back');
@@ -695,14 +695,14 @@ if (result.success) {
 **Example (Round-trip Migration for Testing):**
 ```typescript
 // Test that migrations can be applied and rolled back
-const upResult = await executor.up(202501220300);
+const upResult = await runner.up(202501220300);
 console.log(`Applied ${upResult.executed.length} migrations`);
 
 // Verify database state
 await verifyDatabaseState();
 
 // Rollback
-const downResult = await executor.down(0);
+const downResult = await runner.down(0);
 console.log(`Rolled back ${downResult.executed.length} migrations`);
 ```
 

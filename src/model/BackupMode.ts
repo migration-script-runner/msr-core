@@ -34,7 +34,7 @@ export enum BackupMode {
      * @example
      * ```typescript
      * config.backupMode = BackupMode.FULL;
-     * await executor.migrate(); // Creates backup, restores on failure, cleans up on success
+     * await runner.migrate(); // Creates backup, restores on failure, cleans up on success
      * ```
      */
     FULL = 'full',
@@ -55,7 +55,7 @@ export enum BackupMode {
      * ```typescript
      * config.backupMode = BackupMode.CREATE_ONLY;
      * config.rollbackStrategy = RollbackStrategy.DOWN;
-     * await executor.migrate(); // Creates backup, uses down() on failure, keeps backup
+     * await runner.migrate(); // Creates backup, uses down() on failure, keeps backup
      * ```
      */
     CREATE_ONLY = 'create_only',
@@ -76,7 +76,7 @@ export enum BackupMode {
      * ```typescript
      * config.backupMode = BackupMode.RESTORE_ONLY;
      * config.backup.existingBackupPath = './backups/my-backup.bkp';
-     * await executor.migrate(); // No backup creation, restores from existing on failure
+     * await runner.migrate(); // No backup creation, restores from existing on failure
      * ```
      */
     RESTORE_ONLY = 'restore_only',
@@ -98,12 +98,12 @@ export enum BackupMode {
      * config.backupMode = BackupMode.MANUAL;
      *
      * // Manual workflow
-     * const backupPath = await executor.createBackup();
+     * const backupPath = await runner.createBackup();
      * try {
-     *   await executor.migrate();
+     *   await runner.migrate();
      * } catch (error) {
      *   if (shouldRestore(error)) {
-     *     await executor.restoreFromBackup(backupPath);
+     *     await runner.restoreFromBackup(backupPath);
      *   }
      * }
      * ```

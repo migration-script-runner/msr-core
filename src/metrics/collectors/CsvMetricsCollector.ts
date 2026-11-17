@@ -45,7 +45,7 @@ interface CsvRow {
  *
  * @example
  * ```typescript
- * const executor = new MigrationScriptRunner<IDB>({
+ * const runner = new MigrationScriptRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new CsvMetricsCollector({
@@ -55,7 +55,7 @@ interface CsvRow {
  *   ]
  * }, config);
  *
- * await executor.up();
+ * await runner.up();
  *
  * // Open in Excel or Google Sheets for analysis
  * // Create pivot tables, charts, performance reports

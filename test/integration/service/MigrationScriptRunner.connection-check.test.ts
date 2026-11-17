@@ -54,8 +54,8 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
-            await executor.up();
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            await runner.up();
 
             expect(connectionChecked).to.be.true;
 });
@@ -69,10 +69,10 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
-                await executor.up();
+                await runner.up();
                 expect.fail('Should have thrown error');
             } catch (error) {
                 expect((error as Error).message).to.include('Database connection check failed');
@@ -92,10 +92,10 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
-                await executor.up();
+                await runner.up();
             } catch (error) {
                 // Expected
             }
@@ -118,8 +118,8 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
-            await executor.down(202501010001);
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            await runner.down(202501010001);
 
             expect(connectionChecked).to.be.true;
 });
@@ -133,10 +133,10 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
-                await executor.down(202501010001);
+                await runner.down(202501010001);
                 expect.fail('Should have thrown error');
             } catch (error) {
                 expect((error as Error).message).to.include('Database connection check failed');
@@ -158,8 +158,8 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
-            await executor.validate();
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            await runner.validate();
 
             expect(connectionChecked).to.be.true;
 });
@@ -173,10 +173,10 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
-                await executor.validate();
+                await runner.validate();
                 expect.fail('Should have thrown error');
             } catch (error) {
                 expect((error as Error).message).to.include('Database connection check failed');
@@ -194,10 +194,10 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
-                await executor.up();
+                await runner.up();
                 expect.fail('Should have thrown error');
             } catch (error) {
                 const errorMsg = (error as Error).message;
@@ -233,8 +233,8 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as ISchemaVersion<IDB>
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
-            await executor.up();
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            await runner.up();
 
             // checkConnection should be first
             expect(operations[0]).to.equal('checkConnection');
@@ -255,8 +255,8 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
-            await executor.migrate();
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            await runner.migrate();
 
             expect(connectionChecked).to.be.true;
 });
@@ -270,10 +270,10 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown error');
             } catch (error) {
                 expect((error as Error).message).to.include('Database connection check failed');

@@ -86,7 +86,7 @@ export interface IRunnerDependencies<
      *     getVersion: () => '1.0.0'
      * };
      *
-     * const executor = new MigrationScriptRunner<IDB>({ handler });
+     * const runner = new MigrationScriptRunner<IDB>({ handler });
      *
      * // v0.8.0: Specify handler type for better type safety in adapters
      * class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
@@ -106,7 +106,7 @@ export interface IRunnerDependencies<
      * @example
      * ```typescript
      * // Use default ConfigLoader
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler
      * });
      * // ConfigLoader automatically used
@@ -122,7 +122,7 @@ export interface IRunnerDependencies<
      *     }
      * }
      *
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     configLoader: new MyConfigLoader()
      * });

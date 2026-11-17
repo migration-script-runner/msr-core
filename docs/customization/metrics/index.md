@@ -34,7 +34,7 @@ MSR provides a flexible metrics collection system that allows you to track and m
 
 ## Quick Start
 
-Add metrics collection to your executor in under 30 seconds:
+Add metrics collection to your runner in under 30 seconds:
 
 ```typescript
 import {
@@ -43,7 +43,7 @@ import {
   JsonMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),           // Real-time console output
@@ -54,7 +54,7 @@ const executor = new MigrationScriptRunner({
   config
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Console output:**
@@ -307,7 +307,7 @@ new LoggerMetricsCollector({
 Send metrics to multiple destinations simultaneously:
 
 ```typescript
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     // Development feedback

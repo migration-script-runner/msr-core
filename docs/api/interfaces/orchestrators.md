@@ -36,7 +36,7 @@ Its operations are **init(tableName)**, **save(details)**, **getAllMigratedScrip
 
 **ILockingOrchestrator** is implemented by **LockingOrchestrator<DB>**. The core orchestrator uses an adapter's **ILockingProvider<DB>** and adds retries, ownership verification, hooks, and logging.
 
-Its public operations are **acquireLock(executorId)**, **releaseLock(executorId)**, **getLockStatus()**, **forceReleaseLock()**, **checkAndReleaseExpiredLock()**, **initLockStorage()**, and **ensureLockStorageAccessible()**.
+Its public operations are **acquireLock(runnerId)**, **releaseLock(runnerId)**, **getLockStatus()**, **forceReleaseLock()**, **checkAndReleaseExpiredLock()**, **initLockStorage()**, and **ensureLockStorageAccessible()**.
 
 Adapters provide database-specific operations through [ILockingProvider](locking-provider); they do not implement the core orchestration contract.
 

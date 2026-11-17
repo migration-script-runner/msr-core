@@ -1,6 +1,6 @@
 import {IBackup, IDB, ISchemaVersion} from "./dao";
-import {ITransactionManager} from "./service/ITransactionManager";
-import {ILockingService} from "./service/ILockingService";
+import {ITransactionProvider} from "./service/ITransactionProvider";
+import {ILockingProvider} from "./service/ILockingProvider";
 
 /**
  * Main interface for database-specific migration handling.
@@ -105,12 +105,12 @@ export interface IDatabaseMigrationHandler<DB extends IDB> {
      * Typed with the generic DB parameter (v0.6.0).
      *
      * **If not provided:**
-     * - MSR automatically creates {@link DefaultTransactionManager} if `db` implements {@link ITransactionalDB}
+     * - MSR automatically creates {@link DefaultTransactionProvider} if `db` implements {@link ITransactionalDB}
      * - No transactions if `db` does not implement {@link ITransactionalDB} and mode is NONE
      *
      * **New in v0.5.0**
      *
-     * @see {@link ITransactionManager} for interface documentation
+     * @see {@link ITransactionProvider} for interface documentation
      * @see {@link ITransactionalDB} for database capability requirements
      * @see {@link Config.transaction} for transaction configuration
      *
@@ -122,10 +122,10 @@ export interface IDatabaseMigrationHandler<DB extends IDB> {
      *   async commit(): Promise<void> { await this.pool.query('COMMIT'); }
      *   async rollback(): Promise<void> { await this.pool.query('ROLLBACK'); }
      * }
-     * // MSR automatically creates DefaultTransactionManager
+     * // MSR automatically creates DefaultTransactionProvider
      *
      * // Advanced: Custom transaction manager for special needs
-     * class DistributedTransactionManager implements ITransactionManager<IDB> {
+     * class DistributedTransactionProvider implements ITransactionProvider<IDB> {
      *   async begin(): Promise<void> {
      *     // Begin transactions across multiple databases
      *   }
@@ -140,13 +140,13 @@ export interface IDatabaseMigrationHandler<DB extends IDB> {
      * const handler: IDatabaseMigrationHandler<IDB> = {
      *   db: myDB,
      *   schemaVersion: schemaVersionImpl,
-     *   transactionManager: new DistributedTransactionManager(),  // Override default
+     *   transactionProvider: new DistributedTransactionProvider(),  // Override default
      *   getName: () => 'Custom Handler',
      *   getVersion: () => '1.0.0'
      * };
      * ```
      */
-    transactionManager?: ITransactionManager<DB>
+    transactionProvider?: ITransactionProvider<DB>
 
     /**
      * Locking service for preventing concurrent migration execution (optional).
@@ -167,16 +167,16 @@ export interface IDatabaseMigrationHandler<DB extends IDB> {
      *
      * **New in v0.8.0**
      *
-     * @see {@link ILockingService} for interface documentation
+     * @see {@link ILockingProvider} for interface documentation
      * @see {@link Config.locking} for locking configuration
      * @see {@link LockingConfig} for configuration options
      *
      * @example
      * ```typescript
      * // PostgreSQL implementation
-     * import { ILockingService, ILockStatus } from '@migration-script-runner/core';
+     * import { ILockingProvider, ILockStatus } from '@migration-script-runner/core';
      *
-     * class PostgreSqlLockingService implements ILockingService<PostgreSqlDB> {
+     * class PostgreSqlLockingProvider implements ILockingProvider<PostgreSqlDB> {
      *   constructor(
      *     private readonly db: PostgreSqlDB,
      *     private readonly config: LockingConfig
@@ -247,11 +247,11 @@ export interface IDatabaseMigrationHandler<DB extends IDB> {
      * const handler: IDatabaseMigrationHandler<PostgreSqlDB> = {
      *   db: postgresDb,
      *   schemaVersion: schemaVersionImpl,
-     *   lockingService: new PostgreSqlLockingService(postgresDb, config.locking),
+     *   lockingProvider: new PostgreSqlLockingProvider(postgresDb, config.locking),
      *   getName: () => 'PostgreSQL Handler',
      *   getVersion: () => '1.0.0'
      * };
      * ```
      */
-    lockingService?: ILockingService<DB>
+    lockingProvider?: ILockingProvider<DB>
 }

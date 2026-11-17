@@ -35,7 +35,7 @@ export function addLockStatusCommand<DB extends IDB>(
                 if (!status) {
                     console.log('\nLock Status: NOT CONFIGURED');
                     console.log('Locking service is not available in your database handler.');
-                    console.log('See documentation for implementing ILockingService.\n');
+                    console.log('See documentation for implementing ILockingProvider.\n');
                     process.exit(EXIT_CODES.SUCCESS);
                     return;
                 }

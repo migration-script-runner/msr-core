@@ -1,5 +1,5 @@
-import {IBackupService} from "./service/IBackupService";
-import {ISchemaVersionService} from "./service/ISchemaVersionService";
+import {IBackupOrchestrator} from "./service/IBackupOrchestrator";
+import {ISchemaVersionOrchestrator} from "./service/ISchemaVersionOrchestrator";
 import {IMigrationRenderer} from "./service/IMigrationRenderer";
 import {IRenderStrategy} from "./service/IRenderStrategy";
 import {IMigrationService} from "./service/IMigrationService";
@@ -104,15 +104,15 @@ export interface IRunnerOptions<
 
     /**
      * Custom backup service implementation.
-     * If not provided, uses BackupService with default configuration.
+     * If not provided, uses BackupOrchestrator with default configuration.
      */
-    backupService?: IBackupService;
+    backupOrchestrator?: IBackupOrchestrator;
 
     /**
      * Custom schema version tracking service implementation.
-     * If not provided, uses SchemaVersionService with handler's schema version.
+     * If not provided, uses SchemaVersionOrchestrator with handler's schema version.
      */
-    schemaVersionService?: ISchemaVersionService<DB>;
+    schemaVersionOrchestrator?: ISchemaVersionOrchestrator<DB>;
 
     /**
      * Custom migration renderer implementation.
@@ -246,7 +246,7 @@ export interface IRunnerOptions<
      * @example
      * ```typescript
      * // Use custom rollback service
-     * rollbackService: new CustomRollbackService(handler, config, backupService, logger, hooks)
+     * rollbackService: new CustomRollbackService(handler, config, backupOrchestrator, logger, hooks)
      * ```
      */
     rollbackService?: IRollbackService<DB>;

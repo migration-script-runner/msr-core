@@ -27,9 +27,9 @@ constructor(
 - `config`: Configuration object (formerly accessed via `handler.cfg`)
 - `dependencies` (optional): Custom service implementations for dependency injection
   - `logger?`: Custom logger implementation (defaults to `ConsoleLogger`)
-  - `backupService?`: Custom backup service (defaults to `BackupService`)
+  - `backupOrchestrator?`: Custom backup service (defaults to `BackupOrchestrator`)
   - `rollbackService?`: Custom rollback service (defaults to `RollbackService`)
-  - `schemaVersionService?`: Custom schema version service (defaults to `SchemaVersionService`)
+  - `schemaVersionOrchestrator?`: Custom schema version service (defaults to `SchemaVersionOrchestrator`)
   - `migrationRenderer?`: Custom migration renderer (defaults to `MigrationRenderer`)
   - `migrationService?`: Custom migration service (defaults to `MigrationService`)
   - `migrationScanner?`: Custom migration scanner (defaults to `MigrationScanner`)
@@ -46,9 +46,9 @@ The `MigrationScriptRunner` exposes several service instances as public readonly
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `backupService` | `IBackupService` | Service for creating and managing database backups |
+| `backupOrchestrator` | `IBackupOrchestrator` | Service for creating and managing database backups |
 | `rollbackService` | `IRollbackService` | Service for handling rollback operations and strategies |
-| `schemaVersionService` | `ISchemaVersionService` | Service for tracking executed migrations |
+| `schemaVersionOrchestrator` | `ISchemaVersionOrchestrator` | Service for tracking executed migrations |
 | `migrationRenderer` | `IMigrationRenderer` | Service for rendering migration output |
 | `migrationService` | `IMigrationService` | Service for discovering migration script files |
 | `migrationScanner` | `IMigrationScanner` | Service for gathering complete migration state |
@@ -66,7 +66,7 @@ if (executor.rollbackService.shouldCreateBackup()) {
 }
 
 // Access backup service directly
-const backupPath = await executor.backupService.backup();
+const backupPath = await executor.backupOrchestrator.backup();
 
 // Access validation service
 const results = await executor.validationService.validateAll(scripts, config);

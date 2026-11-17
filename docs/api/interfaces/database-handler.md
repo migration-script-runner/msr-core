@@ -35,8 +35,8 @@ interface IDatabaseMigrationHandler<DB extends IDB> {
   db: DB;  // Your specific database type
   schemaVersion: ISchemaVersion<DB>;
   backup?: IBackup<DB>;  // Optional - only needed for BACKUP or BOTH strategies
-  transactionManager?: ITransactionManager<DB>;  // Optional - auto-created if db supports transactions
-  lockingService?: ILockingService<DB>;  // Optional (v0.8.0) - enables concurrent migration prevention
+  transactionProvider?: ITransactionProvider<DB>;  // Optional - auto-created if db supports transactions
+  lockingProvider?: ILockingProvider<DB>;  // Optional (v0.8.0) - enables concurrent migration prevention
 }
 ```
 
@@ -125,12 +125,12 @@ Handles database backup and restore operations. See [`IBackup` interface](backup
 
 ---
 
-### lockingService
+### lockingProvider
 
 Locking interface for preventing concurrent migrations (optional, v0.8.0).
 
 ```typescript
-lockingService?: ILockingService<DB>
+lockingProvider?: ILockingProvider<DB>
 ```
 
 **Optional (v0.8.0):** Provides database-level locking to prevent multiple processes from running migrations simultaneously. When not provided, locking is disabled.
@@ -142,9 +142,9 @@ lockingService?: ILockingService<DB>
 
 **Example:**
 ```typescript
-import { ILockingService } from '@migration-script-runner/core';
+import { ILockingProvider } from '@migration-script-runner/core';
 
-class PostgresLockingService implements ILockingService<PostgresDB> {
+class PostgresLockingProvider implements ILockingProvider<PostgresDB> {
   constructor(private db: PostgresDB) {}
 
   async acquireLock(executorId: string, timeout: number): Promise<boolean> {
@@ -212,7 +212,7 @@ class PostgresHandler implements IDatabaseMigrationHandler<PostgresDB> {
   db: PostgresDB;
   schemaVersion: PostgresSchemaVersion;
   backup?: PostgresBackup;
-  lockingService?: ILockingService<PostgresDB>;
+  lockingProvider?: ILockingProvider<PostgresDB>;
 
   constructor(pool: Pool, options: { useBackup?: boolean; useLocking?: boolean } = {}) {
     this.db = new PostgresDB(pool);
@@ -223,7 +223,7 @@ class PostgresHandler implements IDatabaseMigrationHandler<PostgresDB> {
     }
 
     if (options.useLocking) {
-      this.lockingService = new PostgresLockingService(this.db);
+      this.lockingProvider = new PostgresLockingProvider(this.db);
     }
   }
 

@@ -33,8 +33,8 @@ test/unit/service/
   ├── MigrationScriptSelector.test.ts  (11 tests)
   ├── MigrationScanner.test.ts         (11 tests)
   ├── MigrationRunner.test.ts          (16 tests)
-  ├── BackupService.test.ts
-  ├── SchemaVersionService.test.ts
+  ├── BackupOrchestrator.test.ts
+  ├── SchemaVersionOrchestrator.test.ts
   └── ...
 ```
 
@@ -78,9 +78,9 @@ const executor = new MigrationScriptRunner({ handler,
 ### Custom Backup
 
 ```typescript
-import { IBackupService } from '@migration-script-runner/core';
+import { IBackupOrchestrator } from '@migration-script-runner/core';
 
-class S3BackupService implements IBackupService {
+class S3BackupOrchestrator implements IBackupOrchestrator {
     async backup() {
         const dump = await createDump();
         await s3.upload(dump);
@@ -89,7 +89,7 @@ class S3BackupService implements IBackupService {
 }
 
 const executor = new MigrationScriptRunner({ handler,
-    backupService: new S3BackupService()
+    backupOrchestrator: new S3BackupOrchestrator()
 });
 ```
 
@@ -127,7 +127,7 @@ MSR uses `Promise.all()` for parallel operations where safe:
 ```typescript
 // Parallel: Independent operations (in MigrationScanner)
 const { migrated, all } = await Utils.promiseAll({
-    migrated: schemaVersionService.getAllMigratedScripts(),
+    migrated: schemaVersionOrchestrator.getAllMigratedScripts(),
     all: migrationService.readMigrationScripts(handler.cfg)
 });
 
@@ -165,7 +165,7 @@ for (const script of scripts) {
 ```typescript
 new MigrationScriptRunner({ handler,
     logger: mockLogger,
-    backupService: mockBackup
+    backupOrchestrator: mockBackup
 });
 ```
 

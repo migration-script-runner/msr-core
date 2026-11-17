@@ -3,7 +3,7 @@ layout: default
 title: IMetricsCollector
 parent: Interfaces
 grand_parent: API Reference
-nav_order: 10
+nav_order: 9
 ---
 
 # IMetricsCollector

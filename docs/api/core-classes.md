@@ -109,9 +109,9 @@ constructor<DB extends IDB>(
   - `config?`: Configuration object typed as `TConfig` (defaults to `ConfigLoader.load()` if not provided) - **MOVED from second parameter in v0.7.0, typed with TConfig in v0.8.2**
   - `configLoader?`: Custom config loader implementing `IConfigLoader<TConfig>` (defaults to `ConfigLoader<TConfig>`) - **NEW in v0.7.0, made generic in v0.8.2**
   - `logger?`: Custom logger implementation (defaults to `ConsoleLogger`). **Note:** Automatically wrapped with `LevelAwareLogger` for log level filtering based on `config.logLevel`
-  - `backupService?`: Custom backup service implementing `IBackupService` (defaults to `BackupService<DB>`)
+  - `backupOrchestrator?`: Custom backup service implementing `IBackupOrchestrator` (defaults to `BackupOrchestrator<DB>`)
   - `rollbackService?`: Custom rollback service implementing `IRollbackService<DB>` (defaults to `RollbackService<DB>`)
-  - `schemaVersionService?`: Custom schema version service implementing `ISchemaVersionService<DB>` (defaults to `SchemaVersionService<DB>`)
+  - `schemaVersionOrchestrator?`: Custom schema version service implementing `ISchemaVersionOrchestrator<DB>` (defaults to `SchemaVersionOrchestrator<DB>`)
   - `migrationRenderer?`: Custom migration renderer implementing `IMigrationRenderer<DB>` (defaults to `MigrationRenderer<DB>`)
   - `migrationService?`: Custom migration service implementing `IMigrationService<DB>` (defaults to `MigrationService<DB>`)
   - `migrationScanner?`: Custom migration scanner implementing `IMigrationScanner<DB>` (defaults to `MigrationScanner<DB>`)

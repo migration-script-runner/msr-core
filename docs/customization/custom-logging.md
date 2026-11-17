@@ -337,7 +337,7 @@ class CILogger implements ILogger {
 The following services accept an optional `ILogger` parameter:
 
 - **MigrationScriptRunner** - Main migration executor
-- **BackupService** - Backup creation and restoration
+- **BackupOrchestrator** - Backup creation and restoration
 - **MigrationService** - Migration script discovery
 - **MigrationRenderer** - Migration output rendering (delegates to render strategies)
 - **AsciiTableRenderStrategy** - ASCII table rendering
@@ -348,7 +348,7 @@ The following services accept an optional `ILogger` parameter:
 ```typescript
 import {
   MigrationScriptRunner,
-  BackupService,
+  BackupOrchestrator,
   MigrationService,
   SilentLogger
 } from '@migration-script-runner/core';
@@ -359,7 +359,7 @@ const logger = new SilentLogger();
 const executor = new MigrationScriptRunner({ handler,  logger });
 
 // Other services accept logger directly
-const backupService = new BackupService(handler, logger);
+const backupOrchestrator = new BackupOrchestrator(handler, logger);
 const migrationService = new MigrationService(logger);
 ```
 

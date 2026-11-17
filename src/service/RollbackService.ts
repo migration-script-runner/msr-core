@@ -1,7 +1,7 @@
 import {MigrationScript} from "../model/MigrationScript";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
 import {Config, RollbackStrategy, BackupMode} from "../model";
-import {IBackupService} from "../interface/service/IBackupService";
+import {IBackupOrchestrator} from "../interface/service/IBackupOrchestrator";
 import {ILogger} from "../interface/ILogger";
 import {IMigrationHooks} from "../interface/IMigrationHooks";
 import {IRollbackService} from "../interface/service/IRollbackService";
@@ -18,7 +18,7 @@ import {IDB} from "../interface/dao";
  * @template DB - Database interface type
  * @example
  * ```typescript
- * const rollbackService = new RollbackService<DB>(handler, config, backupService, logger, hooks);
+ * const rollbackService = new RollbackService<DB>(handler, config, backupOrchestrator, logger, hooks);
  *
  * try {
  *   await runMigrations();
@@ -35,7 +35,7 @@ export class RollbackService<DB extends IDB> implements IRollbackService<DB> {
      *
      * @param handler - Database migration handler for accessing the database
      * @param config - Configuration including rollback strategy and backup mode
-     * @param backupService - Service for creating and restoring backups
+     * @param backupOrchestrator - Service for creating and restoring backups
      * @param logger - Logger for rollback messages
      * @param hooks - Optional lifecycle hooks for rollback events
      *
@@ -46,7 +46,7 @@ export class RollbackService<DB extends IDB> implements IRollbackService<DB> {
      * const rollbackService = new RollbackService<DB>(
      *     handler,
      *     config,
-     *     backupService,
+     *     backupOrchestrator,
      *     logger,
      *     hooks
      * );
@@ -55,7 +55,7 @@ export class RollbackService<DB extends IDB> implements IRollbackService<DB> {
     constructor(
         private readonly handler: IDatabaseMigrationHandler<DB>,
         private readonly config: Config,
-        private readonly backupService: IBackupService,
+        private readonly backupOrchestrator: IBackupOrchestrator,
         private readonly logger: ILogger,
         private readonly hooks?: IMigrationHooks<DB>
     ) {}
@@ -121,7 +121,7 @@ export class RollbackService<DB extends IDB> implements IRollbackService<DB> {
      * @example
      * ```typescript
      * if (rollbackService.shouldCreateBackup()) {
-     *   const backupPath = await backupService.backup();
+     *   const backupPath = await backupOrchestrator.backup();
      * }
      * ```
      */
@@ -174,14 +174,14 @@ export class RollbackService<DB extends IDB> implements IRollbackService<DB> {
         }
 
         this.logger.info('Restoring from backup...');
-        await this.backupService.restore(pathToRestore);
+        await this.backupOrchestrator.restore(pathToRestore);
 
         // Hook: After restore
         if (this.hooks && this.hooks.onAfterRestore) {
             await this.hooks.onAfterRestore();
         }
 
-        this.backupService.deleteBackup();
+        this.backupOrchestrator.deleteBackup();
         this.logger.info('✓ Database restored from backup');
     }
 

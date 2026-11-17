@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import * as os from 'os';
 import {MigrationScript} from "../model/MigrationScript";
-import {ISchemaVersionService} from "../interface/service/ISchemaVersionService";
+import {ISchemaVersionOrchestrator} from "../interface/service/ISchemaVersionOrchestrator";
 import {IDB} from "../interface/dao";
 import {ILogger} from "../interface/ILogger";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
 import {Config} from "../model/Config";
 import {ChecksumService} from "./ChecksumService";
-import {ITransactionManager} from "../interface/service/ITransactionManager";
+import {ITransactionProvider} from "../interface/service/ITransactionProvider";
 import {TransactionMode} from "../model/TransactionMode";
 import {ITransactionHooks} from "../interface/ITransactionHooks";
 import {ITransactionContext} from "../interface/service/ITransactionContext";
@@ -31,16 +31,16 @@ import {v4 as uuidv4} from 'uuid';
  * @example
  * ```typescript
  * // Basic usage without transactions
- * const runner = new MigrationRunner<DB>(handler, schemaVersionService, config, logger);
+ * const runner = new MigrationRunner<DB>(handler, schemaVersionOrchestrator, config, logger);
  * const executed = await runner.execute(todoScripts);
  *
  * // With transaction manager (PER_MIGRATION mode)
  * const runner = new MigrationRunner<DB>(
  *   handler,
- *   schemaVersionService,
+ *   schemaVersionOrchestrator,
  *   config,
  *   logger,
- *   transactionManager,
+ *   transactionProvider,
  *   hooks
  * );
  * const executed = await runner.execute(todoScripts);
@@ -52,10 +52,10 @@ export class MigrationRunner<DB extends IDB> {
      * Creates a new MigrationRunner instance.
      *
      * @param handler - Database migration handler for accessing the database
-     * @param schemaVersionService - Service for saving migration metadata
+     * @param schemaVersionOrchestrator - Service for saving migration metadata
      * @param config - Configuration including transaction settings
      * @param logger - Logger for execution messages (optional)
-     * @param transactionManager - Transaction manager for automatic transaction handling (optional)
+     * @param transactionProvider - Transaction manager for automatic transaction handling (optional)
      * @param hooks - Transaction lifecycle hooks (optional)
      *
  *
@@ -63,25 +63,25 @@ export class MigrationRunner<DB extends IDB> {
      * @example
      * ```typescript
      * // Without transactions
-     * const runner = new MigrationRunner<DB>(handler, schemaVersionService, config, logger);
+     * const runner = new MigrationRunner<DB>(handler, schemaVersionOrchestrator, config, logger);
      *
      * // With transactions
      * const runner = new MigrationRunner<DB>(
      *   handler,
-     *   schemaVersionService,
+     *   schemaVersionOrchestrator,
      *   config,
      *   logger,
-     *   new DefaultTransactionManager<DB>(db, config.transaction, logger),
+     *   new DefaultTransactionProvider<DB>(db, config.transaction, logger),
      *   new CompositeHooks<DB>([new ExecutionSummaryHook<DB>()])
      * );
      * ```
      */
     constructor(
         private readonly handler: IDatabaseMigrationHandler<DB>,
-        private readonly schemaVersionService: ISchemaVersionService<DB>,
+        private readonly schemaVersionOrchestrator: ISchemaVersionOrchestrator<DB>,
         private readonly config: Config,
         private readonly logger?: ILogger,
-        private readonly transactionManager?: ITransactionManager<DB>,
+        private readonly transactionProvider?: ITransactionProvider<DB>,
         private readonly hooks?: ITransactionHooks<DB>
     ) {}
 
@@ -106,7 +106,7 @@ export class MigrationRunner<DB extends IDB> {
  * @template DB - Database interface type
      * @example
      * ```typescript
-     * const runner = new MigrationRunner<DB>(handler, schemaVersionService, config, logger);
+     * const runner = new MigrationRunner<DB>(handler, schemaVersionOrchestrator, config, logger);
      * const scripts = [script1, script2, script3];
      *
      * try {
@@ -126,7 +126,7 @@ export class MigrationRunner<DB extends IDB> {
         const mode = this.config.transaction.mode;
 
         // PER_BATCH: Wrap all migrations in single transaction
-        if (mode === TransactionMode.PER_BATCH && this.transactionManager) {
+        if (mode === TransactionMode.PER_BATCH && this.transactionProvider) {
             return await this.executeInTransaction(scripts, username, executed);
         }
 
@@ -169,7 +169,7 @@ export class MigrationRunner<DB extends IDB> {
         try {
             // Begin transaction
             await this.hooks?.beforeTransactionBegin?.(context);
-            await this.transactionManager!.begin();
+            await this.transactionProvider!.begin();
             await this.hooks?.afterTransactionBegin?.(context);
 
             // Execute all migrations
@@ -189,7 +189,7 @@ export class MigrationRunner<DB extends IDB> {
             // In dry run mode, always rollback instead of commit
             if (this.config.dryRun) {
                 this.logger?.debug(`Dry run: Rolling back batch transaction (${scripts.length} migrations)`);
-                await this.transactionManager!.rollback();
+                await this.transactionProvider!.rollback();
                 await this.hooks?.afterRollback?.(context);
             } else {
                 // Normal mode: Commit transaction with retry logic
@@ -218,13 +218,13 @@ export class MigrationRunner<DB extends IDB> {
 
             try {
                 await this.hooks?.beforeCommit?.(context);
-                await this.transactionManager!.commit();
+                await this.transactionProvider!.commit();
                 await this.hooks?.afterCommit?.(context);
                 return; // Success!
             } catch (error) {
                 if (attempt < maxRetries) {
                     await this.hooks?.onCommitRetry?.(context, attempt, error as Error);
-                    // Retry is handled by DefaultTransactionManager
+                    // Retry is handled by DefaultTransactionProvider
                 } else {
                     // Final attempt failed
                     throw error;
@@ -242,7 +242,7 @@ export class MigrationRunner<DB extends IDB> {
     private async rollbackTransaction(context: ITransactionContext<DB>, reason: Error): Promise<void> {
         try {
             await this.hooks?.beforeRollback?.(context, reason);
-            await this.transactionManager!.rollback();
+            await this.transactionProvider!.rollback();
             await this.hooks?.afterRollback?.(context);
         } catch (rollbackError) {
             this.logger?.error(`Rollback failed: ${(rollbackError as Error).message}`);
@@ -287,7 +287,7 @@ export class MigrationRunner<DB extends IDB> {
  * @template DB - Database interface type
      * @example
      * ```typescript
-     * const runner = new MigrationRunner<DB>(handler, schemaVersionService, config, logger);
+     * const runner = new MigrationRunner<DB>(handler, schemaVersionOrchestrator, config, logger);
      * const script = new MigrationScript<DB>('V123_example.ts', 123);
      *
      * const result = await runner.executeOne(script);
@@ -298,7 +298,7 @@ export class MigrationRunner<DB extends IDB> {
         const mode = this.config.transaction.mode;
 
         // PER_MIGRATION: Wrap in transaction
-        if (mode === TransactionMode.PER_MIGRATION && this.transactionManager) {
+        if (mode === TransactionMode.PER_MIGRATION && this.transactionProvider) {
             return await this.executeOneInTransaction(script);
         }
 
@@ -320,7 +320,7 @@ export class MigrationRunner<DB extends IDB> {
         try {
             // Begin transaction
             await this.hooks?.beforeTransactionBegin?.(context);
-            await this.transactionManager!.begin();
+            await this.transactionProvider!.begin();
             await this.hooks?.afterTransactionBegin?.(context);
 
             // Execute migration
@@ -329,7 +329,7 @@ export class MigrationRunner<DB extends IDB> {
             // In dry run mode, always rollback instead of commit
             if (this.config.dryRun) {
                 this.logger?.debug(`Dry run: Rolling back transaction for ${script.name}`);
-                await this.transactionManager!.rollback();
+                await this.transactionProvider!.rollback();
                 await this.hooks?.afterRollback?.(context);
             } else {
                 // Normal mode: Commit transaction with retry logic
@@ -364,7 +364,7 @@ export class MigrationRunner<DB extends IDB> {
         // Calculate and store checksum for integrity tracking
         this.calculateChecksum(script);
 
-        await this.schemaVersionService.save(script);
+        await this.schemaVersionOrchestrator.save(script);
         return script;
     }
 

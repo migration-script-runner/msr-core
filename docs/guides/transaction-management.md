@@ -41,7 +41,7 @@ MSR provides robust transaction management to ensure your database migrations ar
 - **Intelligent Error Detection**: Distinguishes between retriable and non-retriable errors
 
 {: .note }
-> Transaction management requires your database handler to implement either `ITransactionalDB` (for SQL databases) or `ICallbackTransactionalDB` (for NoSQL databases). MSR automatically detects your database type and uses the appropriate transaction manager, or you can provide a custom `ITransactionManager` implementation.
+> Transaction management requires your database handler to implement either `ITransactionalDB` (for SQL databases) or `ICallbackTransactionalDB` (for NoSQL databases). MSR automatically detects your database type and uses the appropriate transaction manager, or you can provide a custom `ITransactionProvider` implementation.
 
 {: .important }
 > **New in v0.5.0:** MSR validates transaction configuration before migrations run. If your database doesn't support transactions but `transaction.mode` is enabled, validation will fail with a clear error message. See [Transaction Validation](#transaction-validation) section below.
@@ -465,7 +465,7 @@ await firestore.runTransaction(async (tx) => {
 });
 ```
 
-MSR's `CallbackTransactionManager` automatically:
+MSR's `CallbackTransactionProvider` automatically:
 1. Buffers operations during migration execution
 2. Executes all operations in a single `runTransaction()` call on commit
 3. Retries transient errors (conflicts, contentions) with exponential backoff
@@ -508,7 +508,7 @@ const handler: IDatabaseMigrationHandler = {
 };
 
 const config = new Config();
-config.transaction.mode = 'PER_MIGRATION';  // Auto-uses CallbackTransactionManager
+config.transaction.mode = 'PER_MIGRATION';  // Auto-uses CallbackTransactionProvider
 config.transaction.retries = 5;
 config.transaction.retryBackoff = true;
 
@@ -695,9 +695,9 @@ MSR automatically detects whether your database uses callback or imperative tran
 ```typescript
 // MSR checks at runtime:
 if (db has beginTransaction/commit/rollback) {
-  // Use DefaultTransactionManager (SQL-style)
+  // Use DefaultTransactionProvider (SQL-style)
 } else if (db has runTransaction) {
-  // Use CallbackTransactionManager (NoSQL-style)
+  // Use CallbackTransactionProvider (NoSQL-style)
 } else {
   // Warn: Transaction mode configured but db doesn't support transactions
 }
@@ -1285,12 +1285,12 @@ config.validateBeforeRun = false;  // ⚠️  Disables ALL validation (dangerous
 
 ## Custom Transaction Manager
 
-For advanced use cases, implement `ITransactionManager`:
+For advanced use cases, implement `ITransactionProvider`:
 
 ```typescript
-import { ITransactionManager, ITransactionalDB } from '@migration-script-runner/core';
+import { ITransactionProvider, ITransactionalDB } from '@migration-script-runner/core';
 
-class CustomTransactionManager implements ITransactionManager {
+class CustomTransactionProvider implements ITransactionProvider {
   constructor(
     private db: ITransactionalDB,
     private logger: ILogger
@@ -1334,7 +1334,7 @@ class CustomTransactionManager implements ITransactionManager {
 }
 
 // Use custom transaction manager
-const txManager = new CustomTransactionManager(db, logger);
+const txManager = new CustomTransactionProvider(db, logger);
 const executor = new MigrationScriptRunner(
   handler,
   config,
@@ -1349,7 +1349,7 @@ const executor = new MigrationScriptRunner(
 
 - Read [Configuration: Transaction Settings](../configuration/transaction-settings.md) for detailed API reference
 - Review [API: ITransactionalDB](../api/interfaces/transactional-db#itransactionaldb-interface) interface documentation
-- See [API: ITransactionManager<IDB>](../api/interfaces/index.md#itransactionmanager) for custom implementations
+- See [API: ITransactionProvider<IDB>](../api/interfaces/index.md#itransactionmanager) for custom implementations
 - Check [Recipes: Testing Migrations](recipes/testing-migrations.md) for testing strategies
 
 ---

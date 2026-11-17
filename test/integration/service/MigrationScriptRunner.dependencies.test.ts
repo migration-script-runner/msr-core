@@ -76,34 +76,34 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         })
 
         /**
-         * Test: Constructor accepts custom backupService through dependencies
-         * Validates that custom backupService is used instead of default
+         * Test: Constructor accepts custom backupOrchestrator through dependencies
+         * Validates that custom backupOrchestrator is used instead of default
          */
-        it('should use custom backupService when provided', () => {
-            const mockBackupService = {
+        it('should use custom backupOrchestrator when provided', () => {
+            const mockBackupOrchestrator = {
                 backup: sinon.stub().resolves(),
                 restore: sinon.stub().resolves(),
                 deleteBackup: sinon.stub()
             };
-            const executorWithCustomBackup = new MigrationScriptRunner<IDB>({ handler: handler, backupService: mockBackupService
+            const executorWithCustomBackup = new MigrationScriptRunner<IDB>({ handler: handler, backupOrchestrator: mockBackupOrchestrator
 , config: cfg });
-            expect((executorWithCustomBackup as any).core.backup).to.equal(mockBackupService);
+            expect((executorWithCustomBackup as any).core.backup).to.equal(mockBackupOrchestrator);
         })
 
         /**
-         * Test: Constructor accepts custom schemaVersionService through dependencies
-         * Validates that custom schemaVersionService is used instead of default
+         * Test: Constructor accepts custom schemaVersionOrchestrator through dependencies
+         * Validates that custom schemaVersionOrchestrator is used instead of default
          */
-        it('should use custom schemaVersionService when provided', () => {
-            const mockSchemaVersionService = {
+        it('should use custom schemaVersionOrchestrator when provided', () => {
+            const mockSchemaVersionOrchestrator = {
                 init: sinon.stub().resolves(),
                 save: sinon.stub().resolves(),
                 getAllMigratedScripts: sinon.stub().resolves([]),
                 remove: sinon.stub().resolves()
             };
-            const executorWithCustomSchema = new MigrationScriptRunner<IDB>({ handler: handler, schemaVersionService: mockSchemaVersionService
+            const executorWithCustomSchema = new MigrationScriptRunner<IDB>({ handler: handler, schemaVersionOrchestrator: mockSchemaVersionOrchestrator
 , config: cfg });
-            expect((executorWithCustomSchema as any).core.schemaVersion).to.equal(mockSchemaVersionService);
+            expect((executorWithCustomSchema as any).core.schemaVersion).to.equal(mockSchemaVersionOrchestrator);
         })
 
         /**
@@ -164,12 +164,12 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          */
         it('should use all custom dependencies when provided', () => {
             const customLogger = new SilentLogger();
-            const mockBackupService = {
+            const mockBackupOrchestrator = {
                 backup: sinon.stub().resolves(),
                 restore: sinon.stub().resolves(),
                 deleteBackup: sinon.stub()
             };
-            const mockSchemaVersionService = {
+            const mockSchemaVersionOrchestrator = {
                 init: sinon.stub().resolves(),
                 save: sinon.stub().resolves(),
                 getAllMigratedScripts: sinon.stub().resolves([]),
@@ -188,16 +188,16 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
             };
 
             const executorWithAllCustom = new MigrationScriptRunner<IDB>({ handler: handler, logger: customLogger,
-                backupService: mockBackupService,
-                schemaVersionService: mockSchemaVersionService,
+                backupOrchestrator: mockBackupOrchestrator,
+                schemaVersionOrchestrator: mockSchemaVersionOrchestrator,
                 migrationRenderer: mockRenderer,
                 migrationService: mockMigrationService
 , config: cfg });
 
             // Logger should be wrapped with LevelAwareLogger for level filtering
             expect((executorWithAllCustom as any).output.logger).to.be.instanceOf(LevelAwareLogger);
-            expect((executorWithAllCustom as any).core.backup).to.equal(mockBackupService);
-            expect((executorWithAllCustom as any).core.schemaVersion).to.equal(mockSchemaVersionService);
+            expect((executorWithAllCustom as any).core.backup).to.equal(mockBackupOrchestrator);
+            expect((executorWithAllCustom as any).core.schemaVersion).to.equal(mockSchemaVersionOrchestrator);
             expect((executorWithAllCustom as any).output.renderer).to.equal(mockRenderer);
             expect((executorWithAllCustom as any).core.migration).to.equal(mockMigrationService);
         })

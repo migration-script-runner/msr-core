@@ -230,9 +230,9 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 , config: config });
 
             // Check that transaction manager was not created via factory
-            const transactionManager = (executor as any).execution.transactionManager;
+            const transactionProvider = (executor as any).execution.transactionProvider;
 
-            expect(transactionManager).to.be.undefined;
+            expect(transactionProvider).to.be.undefined;
         });
 
         /**
@@ -249,7 +249,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 
             const handlerWithTx = {
                 ...handler,
-                transactionManager: customTxManager
+                transactionProvider: customTxManager
             };
 
             const executor = new MigrationScriptRunner<IDB>({
@@ -258,17 +258,17 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
             , config: config });
 
             // Check that custom transaction manager was used via factory
-            const transactionManager = (executor as any).execution.transactionManager;
+            const transactionProvider = (executor as any).execution.transactionProvider;
 
-            expect(transactionManager).to.equal(customTxManager);
+            expect(transactionProvider).to.equal(customTxManager);
         });
 
         /**
-         * Test: Auto-creates DefaultTransactionManager for ITransactionalDB
+         * Test: Auto-creates DefaultTransactionProvider for ITransactionalDB
          * Covers lines 256-257 in MigrationScriptRunner.ts
-         * Validates that DefaultTransactionManager is auto-created when db implements ITransactionalDB.
+         * Validates that DefaultTransactionProvider is auto-created when db implements ITransactionalDB.
          */
-        it('should auto-create DefaultTransactionManager when db implements ITransactionalDB', () => {
+        it('should auto-create DefaultTransactionProvider when db implements ITransactionalDB', () => {
             const transactionalDB = {
                 query: () => Promise.resolve([]),
                 checkConnection: () => Promise.resolve(true),
@@ -288,20 +288,20 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
             , config: config });
 
             // Check that transaction manager was auto-created via factory
-            const transactionManager = (executor as any).execution.transactionManager;
+            const transactionProvider = (executor as any).execution.transactionProvider;
 
-            expect(transactionManager).to.exist;
-            expect(transactionManager.begin).to.be.a('function');
-            expect(transactionManager.commit).to.be.a('function');
-            expect(transactionManager.rollback).to.be.a('function');
+            expect(transactionProvider).to.exist;
+            expect(transactionProvider.begin).to.be.a('function');
+            expect(transactionProvider.commit).to.be.a('function');
+            expect(transactionProvider.rollback).to.be.a('function');
         });
 
         /**
-         * Test: Auto-creates CallbackTransactionManager for ICallbackTransactionalDB
+         * Test: Auto-creates CallbackTransactionProvider for ICallbackTransactionalDB
          * Covers lines 284-285 in MigrationScriptRunner.ts
-         * Validates that CallbackTransactionManager is auto-created when db implements ICallbackTransactionalDB.
+         * Validates that CallbackTransactionProvider is auto-created when db implements ICallbackTransactionalDB.
          */
-        it('should auto-create CallbackTransactionManager when db implements ICallbackTransactionalDB', () => {
+        it('should auto-create CallbackTransactionProvider when db implements ICallbackTransactionalDB', () => {
             const callbackTransactionalDB = {
                 query: () => Promise.resolve([]),
                 checkConnection: () => Promise.resolve(true),
@@ -323,12 +323,12 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
             , config: config });
 
             // Check that transaction manager was auto-created via factory
-            const transactionManager = (executor as any).execution.transactionManager;
+            const transactionProvider = (executor as any).execution.transactionProvider;
 
-            expect(transactionManager).to.exist;
-            expect(transactionManager.begin).to.be.a('function');
-            expect(transactionManager.commit).to.be.a('function');
-            expect(transactionManager.rollback).to.be.a('function');
+            expect(transactionProvider).to.exist;
+            expect(transactionProvider.begin).to.be.a('function');
+            expect(transactionProvider.commit).to.be.a('function');
+            expect(transactionProvider.rollback).to.be.a('function');
         });
     });
 

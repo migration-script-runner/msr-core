@@ -32,7 +32,7 @@ Locking settings prevent multiple processes from running migrations simultaneous
 MSR uses database-level locking similar to Knex.js and Liquibase, making it one of the few Node.js migration tools with built-in concurrency protection.
 
 {: .tip }
-> **Opt-In Feature (v0.8.0)**: Locking is disabled by default for backwards compatibility. Enable it by adding a `lockingService` to your handler. Once enabled, locking is active by default (recommended for production).
+> **Opt-In Feature (v0.8.0)**: Locking is disabled by default for backwards compatibility. Enable it by adding a `lockingProvider` to your handler. Once enabled, locking is active by default (recommended for production).
 
 ---
 
@@ -332,12 +332,12 @@ See [Lock Commands](/cli/lock-commands) for full CLI documentation.
 
 ## Implementation Requirements
 
-To use locking, your database handler must implement `ILockingService`:
+To use locking, your database handler must implement `ILockingProvider`:
 
 ```typescript
-import { ILockingService, ILockStatus } from '@migration-script-runner/core';
+import { ILockingProvider, ILockStatus } from '@migration-script-runner/core';
 
-class MyLockingService implements ILockingService<MyDB> {
+class MyLockingProvider implements ILockingProvider<MyDB> {
   async acquireLock(executorId: string): Promise<boolean> {
     // Attempt to acquire lock using SELECT FOR UPDATE NOWAIT or equivalent
     // Return true if acquired, false if already locked
@@ -380,7 +380,7 @@ class MyLockingService implements ILockingService<MyDB> {
 }
 
 // Add to handler
-handler.lockingService = new MyLockingService(handler.db);
+handler.lockingProvider = new MyLockingProvider(handler.db);
 ```
 
 {: .new }
@@ -406,7 +406,7 @@ Creates lock storage structures (tables, collections, paths) before first use.
 
 **Example (PostgreSQL):**
 ```typescript
-class PostgresLockingService implements ILockingService<IPostgresDB> {
+class PostgresLockingProvider implements ILockingProvider<IPostgresDB> {
   async initLockStorage(): Promise<void> {
     await this.db.query(`
       CREATE TABLE IF NOT EXISTS migration_locks (
@@ -428,7 +428,7 @@ class PostgresLockingService implements ILockingService<IPostgresDB> {
 
 **Example (MongoDB):**
 ```typescript
-class MongoLockingService implements ILockingService<IMongoDBInterface> {
+class MongoLockingProvider implements ILockingProvider<IMongoDBInterface> {
   async initLockStorage(): Promise<void> {
     const db = this.db.client.db();
 
@@ -463,7 +463,7 @@ Verifies lock storage is accessible before attempting lock operations.
 
 **Example:**
 ```typescript
-class PostgresLockingService implements ILockingService<IPostgresDB> {
+class PostgresLockingProvider implements ILockingProvider<IPostgresDB> {
   async ensureLockStorageAccessible(): Promise<boolean> {
     try {
       await this.db.query('SELECT 1 FROM migration_locks LIMIT 1');
@@ -481,11 +481,11 @@ class PostgresLockingService implements ILockingService<IPostgresDB> {
 class MyHandler implements IDatabaseMigrationHandler<IDB> {
   async initialize(): Promise<void> {
     // Initialize lock storage
-    if (this.lockingService) {
-      await this.lockingService.initLockStorage();
+    if (this.lockingProvider) {
+      await this.lockingProvider.initLockStorage();
 
       // Verify storage is accessible
-      const accessible = await this.lockingService.ensureLockStorageAccessible();
+      const accessible = await this.lockingProvider.ensureLockStorageAccessible();
       if (!accessible) {
         throw new Error('Lock storage not accessible. Check permissions and run initLockStorage().');
       }
@@ -597,7 +597,7 @@ class MetricsLockingHooks implements ILockingHooks {
 // Usage
 const hooks = new MetricsLockingHooks(myMetricsClient);
 const handler = new MyHandler({
-  lockingService: myLockingService,
+  lockingProvider: myLockingProvider,
   lockingHooks: hooks  // Pass hooks to handler
 });
 ```
@@ -694,21 +694,21 @@ Hooks are automatically passed to `LockingOrchestrator` when provided to the han
 import { IDatabaseMigrationHandler, ILockingHooks } from '@migration-script-runner/core';
 
 class MyHandler implements IDatabaseMigrationHandler<IDB> {
-  lockingService?: ILockingService<IDB>;
+  lockingProvider?: ILockingProvider<IDB>;
   lockingHooks?: ILockingHooks;  // Add hooks property
 
   constructor(options: {
-    lockingService?: ILockingService<IDB>;
+    lockingProvider?: ILockingProvider<IDB>;
     lockingHooks?: ILockingHooks;  // Accept hooks in constructor
   }) {
-    this.lockingService = options.lockingService;
+    this.lockingProvider = options.lockingProvider;
     this.lockingHooks = options.lockingHooks;
   }
 }
 
 // Create handler with hooks
 const handler = new MyHandler({
-  lockingService: new MyLockingService(db),
+  lockingProvider: new MyLockingProvider(db),
   lockingHooks: new MetricsLockingHooks(metricsClient)
 });
 ```
@@ -724,7 +724,7 @@ const handler = new MyHandler({
 
 ### Overview
 
-`LockingOrchestrator` is an internal decorator service that wraps your `ILockingService` implementation. It handles:
+`LockingOrchestrator` is an internal decorator service that wraps your `ILockingProvider` implementation. It handles:
 
 - **Retry Logic**: Automatically retries lock acquisition with configurable attempts and delays
 - **Two-Phase Locking**: Acquires lock then verifies ownership to prevent race conditions
@@ -738,13 +738,13 @@ MSR follows a **decorator pattern** for lock orchestration:
 
 ```
 Your Handler
-├── lockingService: ILockingService (adapter implementation)
+├── lockingProvider: ILockingProvider (adapter implementation)
 │   └── Database-specific lock operations
 └── lockingHooks?: ILockingHooks (optional hooks)
 
 MigrationWorkflowOrchestrator (internal)
 └── lockingOrchestrator: LockingOrchestrator
-    ├── Wraps your lockingService
+    ├── Wraps your lockingProvider
     ├── Applies retry logic
     ├── Invokes hooks
     └── Two-phase locking verification
@@ -752,7 +752,7 @@ MigrationWorkflowOrchestrator (internal)
 
 **Key Design Principles:**
 
-1. **Adapters Stay Simple**: Your `ILockingService` only implements database operations
+1. **Adapters Stay Simple**: Your `ILockingProvider` only implements database operations
 2. **Core Handles Orchestration**: MSR core manages retry, hooks, and verification
 3. **No Duplication**: Retry logic is centralized, not repeated in every adapter
 4. **Consistent Behavior**: All databases get the same orchestration
@@ -769,10 +769,10 @@ const acquired = await executor.up();
 for (let attempt = 1; attempt <= config.locking.retryAttempts; attempt++) {
   await hooks?.onBeforeAcquireLock?.(executorId, timeout);
 
-  const acquired = await lockingService.acquireLock(executorId);
+  const acquired = await lockingProvider.acquireLock(executorId);
   if (acquired) {
     // Success - verify ownership
-    const verified = await lockingService.verifyLockOwnership(executorId);
+    const verified = await lockingProvider.verifyLockOwnership(executorId);
     if (verified) {
       await hooks?.onLockAcquired?.(executorId, status);
       return true;
@@ -795,10 +795,10 @@ Prevents race conditions by verifying ownership after acquisition:
 
 ```typescript
 // Phase 1: Acquire lock
-const acquired = await lockingService.acquireLock(executorId);
+const acquired = await lockingProvider.acquireLock(executorId);
 
 // Phase 2: Verify ownership (catches race conditions)
-const verified = await lockingService.verifyLockOwnership(executorId);
+const verified = await lockingProvider.verifyLockOwnership(executorId);
 
 if (!verified) {
   await hooks?.onOwnershipVerificationFailed?.(executorId);
@@ -834,20 +834,20 @@ await hooks?.onLockError?.('acquire', error, executorId);
 
 ### Automatic Integration
 
-You don't instantiate `LockingOrchestrator` directly. It's created automatically by `MigrationWorkflowOrchestrator` when your handler provides a `lockingService`:
+You don't instantiate `LockingOrchestrator` directly. It's created automatically by `MigrationWorkflowOrchestrator` when your handler provides a `lockingProvider`:
 
 ```typescript
 // In your handler
 class MyHandler implements IDatabaseMigrationHandler<IDB> {
-  lockingService = new MyLockingService(db);  // You provide this
+  lockingProvider = new MyLockingProvider(db);  // You provide this
   lockingHooks = new MetricsHooks();          // Optional
 }
 
 // MSR creates orchestrator internally
 // MigrationWorkflowOrchestrator.constructor():
-if (handler.lockingService) {
+if (handler.lockingProvider) {
   this.lockingOrchestrator = new LockingOrchestrator(
-    handler.lockingService,  // Your adapter
+    handler.lockingProvider,  // Your adapter
     config.locking,          // Retry config
     logger,                  // Logger
     handler.lockingHooks     // Optional hooks
@@ -873,7 +873,7 @@ config.locking.timeout = 60000;      // Lock expires after 60 seconds
 **Before v0.8.1** (without LockingOrchestrator):
 ```typescript
 // Every adapter had to implement retry logic
-class MyLockingService implements ILockingService<IDB> {
+class MyLockingProvider implements ILockingProvider<IDB> {
   async acquireLock(executorId: string): Promise<boolean> {
     // Adapter must implement retry logic ❌
     // Adapter must implement hook calls ❌
@@ -886,7 +886,7 @@ class MyLockingService implements ILockingService<IDB> {
 **After v0.8.1** (with LockingOrchestrator):
 ```typescript
 // Adapters only implement database operations
-class MyLockingService implements ILockingService<IDB> {
+class MyLockingProvider implements ILockingProvider<IDB> {
   async acquireLock(executorId: string): Promise<boolean> {
     // Pure database operation ✅
     const result = await this.db.transaction(/* ... */);
@@ -905,7 +905,7 @@ All errors are caught, logged, and hooks are invoked:
 
 ```typescript
 try {
-  await lockingService.acquireLock(executorId);
+  await lockingProvider.acquireLock(executorId);
 } catch (error) {
   logger.error(`Lock acquisition error: ${error}`);
   await hooks?.onLockError?.('acquire', error, executorId);

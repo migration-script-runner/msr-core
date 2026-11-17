@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import {BackupService, Config, IBackup, IDatabaseMigrationHandler, ISchemaVersion, IDB} from "../../../src";
+import {BackupOrchestrator, Config, IBackup, IDatabaseMigrationHandler, ISchemaVersion, IDB} from "../../../src";
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 /**
- * Tests for BackupService with optional backup interface.
+ * Tests for BackupOrchestrator with optional backup interface.
  * Validates error handling when backup interface is missing or unavailable.
  */
-describe('BackupService - Optional Backup', () => {
+describe('BackupOrchestrator - Optional Backup', () => {
 
     let testDir: string;
 
@@ -41,14 +41,14 @@ describe('BackupService - Optional Backup', () => {
         };
 
         const config = new Config();
-        const backupService = new BackupService<IDB>(handler, config);
+        const backupOrchestrator = new BackupOrchestrator<IDB>(handler, config);
 
         // Set a non-existent backup file path
         const nonExistentPath = path.join(testDir, 'non-existent-backup.json');
-        (backupService as any).backupFile = nonExistentPath;
+        (backupOrchestrator as any).backupFile = nonExistentPath;
 
         try {
-            await backupService.restore();
+            await backupOrchestrator.restore();
             expect.fail('Should have rejected with error');
         } catch (error) {
             expect((error as string).toString()).to.include(`Cannot open ${nonExistentPath}`);
@@ -68,10 +68,10 @@ describe('BackupService - Optional Backup', () => {
         };
 
         const config = new Config();
-        const backupService = new BackupService<IDB>(handler, config);
+        const backupOrchestrator = new BackupOrchestrator<IDB>(handler, config);
 
         try {
-            await backupService.backup();
+            await backupOrchestrator.backup();
             expect.fail('Should have thrown error');
         } catch (error) {
             expect((error as Error).message).to.equal('No backup interface provided - cannot create backup');
@@ -92,15 +92,15 @@ describe('BackupService - Optional Backup', () => {
         };
 
         const config = new Config();
-        const backupService = new BackupService<IDB>(handler, config);
+        const backupOrchestrator = new BackupOrchestrator<IDB>(handler, config);
 
         // Create a fake backup file
         const backupPath = path.join(testDir, 'fake-backup.json');
         fs.writeFileSync(backupPath, 'fake-backup-data');
-        (backupService as any).backupFile = backupPath;
+        (backupOrchestrator as any).backupFile = backupPath;
 
         try {
-            await backupService.restore();
+            await backupOrchestrator.restore();
             expect.fail('Should have thrown error');
         } catch (error) {
             expect((error as Error).message).to.equal('No backup interface provided - cannot restore');
@@ -130,10 +130,10 @@ describe('BackupService - Optional Backup', () => {
         };
 
         const config = new Config();
-        const backupService = new BackupService<IDB>(handler, config);
+        const backupOrchestrator = new BackupOrchestrator<IDB>(handler, config);
 
         // Backup
-        const result = await backupService.backup();
+        const result = await backupOrchestrator.backup();
         expect(result).to.be.a('string');
         expect(fs.existsSync(result)).to.be.true;
 
@@ -141,7 +141,7 @@ describe('BackupService - Optional Backup', () => {
         expect((mockBackup.backup as sinon.SinonStub).calledOnce).to.be.true;
 
         // Restore
-        await backupService.restore();
+        await backupOrchestrator.restore();
 
         // Verify restore was called with the backup data
         expect((mockBackup.restore as sinon.SinonStub).calledOnce).to.be.true;

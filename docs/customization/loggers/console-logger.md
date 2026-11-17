@@ -204,13 +204,13 @@ class MyHandler implements IMigrationScriptHandler {
 ### With Backup Service
 
 ```typescript
-import { BackupService, ConsoleLogger } from 'msr-core';
+import { BackupOrchestrator, ConsoleLogger } from 'msr-core';
 
 const logger = new ConsoleLogger();
-const backupService = new BackupService(logger);
+const backupOrchestrator = new BackupOrchestrator(logger);
 
 logger.info('Creating backup...');
-await backupService.createBackup(config, version);
+await backupOrchestrator.createBackup(config, version);
 logger.info('✓ Backup created successfully');
 ```
 

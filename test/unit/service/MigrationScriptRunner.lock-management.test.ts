@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import {MigrationScriptRunner} from '../../../src/service/MigrationScriptRunner';
 import {Config} from '../../../src/model';
 import {IDB, IDatabaseMigrationHandler} from '../../../src/interface';
-import {ILockingService, ILockStatus} from '../../../src/interface/service/ILockingService';
+import {ILockingProvider, ILockStatus} from '../../../src/interface/service/ILockingProvider';
 import {SilentLogger} from '../../../src/logger/SilentLogger';
 
 describe('MigrationScriptRunner - Lock Management Methods', () => {
@@ -16,7 +16,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                // No lockingService
+                // No lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
@@ -41,7 +41,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 processId: '12345'
             };
 
-            const lockingService: ILockingService<IDB> = {
+            const lockingProvider: ILockingProvider<IDB> = {
                 initLockStorage: async () => {},
                 ensureLockStorageAccessible: async () => true,
                 acquireLock: async () => true,
@@ -60,7 +60,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                lockingService
+                lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
@@ -85,7 +85,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 processId: undefined
             };
 
-            const lockingService: ILockingService<IDB> = {
+            const lockingProvider: ILockingProvider<IDB> = {
                 initLockStorage: async () => {},
                 ensureLockStorageAccessible: async () => true,
                 acquireLock: async () => true,
@@ -104,7 +104,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                lockingService
+                lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
@@ -132,7 +132,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                // No lockingService
+                // No lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
@@ -156,7 +156,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
         it('should call forceReleaseLock on locking service', async () => {
             let forceReleaseWasCalled = false;
 
-            const lockingService: ILockingService<IDB> = {
+            const lockingProvider: ILockingProvider<IDB> = {
                 initLockStorage: async () => {},
                 ensureLockStorageAccessible: async () => true,
                 acquireLock: async () => true,
@@ -177,7 +177,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                lockingService
+                lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
@@ -194,7 +194,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
         });
 
         it('should propagate errors from locking service', async () => {
-            const lockingService: ILockingService<IDB> = {
+            const lockingProvider: ILockingProvider<IDB> = {
                 initLockStorage: async () => {},
                 ensureLockStorageAccessible: async () => true,
                 acquireLock: async () => true,
@@ -215,7 +215,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                lockingService
+                lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();

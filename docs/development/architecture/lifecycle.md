@@ -49,8 +49,8 @@ graph TD
 ```mermaid
 sequenceDiagram
     participant Executor as MigrationScriptRunner
-    participant Backup as BackupService
-    participant Schema as SchemaVersionService
+    participant Backup as BackupOrchestrator
+    participant Schema as SchemaVersionOrchestrator
     participant Scanner as MigrationScanner
 
     Executor->>Schema: init()
@@ -69,7 +69,7 @@ sequenceDiagram
 sequenceDiagram
     participant Executor as MigrationScriptRunner
     participant Execution as MigrationExecutionService
-    participant Schema as SchemaVersionService
+    participant Schema as SchemaVersionOrchestrator
     participant Rollback as RollbackService
 
     loop For each pending migration

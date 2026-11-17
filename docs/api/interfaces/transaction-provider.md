@@ -1,15 +1,15 @@
 ---
 layout: default
-title: ITransactionManager
+title: ITransactionProvider Interface
 parent: Interfaces
 grand_parent: API Reference
 nav_order: 6
 ---
 
-# ITransactionManager Interface
+# ITransactionProvider Interface
 {: .no_toc }
 
-The `ITransactionManager` interface provides transaction orchestration with automatic retry logic for transient failures. It wraps database transaction operations with resilience patterns.
+The `ITransactionProvider` interface provides transaction orchestration with automatic retry logic for transient failures. It wraps database transaction operations with resilience patterns.
 {: .fs-6 .fw-300 }
 
 ## Table of Contents
@@ -26,7 +26,7 @@ The `ITransactionManager` interface provides transaction orchestration with auto
 
 ## Overview
 
-`ITransactionManager` orchestrates transaction lifecycle with built-in retry logic for common transient failures like deadlocks and serialization conflicts. It separates transaction orchestration from database-specific transaction commands.
+`ITransactionProvider` orchestrates transaction lifecycle with built-in retry logic for common transient failures like deadlocks and serialization conflicts. It separates transaction orchestration from database-specific transaction commands.
 
 **Key Features:**
 - Automatic retry on transient failures (deadlocks, serialization errors)
@@ -37,7 +37,7 @@ The `ITransactionManager` interface provides transaction orchestration with auto
 
 **Design Philosophy:**
 - **Database interface (`ITransactionalDB`)** = "what" (execute BEGIN, COMMIT, ROLLBACK)
-- **Transaction manager (`ITransactionManager`)** = "how" (when to retry, how long to wait)
+- **Transaction manager (`ITransactionProvider`)** = "how" (when to retry, how long to wait)
 
 ## Interface Definition
 
@@ -50,7 +50,7 @@ The `ITransactionManager` interface provides transaction orchestration with auto
  *
  * @example
  * ```typescript
- * const txManager = new DefaultTransactionManager(db, config, logger, hooks);
+ * const txManager = new DefaultTransactionProvider(db, config, logger, hooks);
  *
  * await txManager.begin();
  * try {
@@ -62,7 +62,7 @@ The `ITransactionManager` interface provides transaction orchestration with auto
  * }
  * ```
  */
-export interface ITransactionManager {
+export interface ITransactionProvider {
   /**
    * Begin a new transaction.
    *
@@ -163,7 +163,7 @@ Begins a new transaction. Must be called before any transactional operations.
 
 **Example:**
 ```typescript
-const txManager = new DefaultTransactionManager(db, config, logger, hooks);
+const txManager = new DefaultTransactionProvider(db, config, logger, hooks);
 
 await txManager.begin();
 console.log('Transaction started');
@@ -253,13 +253,13 @@ try {
 
 ## Default Implementation
 
-Migration Script Runner provides `DefaultTransactionManager` that implements `ITransactionManager` with production-ready retry logic.
+Migration Script Runner provides `DefaultTransactionProvider` that implements `ITransactionProvider` with production-ready retry logic.
 
-### DefaultTransactionManager
+### DefaultTransactionProvider
 
 **Auto-Created When:**
 - Database implements `ITransactionalDB`
-- Handler doesn't provide custom `transactionManager`
+- Handler doesn't provide custom `transactionProvider`
 - Transaction mode is not `NONE`
 
 **Features:**
@@ -272,14 +272,14 @@ Migration Script Runner provides `DefaultTransactionManager` that implements `IT
 **Constructor:**
 ```typescript
 import {
-  DefaultTransactionManager,
+  DefaultTransactionProvider,
   ITransactionalDB,
   Config,
   ILogger,
   ITransactionHooks
 } from '@migration-script-runner/core';
 
-const txManager = new DefaultTransactionManager(
+const txManager = new DefaultTransactionProvider(
   db,       // ITransactionalDB instance
   config,   // Config with transaction settings
   logger,   // ILogger for logging
@@ -306,12 +306,12 @@ You can provide a custom transaction manager for specialized behavior:
 
 ```typescript
 import {
-  ITransactionManager,
+  ITransactionProvider,
   ITransactionalDB,
   ITransactionContext
 } from '@migration-script-runner/core';
 
-export class CustomTransactionManager implements ITransactionManager {
+export class CustomTransactionProvider implements ITransactionProvider {
   constructor(
     private db: ITransactionalDB,
     private maxRetries: number = 5
@@ -364,7 +364,7 @@ export class CustomTransactionManager implements ITransactionManager {
 const handler: IDatabaseMigrationHandler = {
   db: myDB,
   schemaVersion: mySchemaVersion,
-  transactionManager: new CustomTransactionManager(myDB, 5),
+  transactionProvider: new CustomTransactionProvider(myDB, 5),
   getName: () => 'MyHandler',
   getVersion: () => '1.0.0'
 };
@@ -373,7 +373,7 @@ const handler: IDatabaseMigrationHandler = {
 ### Example 2: Distributed Transaction Manager
 
 ```typescript
-export class DistributedTransactionManager implements ITransactionManager {
+export class DistributedTransactionProvider implements ITransactionProvider {
   constructor(
     private coordinatorUrl: string,
     private participantDBs: ITransactionalDB[]
@@ -421,7 +421,7 @@ export class DistributedTransactionManager implements ITransactionManager {
 ### Example 3: Transaction Manager with Circuit Breaker
 
 ```typescript
-export class CircuitBreakerTransactionManager implements ITransactionManager {
+export class CircuitBreakerTransactionProvider implements ITransactionProvider {
   private failures = 0;
   private lastFailure: Date | null = null;
   private readonly threshold = 5;
@@ -634,14 +634,14 @@ const executor = new MigrationScriptRunner({ handler,
 
 ```typescript
 import {
-  DefaultTransactionManager,
+  DefaultTransactionProvider,
   Config
 } from '@migration-script-runner/core';
 
 const config = new Config();
 config.transaction.retries = 3;
 
-const txManager = new DefaultTransactionManager(db, config, logger);
+const txManager = new DefaultTransactionProvider(db, config, logger);
 
 await txManager.begin();
 try {
@@ -663,7 +663,7 @@ const hooks: ITransactionHooks = {
   }
 };
 
-const txManager = new DefaultTransactionManager(db, config, logger, hooks);
+const txManager = new DefaultTransactionProvider(db, config, logger, hooks);
 
 await txManager.begin();
 // ... operations
@@ -676,7 +676,7 @@ await txManager.commit(); // Hooks invoked on retry
 const handler: IDatabaseMigrationHandler = {
   db: myDB,
   schemaVersion: mySchemaVersion,
-  transactionManager: new CustomTransactionManager(myDB),
+  transactionProvider: new CustomTransactionProvider(myDB),
   getName: () => 'MyHandler',
   getVersion: () => '1.0.0'
 };

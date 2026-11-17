@@ -170,7 +170,7 @@ export class Config {
      * ```
      *
      * @see {@link LockingConfig} for all configuration options
-     * @see {@link ILockingService} for implementation details
+     * @see {@link ILockingProvider} for implementation details
      */
     locking:LockingConfig = new LockingConfig()
 

@@ -11,7 +11,7 @@ This section contains guides for upgrading between major versions of MSR. Each g
 
 ## Current Upgrade Guide
 
-- [**v0.8.x → v1.0.0**](v0.8-to-v1.0.md) - **Breaking:** Rename `MigrationScriptExecutor` and related public types to `Runner` names
+- [**v0.8.x → v1.0.0**](v0.8-to-v1.0.md) - **Breaking:** Runner API rename and provider/orchestrator naming changes
 
 ## Previous Releases
 

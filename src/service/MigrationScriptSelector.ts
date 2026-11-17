@@ -41,7 +41,7 @@ export class MigrationScriptSelector<DB extends IDB> {
      * @example
      * ```typescript
      * const selector = new MigrationScriptSelector<DB>();
-     * const migratedScripts = await schemaVersionService.getAllMigratedScripts();
+     * const migratedScripts = await schemaVersionOrchestrator.getAllMigratedScripts();
      * const allScripts = await migrationService.readMigrationScripts(config);
      *
      * const pendingScripts = selector.getPending(migratedScripts, allScripts);

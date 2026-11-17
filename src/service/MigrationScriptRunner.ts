@@ -7,7 +7,7 @@ import {IMigrationHooks} from "../interface/IMigrationHooks";
 import {Config} from "../model";
 import {IValidationResult, IValidationIssue, IDB} from "../interface";
 import {ILoaderRegistry} from "../interface/loader/ILoaderRegistry";
-import {ILockStatus} from "../interface/service/ILockingService";
+import {ILockStatus} from "../interface/service/ILockingProvider";
 import {createMigrationServices} from "./MigrationServicesFactory";
 import {CoreServices} from "./facade/CoreServices";
 import {ExecutionServices} from "./facade/ExecutionServices";
@@ -177,7 +177,7 @@ export class MigrationScriptRunner<
      * const executor = new MigrationScriptRunner<IDB>({
      *     handler: mockHandler,
      *     config: testConfig,
-     *     backupService: mockBackupService,
+     *     backupOrchestrator: mockBackupOrchestrator,
      *     migrationService: mockMigrationService
      * });
      * ```
@@ -698,12 +698,12 @@ export class MigrationScriptRunner<
      * ```
      */
     public async getLockStatus(): Promise<ILockStatus | null> {
-        const lockingService = this.handler.lockingService;
-        if (!lockingService) {
+        const lockingProvider = this.handler.lockingProvider;
+        if (!lockingProvider) {
             return null;
         }
 
-        return lockingService.getLockStatus();
+        return lockingProvider.getLockStatus();
     }
 
     /**
@@ -738,15 +738,15 @@ export class MigrationScriptRunner<
      * ```
      */
     public async forceReleaseLock(): Promise<void> {
-        const lockingService = this.handler.lockingService;
-        if (!lockingService) {
+        const lockingProvider = this.handler.lockingProvider;
+        if (!lockingProvider) {
             throw new Error(
                 'Locking service is not configured. ' +
                 'Cannot release lock without a locking implementation in your database handler.'
             );
         }
 
-        await lockingService.forceReleaseLock();
+        await lockingProvider.forceReleaseLock();
     }
 
     /**

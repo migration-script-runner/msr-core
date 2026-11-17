@@ -36,8 +36,8 @@ graph TB
     subgraph "MSR Core - Services"
         Scanner[MigrationScanner<br/>Finds migrations]
         Validator[MigrationValidator<br/>Validates scripts]
-        Backup[BackupService<br/>Creates backups]
-        SchemaVersion[SchemaVersionService<br/>Tracks versions]
+        Backup[BackupOrchestrator<br/>Creates backups]
+        SchemaVersion[SchemaVersionOrchestrator<br/>Tracks versions]
         Execution[MigrationExecutionService<br/>Runs migrations]
         Rollback[RollbackService<br/>Handles failures]
     end
@@ -105,8 +105,12 @@ graph TB
 ### [Core Components](components)
 Detailed documentation of the main classes and services:
 - MigrationScriptRunner - Orchestration layer
-- Service layer components (Backup, Schema Version, Rollback, etc.)
+- Provider and orchestrator components (locking, transactions, backup, schema version)
+- Internal services (migration, rollback, validation, etc.)
 - Database handler interface
+
+### [Naming conventions](naming-conventions)
+Provider, orchestrator, and service names used across the adapter and core layers.
 
 ### [Data Flow](data-flow)
 How data moves through the system:

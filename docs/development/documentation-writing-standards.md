@@ -490,7 +490,7 @@ When referencing code in text, use inline code formatting.
 
 **File references with line numbers:**
 ```
-The backup implementation in src/services/BackupService.ts:42
+The backup implementation in src/services/BackupOrchestrator.ts:42
 ```
 
 ---

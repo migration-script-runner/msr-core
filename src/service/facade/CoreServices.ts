@@ -1,8 +1,8 @@
 import {IMigrationScanner} from "../../interface/service/IMigrationScanner";
-import {ISchemaVersionService} from "../../interface/service/ISchemaVersionService";
+import {ISchemaVersionOrchestrator} from "../../interface/service/ISchemaVersionOrchestrator";
 import {IMigrationService} from "../../interface/service/IMigrationService";
 import {IMigrationValidationService} from "../../interface/service/IMigrationValidationService";
-import {IBackupService} from "../../interface/service/IBackupService";
+import {IBackupOrchestrator} from "../../interface/service/IBackupOrchestrator";
 import {IRollbackService} from "../../interface/service/IRollbackService";
 import {IDB} from "../../interface";
 
@@ -29,10 +29,10 @@ export class CoreServices<DB extends IDB> {
      */
     constructor(
         public readonly scanner: IMigrationScanner<DB>,
-        public readonly schemaVersion: ISchemaVersionService<DB>,
+        public readonly schemaVersion: ISchemaVersionOrchestrator<DB>,
         public readonly migration: IMigrationService<DB>,
         public readonly validation: IMigrationValidationService<DB>,
-        public readonly backup: IBackupService,
+        public readonly backup: IBackupOrchestrator,
         public readonly rollback: IRollbackService<DB>
     ) {}
 }

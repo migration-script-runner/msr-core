@@ -465,7 +465,7 @@ Track which version each environment is at:
 
 ```typescript
 // Get current database version
-const migrated = await schemaVersionService.getAllMigratedScripts();
+const migrated = await schemaVersionOrchestrator.getAllMigratedScripts();
 const currentVersion = Math.max(...migrated.map(m => m.timestamp));
 
 console.log(`Current database version: ${currentVersion}`);

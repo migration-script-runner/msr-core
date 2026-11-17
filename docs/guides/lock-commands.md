@@ -72,7 +72,7 @@ $ msr lock:status
 
 Lock Status: NOT CONFIGURED
 Locking service is not available in your database handler.
-See documentation for implementing ILockingService.
+See documentation for implementing ILockingProvider.
 ```
 
 ### Exit Codes

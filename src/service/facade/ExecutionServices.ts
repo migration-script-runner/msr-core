@@ -1,6 +1,6 @@
 import {MigrationScriptSelector} from "../MigrationScriptSelector";
 import {MigrationRunner} from "../MigrationRunner";
-import {ITransactionManager} from "../../interface/service/ITransactionManager";
+import {ITransactionProvider} from "../../interface/service/ITransactionProvider";
 import {IDB} from "../../interface";
 
 /**
@@ -19,11 +19,11 @@ export class ExecutionServices<DB extends IDB> {
      *
      * @param selector - Service for selecting which migrations to execute
      * @param runner - Service for executing migration scripts
-     * @param transactionManager - Optional transaction manager for database transactions
+     * @param transactionProvider - Optional transaction manager for database transactions
      */
     constructor(
         public readonly selector: MigrationScriptSelector<DB>,
         public readonly runner: MigrationRunner<DB>,
-        public readonly transactionManager?: ITransactionManager<DB>
+        public readonly transactionProvider?: ITransactionProvider<DB>
     ) {}
 }

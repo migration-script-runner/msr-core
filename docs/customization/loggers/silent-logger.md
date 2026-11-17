@@ -82,12 +82,12 @@ Keep test output focused on test results, not migration logs:
 
 ```typescript
 import { describe, it, expect } from '@jest/globals';
-import { BackupService, SilentLogger } from 'msr-core';
+import { BackupOrchestrator, SilentLogger } from 'msr-core';
 
-describe('BackupService', () => {
+describe('BackupOrchestrator', () => {
     it('should create backup successfully', async () => {
         const logger = new SilentLogger();
-        const service = new BackupService(logger);
+        const service = new BackupOrchestrator(logger);
 
         const backupPath = await service.createBackup(config, version);
 
@@ -177,7 +177,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
     MigrationService,
     MigrationScriptRunner,
-    BackupService,
+    BackupOrchestrator,
     SilentLogger,
     MigrationConfig
 } from 'msr-core';
@@ -211,9 +211,9 @@ describe('Migration System', () => {
         });
     });
 
-    describe('BackupService', () => {
+    describe('BackupOrchestrator', () => {
         it('should create backup before migration', async () => {
-            const service = new BackupService(logger);
+            const service = new BackupOrchestrator(logger);
             const backupPath = await service.createBackup(config, 'v1.0.0');
 
             expect(fs.existsSync(backupPath)).toBe(true);

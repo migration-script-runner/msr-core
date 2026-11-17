@@ -1,4 +1,4 @@
-import { ILockStatus } from './ILockingService';
+import { ILockStatus } from './ILockingProvider';
 
 /**
  * Lifecycle hooks for lock operations.

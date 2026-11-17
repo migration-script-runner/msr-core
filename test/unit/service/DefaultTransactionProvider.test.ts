@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { DefaultTransactionManager } from '../../../src/service/DefaultTransactionManager';
+import { DefaultTransactionProvider } from '../../../src/service/DefaultTransactionProvider';
 import { IDB } from '../../../src/interface/dao';
 import { TransactionConfig } from '../../../src/model/TransactionConfig';
 import { TransactionMode } from '../../../src/model/TransactionMode';
@@ -8,7 +8,7 @@ import { ITransactionalDB } from '../../../src/interface/dao/ITransactionalDB';
 import { SilentLogger } from '../../../src/logger';
 
 /**
- * Unit tests for DefaultTransactionManager.
+ * Unit tests for DefaultTransactionProvider.
  *
  * Tests the SQL-based transaction manager that uses the ITransactionalDB interface.
  * This manager provides explicit transaction control with begin/commit/rollback
@@ -22,7 +22,7 @@ import { SilentLogger } from '../../../src/logger';
  * - Logger integration
  * - Integration scenarios combining multiple features
  */
-describe('DefaultTransactionManager', () => {
+describe('DefaultTransactionProvider', () => {
 
     let mockDB: ITransactionalDB;
     let config: TransactionConfig;
@@ -68,7 +68,7 @@ describe('DefaultTransactionManager', () => {
                 beginCalled = true;
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.begin();
 
             expect(beginCalled).to.be.true;
@@ -85,7 +85,7 @@ describe('DefaultTransactionManager', () => {
             };
 
             config.isolation = IsolationLevel.SERIALIZABLE;
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.begin();
 
             expect(calls).to.deep.equal([
@@ -101,7 +101,7 @@ describe('DefaultTransactionManager', () => {
             };
 
             config.isolation = undefined;
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.begin();
 
             expect(setIsolationCalled).to.be.false;
@@ -111,7 +111,7 @@ describe('DefaultTransactionManager', () => {
             mockDB.setIsolationLevel = undefined;
 
             config.isolation = IsolationLevel.SERIALIZABLE;
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             // Should not throw
             await manager.begin();
@@ -122,7 +122,7 @@ describe('DefaultTransactionManager', () => {
                 throw new Error('Connection failed');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             let error: Error | undefined;
             try {
@@ -156,7 +156,7 @@ describe('DefaultTransactionManager', () => {
                 commitCalled = true;
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.commit();
 
             expect(commitCalled).to.be.true;
@@ -173,7 +173,7 @@ describe('DefaultTransactionManager', () => {
             };
 
             config.retries = 3;
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.commit();
 
             expect(attempts).to.equal(3);
@@ -188,7 +188,7 @@ describe('DefaultTransactionManager', () => {
                 }
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.commit();
 
             expect(attempts).to.equal(2);
@@ -203,7 +203,7 @@ describe('DefaultTransactionManager', () => {
                 }
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.commit();
 
             expect(attempts).to.equal(2);
@@ -218,7 +218,7 @@ describe('DefaultTransactionManager', () => {
                 }
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.commit();
 
             expect(attempts).to.equal(2);
@@ -231,7 +231,7 @@ describe('DefaultTransactionManager', () => {
                 throw new Error('UNIQUE constraint failed');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             let error: Error | undefined;
             try {
@@ -253,7 +253,7 @@ describe('DefaultTransactionManager', () => {
             };
 
             config.retries = 3;
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             let error: Error | undefined;
             try {
@@ -282,7 +282,7 @@ describe('DefaultTransactionManager', () => {
             config.retryDelay = 5;
             config.retryBackoff = true;
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             // Capture delays by measuring time between attempts
             const startTimes: number[] = [];
@@ -324,7 +324,7 @@ describe('DefaultTransactionManager', () => {
             config.retryDelay = 5;
             config.retryBackoff = false;  // Disable exponential backoff
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             const startTimes: number[] = [];
             const originalCommit = mockDB.commit;
@@ -358,7 +358,7 @@ describe('DefaultTransactionManager', () => {
             };
 
             config.retries = 1;
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             let error: Error | undefined;
             try {
@@ -380,7 +380,7 @@ describe('DefaultTransactionManager', () => {
                 }
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.commit();
 
             expect(attempts).to.equal(2);
@@ -394,7 +394,7 @@ describe('DefaultTransactionManager', () => {
             };
 
             config.retries = undefined;
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             let error: Error | undefined;
             try {
@@ -421,7 +421,7 @@ describe('DefaultTransactionManager', () => {
                 error: () => {}
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, testLogger as any);
+            const manager = new DefaultTransactionProvider(mockDB, config, testLogger as any);
             await manager.commit();
 
             expect(debugCalled).to.be.true;
@@ -447,7 +447,7 @@ describe('DefaultTransactionManager', () => {
                 error: () => {}
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, testLogger as any);
+            const manager = new DefaultTransactionProvider(mockDB, config, testLogger as any);
             await manager.commit();
 
             expect(attempts).to.equal(2);
@@ -472,7 +472,7 @@ describe('DefaultTransactionManager', () => {
                 rollbackCalled = true;
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.rollback();
 
             expect(rollbackCalled).to.be.true;
@@ -483,7 +483,7 @@ describe('DefaultTransactionManager', () => {
                 throw new Error('Rollback failed');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             let error: Error | undefined;
             try {
@@ -503,7 +503,7 @@ describe('DefaultTransactionManager', () => {
                 throw new Error('deadlock detected');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             let error: Error | undefined;
             try {
@@ -534,7 +534,7 @@ describe('DefaultTransactionManager', () => {
                 setLevel = level;
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
 
             expect(setLevel).to.equal(IsolationLevel.SERIALIZABLE);
@@ -543,7 +543,7 @@ describe('DefaultTransactionManager', () => {
         it('should not throw when db does not support setIsolationLevel', async () => {
             mockDB.setIsolationLevel = undefined;
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             // Should not throw
             await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
@@ -559,7 +559,7 @@ describe('DefaultTransactionManager', () => {
 
             mockDB.setIsolationLevel = async () => {};
 
-            const manager = new DefaultTransactionManager(mockDB, config, testLogger as any);
+            const manager = new DefaultTransactionProvider(mockDB, config, testLogger as any);
             await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
 
             expect(debugMessage).to.include('Isolation level set to: SERIALIZABLE');
@@ -575,7 +575,7 @@ describe('DefaultTransactionManager', () => {
 
             mockDB.setIsolationLevel = undefined;
 
-            const manager = new DefaultTransactionManager(mockDB, config, testLogger as any);
+            const manager = new DefaultTransactionProvider(mockDB, config, testLogger as any);
             await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
 
             expect(warnMessage).to.include('does not support setIsolationLevel');
@@ -601,7 +601,7 @@ describe('DefaultTransactionManager', () => {
                 error: () => {}
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, testLogger as any);
+            const manager = new DefaultTransactionProvider(mockDB, config, testLogger as any);
             await manager.rollback();
 
             expect(debugMessage).to.equal('Transaction rolled back');
@@ -619,7 +619,7 @@ describe('DefaultTransactionManager', () => {
                 throw new Error('Rollback failed');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, testLogger as any);
+            const manager = new DefaultTransactionProvider(mockDB, config, testLogger as any);
 
             try {
                 await manager.rollback();
@@ -642,7 +642,7 @@ describe('DefaultTransactionManager', () => {
                 throw new Error('UNIQUE constraint failed');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, testLogger as any);
+            const manager = new DefaultTransactionProvider(mockDB, config, testLogger as any);
 
             try {
                 await manager.commit();
@@ -668,7 +668,7 @@ describe('DefaultTransactionManager', () => {
                 }
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.commit();
 
             // Calculate delays between attempts
@@ -696,7 +696,7 @@ describe('DefaultTransactionManager', () => {
                 }
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             await manager.commit();
 
@@ -718,19 +718,19 @@ describe('DefaultTransactionManager', () => {
 
         it('should work without logger in begin() with isolation level', async () => {
             config.isolation = IsolationLevel.SERIALIZABLE;
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             await manager.begin();  // Should not throw
         });
 
         it('should work without logger in begin() without isolation level', async () => {
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             await manager.begin();  // Should not throw
         });
 
         it('should work without logger in commit() success', async () => {
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             await manager.commit();  // Should not throw
         });
@@ -744,7 +744,7 @@ describe('DefaultTransactionManager', () => {
                 }
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
             await manager.commit();  // Should retry and succeed
 
             expect(attempts).to.equal(2);
@@ -755,7 +755,7 @@ describe('DefaultTransactionManager', () => {
                 throw new Error('UNIQUE constraint failed');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             let error: Error | undefined;
             try {
@@ -773,7 +773,7 @@ describe('DefaultTransactionManager', () => {
             };
 
             config.retries = 2;
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             let error: Error | undefined;
             try {
@@ -786,7 +786,7 @@ describe('DefaultTransactionManager', () => {
         });
 
         it('should work without logger in rollback() success', async () => {
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             await manager.rollback();  // Should not throw
         });
@@ -796,7 +796,7 @@ describe('DefaultTransactionManager', () => {
                 throw new Error('Rollback failed');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             let error: Error | undefined;
             try {
@@ -809,7 +809,7 @@ describe('DefaultTransactionManager', () => {
         });
 
         it('should work without logger in setIsolationLevel() when supported', async () => {
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);  // Should not throw
         });
@@ -817,7 +817,7 @@ describe('DefaultTransactionManager', () => {
         it('should work without logger in setIsolationLevel() when not supported', async () => {
             mockDB.setIsolationLevel = undefined;
 
-            const manager = new DefaultTransactionManager(mockDB, config);  // No logger
+            const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
             await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);  // Should not throw
         });
@@ -855,7 +855,7 @@ describe('DefaultTransactionManager', () => {
                     }
                 };
 
-                const manager = new DefaultTransactionManager(mockDB, config, logger);
+                const manager = new DefaultTransactionProvider(mockDB, config, logger);
                 await manager.commit();
 
                 expect(attempts).to.equal(2, `Failed for error: ${errorMsg}`);
@@ -882,7 +882,7 @@ describe('DefaultTransactionManager', () => {
                     throw new Error(errorMsg);
                 };
 
-                const manager = new DefaultTransactionManager(mockDB, config, logger);
+                const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
                 let error: Error | undefined;
                 try {
@@ -918,7 +918,7 @@ describe('DefaultTransactionManager', () => {
                 calls.push('commit');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.begin();
             await manager.commit();
 
@@ -935,7 +935,7 @@ describe('DefaultTransactionManager', () => {
                 calls.push('rollback');
             };
 
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
             await manager.begin();
             await manager.rollback();
 
@@ -962,7 +962,7 @@ describe('DefaultTransactionManager', () => {
             };
 
             config.isolation = IsolationLevel.REPEATABLE_READ;
-            const manager = new DefaultTransactionManager(mockDB, config, logger);
+            const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
             await manager.begin();
             await manager.commit();

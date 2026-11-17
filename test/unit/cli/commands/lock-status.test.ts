@@ -5,7 +5,7 @@ import {addLockStatusCommand} from '../../../../src/cli/commands/lock-status';
 import {MigrationScriptRunner} from '../../../../src/service/MigrationScriptRunner';
 import {EXIT_CODES} from '../../../../src/cli/utils/exitCodes';
 import {IDB} from '../../../../src/interface';
-import {ILockStatus} from '../../../../src/interface/service/ILockingService';
+import {ILockStatus} from '../../../../src/interface/service/ILockingProvider';
 
 interface MockDB extends IDB {
     data: string;

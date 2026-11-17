@@ -19,7 +19,7 @@ import {IMigrationResult} from "../IMigrationResult";
  * ```typescript
  * const rollbackManager = new MigrationRollbackManager({
  *     handler,
- *     schemaVersionService,
+ *     schemaVersionOrchestrator,
  *     selector,
  *     logger,
  *     config,

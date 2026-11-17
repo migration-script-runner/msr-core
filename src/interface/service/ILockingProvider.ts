@@ -58,7 +58,7 @@ export interface ILockStatus {
  *
  * **Implementation Notes:**
  * - Adapter-specific (PostgreSQL, MongoDB, etc.)
- * - Optional feature (check handler.lockingService existence)
+ * - Optional feature (check handler.lockingProvider existence)
  * - Database-backed (not in-memory) for multi-instance safety
  * - Executor ID format: `hostname-pid-uuid` for uniqueness
  *
@@ -67,7 +67,7 @@ export interface ILockStatus {
  * @example
  * ```typescript
  * // PostgreSQL implementation
- * class PostgreSqlLockingService implements ILockingService<PostgreSqlDB> {
+ * class PostgreSqlLockingProvider implements ILockingProvider<PostgreSqlDB> {
  *   async acquireLock(executorId: string): Promise<boolean> {
  *     const result = await this.db.query(
  *       'INSERT INTO migration_locks (executor_id, locked_at, expires_at) ' +
@@ -90,12 +90,12 @@ export interface ILockStatus {
  * // Usage in handler
  * const handler: IDatabaseMigrationHandler<PostgreSqlDB> = {
  *   db: postgresDb,
- *   lockingService: new PostgreSqlLockingService(postgresDb, config.locking)
+ *   lockingProvider: new PostgreSqlLockingProvider(postgresDb, config.locking)
  * };
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface ILockingService<DB extends IDB> {
+export interface ILockingProvider<DB extends IDB> {
     /**
      * Initialize lock storage structures (tables, indexes, paths).
      *
@@ -129,7 +129,7 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * // PostgreSQL: Create table with unique constraint
-     * class PostgresLockingService implements ILockingService<IPostgresDB> {
+     * class PostgresLockingProvider implements ILockingProvider<IPostgresDB> {
      *   async initLockStorage(): Promise<void> {
      *     await this.db.query(`
      *       CREATE TABLE IF NOT EXISTS migration_locks (
@@ -151,7 +151,7 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * // Firebase: Validate database path access
-     * class FirebaseLockingService implements ILockingService<IFirebaseDB> {
+     * class FirebaseLockingProvider implements ILockingProvider<IFirebaseDB> {
      *   async initLockStorage(): Promise<void> {
      *     const lockRef = this.db.database.ref(`${this.lockPath}/migrations/_lock`);
      *     try {
@@ -169,7 +169,7 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * // MongoDB: Create collection with unique index
-     * class MongoLockingService implements ILockingService<IMongoDBInterface> {
+     * class MongoLockingProvider implements ILockingProvider<IMongoDBInterface> {
      *   async initLockStorage(): Promise<void> {
      *     const db = this.db.client.db();
      *
@@ -235,7 +235,7 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * // PostgreSQL: Check table exists and is readable
-     * class PostgresLockingService implements ILockingService<IPostgresDB> {
+     * class PostgresLockingProvider implements ILockingProvider<IPostgresDB> {
      *   async ensureLockStorageAccessible(): Promise<boolean> {
      *     try {
      *       // Simple query to verify table exists and is readable
@@ -254,7 +254,7 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * // Firebase: Verify path is accessible
-     * class FirebaseLockingService implements ILockingService<IFirebaseDB> {
+     * class FirebaseLockingProvider implements ILockingProvider<IFirebaseDB> {
      *   async ensureLockStorageAccessible(): Promise<boolean> {
      *     try {
      *       const lockRef = this.db.database.ref(`${this.lockPath}/migrations/_lock`);
@@ -272,7 +272,7 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * // MongoDB: Check collection exists
-     * class MongoLockingService implements ILockingService<IMongoDBInterface> {
+     * class MongoLockingProvider implements ILockingProvider<IMongoDBInterface> {
      *   async ensureLockStorageAccessible(): Promise<boolean> {
      *     try {
      *       const db = this.db.client.db();
@@ -293,12 +293,12 @@ export interface ILockingService<DB extends IDB> {
      * // Usage in handler initialization
      * class DatabaseHandler implements IDatabaseMigrationHandler<IDB> {
      *   async initialize(): Promise<void> {
-     *     if (this.lockingService?.initLockStorage) {
-     *       await this.lockingService.initLockStorage();
+     *     if (this.lockingProvider?.initLockStorage) {
+     *       await this.lockingProvider.initLockStorage();
      *     }
      *
-     *     if (this.lockingService?.ensureLockStorageAccessible) {
-     *       const accessible = await this.lockingService.ensureLockStorageAccessible();
+     *     if (this.lockingProvider?.ensureLockStorageAccessible) {
+     *       const accessible = await this.lockingProvider.ensureLockStorageAccessible();
      *       if (!accessible) {
      *         throw new Error(
      *           'Lock storage is not accessible. ' +
@@ -335,7 +335,7 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * const executorId = `${hostname()}-${process.pid}-${randomUUID()}`;
-     * const acquired = await lockingService.acquireLock(executorId);
+     * const acquired = await lockingProvider.acquireLock(executorId);
      * if (!acquired) {
      *   throw new Error('Another migration is already running');
      * }
@@ -363,9 +363,9 @@ export interface ILockingService<DB extends IDB> {
      *
      * @example
      * ```typescript
-     * const acquired = await lockingService.acquireLock(executorId);
+     * const acquired = await lockingProvider.acquireLock(executorId);
      * if (acquired) {
-     *   const stillOwned = await lockingService.verifyLockOwnership(executorId);
+     *   const stillOwned = await lockingProvider.verifyLockOwnership(executorId);
      *   if (!stillOwned) {
      *     throw new Error('Lost lock ownership during verification');
      *   }
@@ -393,10 +393,10 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * try {
-     *   await lockingService.acquireLock(executorId);
+     *   await lockingProvider.acquireLock(executorId);
      *   await executeMigrations();
      * } finally {
-     *   await lockingService.releaseLock(executorId);
+     *   await lockingProvider.releaseLock(executorId);
      * }
      * ```
      */
@@ -419,7 +419,7 @@ export interface ILockingService<DB extends IDB> {
      *
      * @example
      * ```typescript
-     * const status = await lockingService.getLockStatus();
+     * const status = await lockingProvider.getLockStatus();
      * if (status?.isLocked) {
      *   console.log(`Locked by: ${status.lockedBy}`);
      *   console.log(`Expires: ${status.expiresAt}`);
@@ -452,7 +452,7 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * // CLI command: msr lock:release --force
-     * await lockingService.forceReleaseLock();
+     * await lockingProvider.forceReleaseLock();
      * console.log('Lock forcibly released');
      * ```
      */
@@ -475,8 +475,8 @@ export interface ILockingService<DB extends IDB> {
      * @example
      * ```typescript
      * // Called automatically by acquireLock:
-     * await lockingService.checkAndReleaseExpiredLock();
-     * const acquired = await lockingService.acquireLock(executorId);
+     * await lockingProvider.checkAndReleaseExpiredLock();
+     * const acquired = await lockingProvider.acquireLock(executorId);
      * ```
      */
     checkAndReleaseExpiredLock(): Promise<void>;

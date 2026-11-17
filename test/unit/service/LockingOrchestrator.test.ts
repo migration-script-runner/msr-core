@@ -4,14 +4,14 @@ import {SinonStub, stub} from 'sinon';
 
 use(chaiAsPromised);
 import {LockingOrchestrator} from '../../../src/service/LockingOrchestrator';
-import {ILockingService, ILockStatus} from '../../../src/interface/service/ILockingService';
+import {ILockingProvider, ILockStatus} from '../../../src/interface/service/ILockingProvider';
 import {ILockingHooks} from '../../../src/interface/service/ILockingHooks';
 import {LockingConfig} from '../../../src/model/LockingConfig';
 import {ILogger} from '../../../src/interface/ILogger';
 import {IDB} from '../../../src/interface/dao';
 
 describe('LockingOrchestrator', () => {
-    let mockLockingService: ILockingService<IDB>;
+    let mockLockingProvider: ILockingProvider<IDB>;
     let mockLogger: ILogger;
     let config: LockingConfig;
     let acquireStub: SinonStub;
@@ -33,7 +33,7 @@ describe('LockingOrchestrator', () => {
         initStorageStub = stub().resolves();
         ensureAccessibleStub = stub().resolves(true);
 
-        mockLockingService = {
+        mockLockingProvider = {
             acquireLock: acquireStub,
             verifyLockOwnership: verifyStub,
             releaseLock: releaseStub,
@@ -68,7 +68,7 @@ describe('LockingOrchestrator', () => {
                 expiresAt: new Date()
             } as ILockStatus);
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
             const executorId = 'test-executor-123';
 
             const result = await orchestrator.acquireLock(executorId);
@@ -91,7 +91,7 @@ describe('LockingOrchestrator', () => {
                 onLockAcquired: stub().resolves()
             };
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger, hooks);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger, hooks);
             const executorId = 'test-executor-123';
 
             const result = await orchestrator.acquireLock(executorId);
@@ -111,7 +111,7 @@ describe('LockingOrchestrator', () => {
                 expiresAt: new Date()
             } as ILockStatus);
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
             const executorId = 'test-executor-123';
 
             const result = await orchestrator.acquireLock(executorId);
@@ -130,7 +130,7 @@ describe('LockingOrchestrator', () => {
                 expiresAt: new Date()
             } as ILockStatus);
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
             const executorId = 'test-executor-123';
 
             const result = await orchestrator.acquireLock(executorId);
@@ -143,7 +143,7 @@ describe('LockingOrchestrator', () => {
         it('should throw error when lock ownership verification fails', async () => {
             verifyStub.resolves(false);
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
             const executorId = 'test-executor-123';
 
             await expect(orchestrator.acquireLock(executorId))
@@ -164,7 +164,7 @@ describe('LockingOrchestrator', () => {
             acquireStub.onSecondCall().resolves(true);
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -192,7 +192,7 @@ describe('LockingOrchestrator', () => {
             } as ILockStatus);
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -213,7 +213,7 @@ describe('LockingOrchestrator', () => {
             verifyStub.resolves(false);
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -235,7 +235,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -261,7 +261,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -281,7 +281,7 @@ describe('LockingOrchestrator', () => {
 
     describe('releaseLock', () => {
         it('should release lock successfully without hooks', async () => {
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
             const executorId = 'test-executor-123';
 
             await orchestrator.releaseLock(executorId);
@@ -296,7 +296,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -318,7 +318,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -338,7 +338,7 @@ describe('LockingOrchestrator', () => {
             const hooks: ILockingHooks = {}; // No onLockError method
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -352,7 +352,7 @@ describe('LockingOrchestrator', () => {
 
     describe('forceReleaseLock', () => {
         it('should force release lock successfully without hooks', async () => {
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             await orchestrator.forceReleaseLock();
 
@@ -365,7 +365,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -385,7 +385,7 @@ describe('LockingOrchestrator', () => {
             };
             getStatusStub.resolves(lockStatus);
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             await orchestrator.forceReleaseLock();
 
@@ -401,7 +401,7 @@ describe('LockingOrchestrator', () => {
             };
             getStatusStub.resolves(lockStatus);
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             await orchestrator.forceReleaseLock();
 
@@ -411,7 +411,7 @@ describe('LockingOrchestrator', () => {
         it('should force release when status is null', async () => {
             getStatusStub.resolves(null);
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             await orchestrator.forceReleaseLock();
 
@@ -427,7 +427,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -449,7 +449,7 @@ describe('LockingOrchestrator', () => {
             const hooks: ILockingHooks = {}; // No onLockError method
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -464,7 +464,7 @@ describe('LockingOrchestrator', () => {
             forceReleaseStub.rejects(error);
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger
                 // No hooks parameter
@@ -477,7 +477,7 @@ describe('LockingOrchestrator', () => {
 
     describe('checkAndReleaseExpiredLock', () => {
         it('should check and release expired locks without hooks', async () => {
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             await orchestrator.checkAndReleaseExpiredLock();
 
@@ -493,7 +493,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -515,7 +515,7 @@ describe('LockingOrchestrator', () => {
             const hooks: ILockingHooks = {}; // No onLockError method
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -530,7 +530,7 @@ describe('LockingOrchestrator', () => {
             checkExpiredStub.rejects(error);
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger
                 // No hooks parameter
@@ -551,7 +551,7 @@ describe('LockingOrchestrator', () => {
             };
             getStatusStub.resolves(expectedStatus);
 
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             const status = await orchestrator.getLockStatus();
 
@@ -568,7 +568,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -590,7 +590,7 @@ describe('LockingOrchestrator', () => {
             const hooks: ILockingHooks = {}; // No onLockError method
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -605,7 +605,7 @@ describe('LockingOrchestrator', () => {
             getStatusStub.rejects(error);
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger
                 // No hooks parameter
@@ -618,7 +618,7 @@ describe('LockingOrchestrator', () => {
 
     describe('initLockStorage', () => {
         it('should initialize lock storage without hooks', async () => {
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             await orchestrator.initLockStorage();
 
@@ -634,7 +634,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -656,7 +656,7 @@ describe('LockingOrchestrator', () => {
             const hooks: ILockingHooks = {}; // No onLockError method
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -671,7 +671,7 @@ describe('LockingOrchestrator', () => {
             initStorageStub.rejects(error);
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger
                 // No hooks parameter
@@ -685,7 +685,7 @@ describe('LockingOrchestrator', () => {
     describe('ensureLockStorageAccessible', () => {
         it('should return true when lock storage is accessible without hooks', async () => {
             ensureAccessibleStub.resolves(true);
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             const result = await orchestrator.ensureLockStorageAccessible();
 
@@ -695,7 +695,7 @@ describe('LockingOrchestrator', () => {
 
         it('should return false when lock storage is not accessible without hooks', async () => {
             ensureAccessibleStub.resolves(false);
-            const orchestrator = new LockingOrchestrator(mockLockingService, config, mockLogger);
+            const orchestrator = new LockingOrchestrator(mockLockingProvider, config, mockLogger);
 
             const result = await orchestrator.ensureLockStorageAccessible();
 
@@ -712,7 +712,7 @@ describe('LockingOrchestrator', () => {
             };
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -734,7 +734,7 @@ describe('LockingOrchestrator', () => {
             const hooks: ILockingHooks = {}; // No onLockError method
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger,
                 hooks
@@ -750,7 +750,7 @@ describe('LockingOrchestrator', () => {
             ensureAccessibleStub.rejects(error);
 
             const orchestrator = new LockingOrchestrator(
-                mockLockingService,
+                mockLockingProvider,
                 config,
                 mockLogger
                 // No hooks parameter

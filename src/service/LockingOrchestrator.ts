@@ -1,5 +1,6 @@
 import { IDB } from '../interface/dao';
-import { ILockingService, ILockStatus } from '../interface/service/ILockingService';
+import { ILockingProvider, ILockStatus } from '../interface/service/ILockingProvider';
+import { ILockingOrchestrator } from '../interface/service/ILockingOrchestrator';
 import { ILockingHooks } from '../interface/service/ILockingHooks';
 import { LockingConfig } from '../model/LockingConfig';
 import { ILogger } from '../interface/ILogger';
@@ -9,7 +10,7 @@ import { ILogger } from '../interface/ILogger';
  *
  * **NEW in v0.8.1:** Decorator pattern for centralized lock management.
  *
- * The LockingOrchestrator wraps an ILockingService implementation and adds:
+ * The LockingOrchestrator wraps an ILockingProvider implementation and adds:
  * - **Retry logic**: Configurable attempts and delays
  * - **Two-phase locking**: Acquire → verify ownership for race condition prevention
  * - **Hooks**: Lifecycle events for metrics, alerting, and audit logging
@@ -17,7 +18,7 @@ import { ILogger } from '../interface/ILogger';
  * - **Error handling**: Consistent error propagation and context preservation
  *
  * This follows MSR's established pattern where **Core handles orchestration**
- * and **adapters handle database-specific operations**, similar to BackupService
+ * and **adapters handle database-specific operations**, similar to BackupOrchestrator
  * and RollbackService.
  *
  * @template DB - Database interface type extending IDB
@@ -25,11 +26,11 @@ import { ILogger } from '../interface/ILogger';
  * @example
  * ```typescript
  * // PostgreSQL adapter provides pure database operations
- * const lockingService = new PostgresLockingService(db);
+ * const lockingProvider = new PostgresLockingProvider(db);
  *
  * // Core orchestrates with retry, hooks, and logging
  * const orchestrator = new LockingOrchestrator(
- *   lockingService,
+ *   lockingProvider,
  *   config.locking,
  *   logger,
  *   {
@@ -54,17 +55,17 @@ import { ILogger } from '../interface/ILogger';
  * }
  * ```
  */
-export class LockingOrchestrator<DB extends IDB> {
+export class LockingOrchestrator<DB extends IDB> implements ILockingOrchestrator {
     /**
      * Create a new LockingOrchestrator.
      *
-     * @param lockingService Database-specific lock implementation
+     * @param lockingProvider Database-specific lock implementation
      * @param config Locking configuration (timeout, retries)
      * @param logger Logger for structured logging
      * @param hooks Optional lifecycle hooks for observability
      */
     constructor(
-        private readonly lockingService: ILockingService<DB>,
+        private readonly lockingProvider: ILockingProvider<DB>,
         private readonly config: LockingConfig,
         private readonly logger: ILogger,
         private readonly hooks?: ILockingHooks
@@ -99,11 +100,11 @@ export class LockingOrchestrator<DB extends IDB> {
             for (let attempt = 0; attempt <= this.config.retryAttempts; attempt++) {
                 try {
                     // Delegate to adapter for database-specific acquisition
-                    const acquired = await this.lockingService.acquireLock(executorId);
+                    const acquired = await this.lockingProvider.acquireLock(executorId);
 
                     if (acquired) {
                         // Two-phase locking: verify ownership after acquisition
-                        const verified = await this.lockingService.verifyLockOwnership(executorId);
+                        const verified = await this.lockingProvider.verifyLockOwnership(executorId);
 
                         if (!verified) {
                             this.logger.error('Lock ownership verification failed');
@@ -115,7 +116,7 @@ export class LockingOrchestrator<DB extends IDB> {
                         }
 
                         // Success: acquired and verified
-                        const status = await this.lockingService.getLockStatus();
+                        const status = await this.lockingProvider.getLockStatus();
                         this.logger.info(`✓ Lock acquired: ${executorId}`);
                         await this.hooks?.onLockAcquired?.(executorId, status!);
 
@@ -124,7 +125,7 @@ export class LockingOrchestrator<DB extends IDB> {
 
                     // Lock already held - retry if configured
                     if (attempt < this.config.retryAttempts) {
-                        const currentOwner = (await this.lockingService.getLockStatus())?.lockedBy || 'unknown';
+                        const currentOwner = (await this.lockingProvider.getLockStatus())?.lockedBy || 'unknown';
                         this.logger.warn(
                             `Lock held by ${currentOwner}, retrying... (${attempt + 1}/${this.config.retryAttempts})`
                         );
@@ -132,7 +133,7 @@ export class LockingOrchestrator<DB extends IDB> {
                         await this.sleep(this.config.retryDelay);
                     } else {
                         // Max retries exceeded
-                        const currentOwner = (await this.lockingService.getLockStatus())?.lockedBy || 'unknown';
+                        const currentOwner = (await this.lockingProvider.getLockStatus())?.lockedBy || 'unknown';
                         this.logger.error(`Failed to acquire lock after ${this.config.retryAttempts} attempts`);
                         await this.hooks?.onLockAcquisitionFailed?.(executorId, currentOwner);
                         return false;
@@ -170,7 +171,7 @@ export class LockingOrchestrator<DB extends IDB> {
             this.logger.info(`Releasing lock: ${executorId}`);
 
             // Delegate to adapter
-            await this.lockingService.releaseLock(executorId);
+            await this.lockingProvider.releaseLock(executorId);
 
             this.logger.info(`✓ Lock released: ${executorId}`);
             await this.hooks?.onLockReleased?.(executorId);
@@ -189,7 +190,7 @@ export class LockingOrchestrator<DB extends IDB> {
      */
     async getLockStatus(): Promise<ILockStatus | null> {
         try {
-            return await this.lockingService.getLockStatus();
+            return await this.lockingProvider.getLockStatus();
         } catch (error) {
             this.logger.error(`Failed to get lock status: ${error}`);
             await this.hooks?.onLockError?.('status', error as Error);
@@ -207,13 +208,13 @@ export class LockingOrchestrator<DB extends IDB> {
      */
     async forceReleaseLock(): Promise<void> {
         try {
-            const status = await this.lockingService.getLockStatus();
+            const status = await this.lockingProvider.getLockStatus();
 
             if (status?.isLocked) {
                 this.logger.warn(`⚠️ Force-releasing lock held by: ${status.lockedBy}`);
             }
 
-            await this.lockingService.forceReleaseLock();
+            await this.lockingProvider.forceReleaseLock();
 
             this.logger.info('✓ Lock force-released');
             await this.hooks?.onForceReleaseLock?.(status);
@@ -233,7 +234,7 @@ export class LockingOrchestrator<DB extends IDB> {
      */
     async checkAndReleaseExpiredLock(): Promise<void> {
         try {
-            await this.lockingService.checkAndReleaseExpiredLock();
+            await this.lockingProvider.checkAndReleaseExpiredLock();
         } catch (error) {
             this.logger.error(`Failed to cleanup expired locks: ${error}`);
             await this.hooks?.onLockError?.('cleanup', error as Error);
@@ -251,7 +252,7 @@ export class LockingOrchestrator<DB extends IDB> {
     async initLockStorage(): Promise<void> {
         try {
             this.logger.debug('Initializing lock storage');
-            await this.lockingService.initLockStorage();
+            await this.lockingProvider.initLockStorage();
             this.logger.debug('✓ Lock storage initialized');
         } catch (error) {
             this.logger.error(`Failed to initialize lock storage: ${error}`);
@@ -269,7 +270,7 @@ export class LockingOrchestrator<DB extends IDB> {
      */
     async ensureLockStorageAccessible(): Promise<boolean> {
         try {
-            const accessible = await this.lockingService.ensureLockStorageAccessible();
+            const accessible = await this.lockingProvider.ensureLockStorageAccessible();
             if (accessible) {
                 this.logger.debug('✓ Lock storage is accessible');
             } else {

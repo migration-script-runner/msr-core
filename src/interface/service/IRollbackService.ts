@@ -15,7 +15,7 @@ import {IDB} from "../dao";
  *
  * @example
  * ```typescript
- * const rollbackService = new RollbackService<IDB>(handler, config, backupService, logger, hooks);
+ * const rollbackService = new RollbackService<IDB>(handler, config, backupOrchestrator, logger, hooks);
  *
  * try {
  *   await runMigrations();
@@ -62,7 +62,7 @@ export interface IRollbackService<DB extends IDB> {
      * @example
      * ```typescript
      * if (rollbackService.shouldCreateBackup()) {
-     *   const backupPath = await backupService.backup();
+     *   const backupPath = await backupOrchestrator.backup();
      * }
      * ```
      */

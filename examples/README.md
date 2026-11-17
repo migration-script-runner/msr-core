@@ -31,7 +31,7 @@ npx ts-node examples/simple-cli.ts backup --help
 
 ### [cli-example.ts](./cli-example.ts)
 
-A more complete example with a mock database handler (needs TypeScript fixes).
+A more complete example with a mock database handler using the current runner API.
 
 ## Using Examples in Your Project
 

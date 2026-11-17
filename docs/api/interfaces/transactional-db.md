@@ -494,7 +494,6 @@ import {
 } from '@migration-script-runner/core';
 import { PostgresDB } from './postgres-db';
 import { createHandler } from './handler';
-import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { IDB } from '@migration-script-runner/core';
 
 class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}

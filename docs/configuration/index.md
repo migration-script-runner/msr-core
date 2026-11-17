@@ -216,7 +216,6 @@ import {
     MigrationScriptRunner
 } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
-import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { IDB } from '@migration-script-runner/core';
 
 class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}

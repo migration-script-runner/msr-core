@@ -1012,7 +1012,6 @@ import {
     MigrationScriptRunner
 } from '@migration-script-runner/core';
 import * as fs from 'fs';
-import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { IDB } from '@migration-script-runner/core';
 
 class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}

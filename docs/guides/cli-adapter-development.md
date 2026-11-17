@@ -25,6 +25,8 @@ Learn how to build a command-line interface for a database adapter using MSR Cor
 
 MSR Core provides a `createCLI()` factory function that creates a fully-featured command-line interface for your database adapter. The CLI includes all standard migration commands and can be extended with custom commands specific to your database.
 
+Use the [CLI Reference](../api/cli-reference) for the exact built-in command, option, and exit-code list. The [MigrationScriptRunner API](../api/migration-script-runner) documents the public runner methods available to adapter code.
+
 ### Key Features
 
 - **Built-in Commands**: migrate, list, down, validate, backup (create/restore/delete)

@@ -390,7 +390,7 @@ export function createCLI<
         // 1. Load base config using waterfall (defaults → file → env vars)
         const configLoader = options.configLoader || new ConfigLoader<TConfig>();
         const config: TConfig = opts.configFile
-            ? configLoader.load({}, {baseDir: opts.configFile})
+            ? configLoader.load({}, {configFile: opts.configFile})
             : configLoader.load(); // Uses waterfall without explicit file
 
         // 2. Merge with options.config if provided

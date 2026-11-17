@@ -12,6 +12,8 @@ has_children: true
 Complete guide to configuring Migration Script Runner
 {: .fs-6 .fw-300 }
 
+For a consolidated property list with types, defaults, and environment-variable names, see the [Config Reference](config-reference).
+
 ## Table of contents
 {: .no_toc .text-delta }
 
@@ -76,7 +78,7 @@ const config = new Config();
 
 | Category | Properties | Description |
 |----------|-----------|-------------|
-| 🎯 [Migration Settings](migration-settings) | `folder`, `filePattern`, `tableName`, `displayLimit`, `beforeMigrateName`, `recursive` | Control how migrations are discovered and tracked |
+| 🎯 [Migration Settings](migration-settings) | `folder`, `filePatterns`, `tableName`, `displayLimit`, `beforeMigrateName`, `recursive` | Control how migrations are discovered and tracked |
 | 🎚️ Logging Settings | `logLevel`, `showBanner` | Configure output verbosity and display options |
 | 🗂️ Environment Settings | `envFileSources` | Configure .env file loading (v0.7.0+) |
 | ✅ [Validation Settings](validation-settings) | `validateBeforeRun`, `strictValidation`, `downMethodPolicy`, `customValidators` | Control validation behavior and rules |
@@ -359,6 +361,7 @@ export MSR_BACKUP_FOLDER=./backups
 - 📖 **[Environment Variables User Guide](../guides/environment-variables)** - How-to guide with practical examples, platform-specific configs (Docker, Kubernetes, etc.), and troubleshooting
 - 📋 **[Environment Variables API Reference](../api/environment-variables/)** - Complete reference with detailed descriptions for all MSR_* variables (Core, Validation, Logging, Backup, Transaction)
 - 🔧 **[ConfigLoader API](../api/ConfigLoader)** - API reference for programmatic configuration loading
+- 📋 **[Config Reference](config-reference)** - Complete property, default, and environment-variable reference
 - 🏷️ **[EnvironmentVariables Type](../../src/model/env/index.ts)** - Type-safe environment variable names
 
 ---

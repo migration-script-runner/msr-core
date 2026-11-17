@@ -23,6 +23,8 @@ The main classes for executing and managing migrations.
 
 The abstract base class for executing database migrations. Create a database-specific subclass before constructing a runner; `MigrationScriptRunner` cannot be instantiated directly.
 
+For the constructor and complete method reference, see [MigrationScriptRunner API](migration-script-runner).
+
 **Generic Type Parameters:**
 - **v0.6.0:** Database type parameter (`DB extends IDB`) provides database-specific type safety
 - **v0.8.0:** Handler type parameter (`THandler extends IDatabaseMigrationHandler<DB>`) provides type-safe handler access in adapters

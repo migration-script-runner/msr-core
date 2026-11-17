@@ -30,6 +30,15 @@ The main classes you'll interact with:
 - **Config** - Configuration management
 - **MigrationScript** - Migration script representation
 
+### [MigrationScriptRunner API](migration-script-runner)
+Constructor, generic parameters, and all public runner methods.
+
+### [CLI Reference](cli-reference)
+Built-in commands, common flags, adapter options, and exit codes.
+
+### [Configuration Reference](../configuration/config-reference)
+All `Config` properties, defaults, nested settings, and environment-variable names.
+
 ### [Interfaces](interfaces)
 Core interfaces for implementing database handlers and custom components:
 - **IDatabaseMigrationHandler** - Database handler interface
@@ -63,7 +72,7 @@ Type definitions and aliases for TypeScript users
 
 **Getting Started?**
 - Start with [MigrationScriptRunner](core-classes#migrationscriptrunner)
-- Configure with [Config](ConfigLoader#config)
+- Configure with the [configuration reference](../configuration/config-reference)
 - Implement [IDatabaseMigrationHandler](interfaces/database-handler#idatabasemigrationhandler)
 
 **Customizing?**
@@ -81,7 +90,7 @@ Type definitions and aliases for TypeScript users
 ## API Versioning
 
 MSR follows [Semantic Versioning](https://semver.org/). This documentation reflects:
-- **Current Version**: v0.6.0
+- **Current Version**: v1.0.0-beta.1
 - **Breaking Changes**: Documented in [Migration Guides](../version-migration/)
 - **Deprecations**: Marked with `@deprecated` in source code
 

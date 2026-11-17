@@ -288,7 +288,10 @@ These additions reflect the current repository configuration. Keep them aligned 
 
 ### GitHub project management
 
-Before any GitHub issue, milestone, label, GitHub Release, tag, or npm publication operation, read [`docs/development/github-project-workflow.md`](docs/development/github-project-workflow.md) and follow it. Its procedures are mandatory. Search and inspect existing remote state before writing, then verify every authorized change. Do not perform a remote mutation unless the user explicitly requests it.
+Before any GitHub issue, pull request, milestone, label, GitHub Release, tag, or npm publication operation, read [`docs/development/github-project-workflow.md`](docs/development/github-project-workflow.md) and follow it. Its procedures are mandatory. Search and inspect existing remote state before writing, then verify every authorized change. Do not perform a remote mutation unless the user explicitly requests it.
+
+- For task PR creation or updates, use the project skill [`.agents/skills/msr-github-pr/SKILL.md`](.agents/skills/msr-github-pr/SKILL.md) and its helper script. It applies the repository title, target branch, assignee, labels, milestone, and Development-link rules. The command requires an already-pushed, clean task branch; it never commits or pushes.
+- Link the related issue through GitHub's **Development** relationship. Do not put `Closes #<issue>` in the PR description. The script creates and verifies the manual link through GitHub GraphQL's `addCloseIssueReferences` mutation.
 
 ### SonarCloud issue retrieval
 

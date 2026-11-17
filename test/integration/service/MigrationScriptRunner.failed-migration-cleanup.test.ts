@@ -5,7 +5,7 @@ import {
     IDB,
     IMigrationInfo,
     IDatabaseMigrationHandler,
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     ISchemaVersion,
     SilentLogger,
     RollbackStrategy,
@@ -28,7 +28,7 @@ import * as path from "node:path";
  * 2. Call migration 2's down()
  * 3. Call migration 1's down()
  */
-describe('MigrationScriptExecutor - Failed Migration Cleanup', () => {
+describe('MigrationScriptRunner - Failed Migration Cleanup', () => {
 
     let testDir: string;
     let db: IDB;
@@ -138,7 +138,7 @@ describe('MigrationScriptExecutor - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await executor.migrate();
 
         const downCalls = (global as any).__cleanupDownCalls || [];
@@ -217,7 +217,7 @@ describe('MigrationScriptExecutor - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: testLogger, config: config });
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
         const result = await executor.migrate();
 
         // Should fail
@@ -304,7 +304,7 @@ describe('MigrationScriptExecutor - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await executor.migrate();
 
         const downCalls = (global as any).__bothStrategyDownCalls || [];

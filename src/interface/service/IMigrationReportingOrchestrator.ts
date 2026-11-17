@@ -11,7 +11,7 @@ import {MigrationScript} from "../../model";
  * - Displaying migration progress
  * - Coordinating with migration renderer for visual output
  *
- * Extracted from MigrationScriptExecutor for better separation of concerns.
+ * Extracted from MigrationScriptRunner for better separation of concerns.
  *
  * @template DB - Database interface type
  *

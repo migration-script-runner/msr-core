@@ -48,7 +48,7 @@ graph TD
 
 ```mermaid
 sequenceDiagram
-    participant Executor as MigrationScriptExecutor
+    participant Executor as MigrationScriptRunner
     participant Backup as BackupService
     participant Schema as SchemaVersionService
     participant Scanner as MigrationScanner
@@ -67,7 +67,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant Executor as MigrationScriptExecutor
+    participant Executor as MigrationScriptRunner
     participant Execution as MigrationExecutionService
     participant Schema as SchemaVersionService
     participant Rollback as RollbackService

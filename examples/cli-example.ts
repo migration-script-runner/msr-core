@@ -80,7 +80,7 @@ const program: Command = createCLI<MockDB>({
         // Adapter developers receive the final merged config
         // They can use it to initialize their handler and executor
         const handler = new MockDatabaseHandler();
-        return new MigrationScriptExecutor<MockDB>({
+        return new MigrationScriptRunner<MockDB>({
             handler,
             config,
         });
@@ -130,7 +130,7 @@ program.parse(process.argv);
  * #!/usr/bin/env node
  *
  * const { createCLI } = require('@migration-script-runner/core');
- * const { MongoAdapter } = require('../dist/MongoAdapter');
+ * const { MongoRunner } = require('../dist/MongoRunner');
  * const { MongoHandler } = require('../dist/MongoHandler');
  *
  * const program = createCLI({
@@ -141,7 +141,7 @@ program.parse(process.argv);
  *     // Initialize handler with config
  *     const handler = new MongoHandler(config.mongoUri || 'mongodb://localhost:27017');
  *     // Return adapter instance with merged config
- *     return new MongoAdapter({ handler, config });
+ *     return new MongoRunner({ handler, config });
  *   }
  * });
  *

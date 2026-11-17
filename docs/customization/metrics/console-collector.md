@@ -41,11 +41,11 @@ Zero-configuration metrics output for development and debugging.
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+  MigrationScriptRunner,
   ConsoleMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector()  // That's it!
@@ -247,7 +247,7 @@ This means:
 ```typescript
 import { ConsoleMetricsCollector } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [new ConsoleMetricsCollector()], 
   config 
@@ -261,7 +261,7 @@ await executor.up();
 ### With Other Collectors
 
 ```typescript
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),  // Real-time feedback
@@ -290,7 +290,7 @@ collectors.push(new JsonMetricsCollector({
   filePath: `./metrics/${process.env.NODE_ENV}.json`
 }));
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: collectors, 
   config

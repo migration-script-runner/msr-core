@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../service/MigrationScriptRunner';
 import {IConfigLoader} from '../interface/IConfigLoader';
 import {Config} from '../model/Config';
 import {BackupMode} from '../model/BackupMode';
@@ -26,19 +26,19 @@ import {
  * Options for creating a CLI instance.
  *
  * @template DB - Database interface type
- * @template TExecutor - Executor type (MigrationScriptExecutor or adapter extending it)
+ * @template TRunner - Executor type (MigrationScriptRunner or adapter extending it)
  * @template TConfig - Configuration type (Config or adapter-specific config extending it)
  */
 export interface CLIOptions<
     DB extends IDB,
-    TExecutor extends MigrationScriptExecutor<DB> = MigrationScriptExecutor<DB>,
+    TRunner extends MigrationScriptRunner<DB> = MigrationScriptRunner<DB>,
     TConfig extends Config = Config
 > {
     /**
-     * Factory function to create MigrationScriptExecutor instance.
+     * Factory function to create MigrationScriptRunner instance.
      *
      * Receives the final merged Config (defaults → file → env vars → CLI flags)
-     * and should return an instance of MigrationScriptExecutor or adapter that extends it.
+     * and should return an instance of MigrationScriptRunner or adapter that extends it.
      *
      * **NEW in v0.8.2:** Supports both synchronous and asynchronous executor creation.
      * Use async when your database adapter requires async initialization (connections, auth, etc).
@@ -47,14 +47,14 @@ export interface CLIOptions<
      * Use this when your adapter has FirebaseConfig extends Config with custom properties.
      *
      * @param config - Final merged configuration with CLI flags applied
-     * @returns MigrationScriptExecutor instance (or Promise) or adapter extending it
+     * @returns MigrationScriptRunner instance (or Promise) or adapter extending it
      *
      * @example
      * ```typescript
      * // Synchronous executor (backward compatible)
      * createExecutor: (config) => {
      *   const handler = new MongoHandler(config.mongoUri);
-     *   return new MongoAdapter({ handler, config });
+     *   return new MongoRunner({ handler, config });
      * }
      * ```
      *
@@ -63,7 +63,7 @@ export interface CLIOptions<
      * // Asynchronous executor (NEW in v0.8.2)
      * createExecutor: async (config) => {
      *   const handler = await FirebaseHandler.getInstance(config);
-     *   return new FirebaseAdapter({ handler, config });
+     *   return new FirebaseRunner({ handler, config });
      * }
      * ```
      *
@@ -77,11 +77,11 @@ export interface CLIOptions<
      *
      * createExecutor: async (config: FirebaseConfig) => {
      *   // ✅ config.databaseUrl is typed and autocompletes!
-     *   return FirebaseAdapter.getInstance({ config });
+     *   return FirebaseRunner.getInstance({ config });
      * }
      * ```
      */
-    createExecutor: (config: TConfig) => TExecutor | Promise<TExecutor>;
+    createExecutor: (config: TConfig) => TRunner | Promise<TRunner>;
 
     /**
      * CLI metadata (optional).
@@ -128,7 +128,7 @@ export interface CLIOptions<
      * }
      * ```
      */
-    extendCLI?: (program: Command, createExecutor: () => Promise<TExecutor>) => void;
+    extendCLI?: (program: Command, createExecutor: () => Promise<TRunner>) => void;
 
     /**
      * Optional callback to add adapter-specific CLI options.
@@ -165,7 +165,7 @@ export interface CLIOptions<
      *
      *   createExecutor: async (config) => {
      *     // config.databaseUrl and config.applicationCredentials available here
-     *     return FirebaseAdapter.getInstance({ config });
+     *     return FirebaseRunner.getInstance({ config });
      *   }
      * });
      *
@@ -210,7 +210,7 @@ export interface CLIOptions<
      *     }
      *   },
      *
-     *   createExecutor: (config) => new MongoAdapter({ config })
+     *   createExecutor: (config) => new MongoRunner({ config })
      * });
      * ```
      *
@@ -222,7 +222,7 @@ export interface CLIOptions<
      *   applicationCredentials: string;
      * }
      *
-     * const program = createCLI<IFirebaseDB, FirebaseAdapter, FirebaseConfig>({
+     * const program = createCLI<IFirebaseDB, FirebaseRunner, FirebaseConfig>({
      *   extendFlags: (config, flags) => {
      *     // ✅ config is typed as FirebaseConfig - full IntelliSense!
      *     config.databaseUrl = flags.databaseUrl as string;
@@ -231,7 +231,7 @@ export interface CLIOptions<
      *
      *   createExecutor: async (config) => {
      *     // ✅ config.databaseUrl is typed!
-     *     return FirebaseAdapter.getInstance({ config });
+     *     return FirebaseRunner.getInstance({ config });
      *   }
      * });
      * ```
@@ -260,7 +260,7 @@ export interface CLIOptions<
  * allowing you to initialize your adapter with the correct configuration.
  *
  * @template DB - Database interface type
- * @template TExecutor - Executor type (inferred from createExecutor return type)
+ * @template TRunner - Executor type (inferred from createExecutor return type)
  * @template TConfig - Configuration type (Config or adapter-specific config extending it)
  * @param options - CLI creation options
  * @returns Commander program ready for parsing or extension
@@ -269,7 +269,7 @@ export interface CLIOptions<
  * ```typescript
  * // Basic usage with adapter
  * import { createCLI } from '@migration-script-runner/core';
- * import { MongoAdapter } from './MongoAdapter';
+ * import { MongoRunner } from './MongoRunner';
  * import { MongoHandler } from './MongoHandler';
  *
  * const program = createCLI({
@@ -278,7 +278,7 @@ export interface CLIOptions<
  *   version: '1.0.0',
  *   createExecutor: (config) => {
  *     const handler = new MongoHandler(config.mongoUri || 'mongodb://localhost');
- *     return new MongoAdapter({ handler, config });
+ *     return new MongoRunner({ handler, config });
  *   }
  * });
  *
@@ -288,7 +288,7 @@ export interface CLIOptions<
  * @example
  * ```typescript
  * // Extending with custom commands via extendCLI callback
- * class PostgresAdapter extends MigrationScriptExecutor<IPostgresDB> {
+ * class PostgresRunner extends MigrationScriptRunner<IPostgresDB> {
  *   async vacuum(): Promise<void> {
  *     await this.handler.db.query('VACUUM ANALYZE');
  *   }
@@ -296,7 +296,7 @@ export interface CLIOptions<
  *
  * const program = createCLI({
  *   name: 'msr-postgres',
- *   createExecutor: (config) => new PostgresAdapter({ handler, config }),
+ *   createExecutor: (config) => new PostgresRunner({ handler, config }),
  *
  *   // Add custom commands with full type safety
  *   extendCLI: (program, createExecutor) => {
@@ -304,7 +304,7 @@ export interface CLIOptions<
  *       .command('vacuum')
  *       .description('Run VACUUM ANALYZE on database')
  *       .action(async () => {
- *         const adapter = createExecutor(); // Typed as PostgresAdapter!
+ *         const adapter = createExecutor(); // Typed as PostgresRunner!
  *         await adapter.vacuum(); // ✓ TypeScript knows about vacuum()
  *         console.log('✓ Vacuum completed');
  *         process.exit(0);
@@ -323,7 +323,7 @@ export interface CLIOptions<
  *   applicationCredentials: string;
  * }
  *
- * const program = createCLI<IFirebaseDB, FirebaseAdapter, FirebaseConfig>({
+ * const program = createCLI<IFirebaseDB, FirebaseRunner, FirebaseConfig>({
  *   name: 'msr-firebase',
  *
  *   addCustomOptions: (program) => {
@@ -340,17 +340,17 @@ export interface CLIOptions<
  *
  *   createExecutor: async (config) => {
  *     // ✅ config is typed as FirebaseConfig!
- *     return FirebaseAdapter.getInstance({ config });
+ *     return FirebaseRunner.getInstance({ config });
  *   }
  * });
  * ```
  */
 export function createCLI<
     DB extends IDB,
-    TExecutor extends MigrationScriptExecutor<DB> = MigrationScriptExecutor<DB>,
+    TRunner extends MigrationScriptRunner<DB> = MigrationScriptRunner<DB>,
     TConfig extends Config = Config
 >(
-    options: CLIOptions<DB, TExecutor, TConfig>
+    options: CLIOptions<DB, TRunner, TConfig>
 ): Command {
     const loggerTypes = LOGGER_TYPES.join('|');
     const logLevels = LOG_LEVELS.join('|');
@@ -384,7 +384,7 @@ export function createCLI<
     }
 
     // Factory function to create executor based on parsed CLI flags
-    const createExecutorWithFlags = async (): Promise<TExecutor> => {
+    const createExecutorWithFlags = async (): Promise<TRunner> => {
         const opts = program.opts<CLIFlags>();
 
         // 1. Load base config using waterfall (defaults → file → env vars)

@@ -63,13 +63,13 @@ Each migration runs in its own transaction. If a migration fails, only that migr
 
 **Example:**
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 
 const config = new Config();
 config.transaction.mode = 'PER_MIGRATION';  // Default
 config.transaction.isolation = 'READ COMMITTED';
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 
@@ -98,7 +98,7 @@ const config = new Config();
 config.transaction.mode = 'PER_BATCH';
 config.transaction.retries = 5;  // Retry entire batch on transient errors
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();  // All migrations in single transaction
 ```
 
@@ -129,7 +129,7 @@ No transaction wrapping. Each migration's `up()` method is responsible for its o
 const config = new Config();
 config.transaction.mode = 'NONE';
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 
@@ -296,7 +296,7 @@ config.transaction.retries = 3;
 config.transaction.retryDelay = 200;  // 200ms base delay
 config.transaction.retryBackoff = true;  // Exponential backoff
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 
@@ -333,7 +333,7 @@ config.transaction.retries = 5;           // Max retry attempts (default: 3)
 config.transaction.retryDelay = 100;      // Base delay in ms (default: 100)
 config.transaction.retryBackoff = true;   // Enable exponential backoff (default: true)
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 
@@ -512,7 +512,7 @@ config.transaction.mode = 'PER_MIGRATION';  // Auto-uses CallbackTransactionMana
 config.transaction.retries = 5;
 config.transaction.retryBackoff = true;
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 
@@ -562,7 +562,7 @@ const config = new Config();
 config.transaction.mode = 'PER_BATCH';  // All migrations in one transaction
 config.transaction.retries = 3;
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 
@@ -740,7 +740,7 @@ const hooks: ITransactionHooks = {
   }
 };
 
-const executor = new MigrationScriptExecutor({ handler, hooks , config });
+const executor = new MigrationScriptRunner({ handler, hooks , config });
 await executor.migrate();
 ```
 
@@ -1335,7 +1335,7 @@ class CustomTransactionManager implements ITransactionManager {
 
 // Use custom transaction manager
 const txManager = new CustomTransactionManager(db, logger);
-const executor = new MigrationScriptExecutor(
+const executor = new MigrationScriptRunner(
   handler,
   config,
   undefined,  // hooks
@@ -1348,7 +1348,7 @@ const executor = new MigrationScriptExecutor(
 ## Next Steps
 
 - Read [Configuration: Transaction Settings](../configuration/transaction-settings.md) for detailed API reference
-- Review [API: ITransactionalDB](../api/interfaces/db.md#itransactionaldb) interface documentation
+- Review [API: ITransactionalDB](../api/interfaces/transactional-db#itransactionaldb-interface) interface documentation
 - See [API: ITransactionManager<IDB>](../api/interfaces/index.md#itransactionmanager) for custom implementations
 - Check [Recipes: Testing Migrations](recipes/testing-migrations.md) for testing strategies
 

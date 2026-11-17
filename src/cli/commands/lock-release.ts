@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 import * as readline from 'node:readline';
@@ -10,7 +10,7 @@ import * as readline from 'node:readline';
  * Force-releases a stuck migration lock. Requires --force flag for safety.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor
+ * @param createExecutor - Factory function to create MigrationScriptRunner
  * @param promptFunction - Optional function for user confirmation (for testing)
  *
  * @example
@@ -24,7 +24,7 @@ import * as readline from 'node:readline';
  */
 export function addLockReleaseCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>,
+    createExecutor: () => Promise<MigrationScriptRunner<DB>>,
     promptFunction: (question: string) => Promise<boolean> = askForConfirmation
 ): void {
     program

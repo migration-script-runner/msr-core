@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import sinon from "sinon";
-import { MigrationScriptExecutor } from "../../../src/service/MigrationScriptExecutor";
+import { MigrationScriptRunner } from "../../../src/service/MigrationScriptRunner";
 import { IDB } from '../../../src/interface/dao';
 import { MigrationScript } from "../../../src/model/MigrationScript";
 import { Config } from "../../../src/model/Config";
@@ -9,13 +9,13 @@ import { IRunnableScript } from "../../../src/interface/IRunnableScript";
 import { SilentLogger } from "../../../src/logger/SilentLogger";
 
 /**
- * Unit tests for MigrationScriptExecutor hooks execution paths.
+ * Unit tests for MigrationScriptRunner hooks execution paths.
  * Tests the executeWithHooks method and hook integration.
  */
-describe('MigrationScriptExecutor - Hooks Execution', () => {
+describe('MigrationScriptRunner - Hooks Execution', () => {
 
     let handler: any;
-    let executor: MigrationScriptExecutor<IDB>;
+    let executor: MigrationScriptRunner<IDB>;
     let mockHooks: IMigrationHooks<IDB>;
     let script1: MigrationScript<IDB>;
     let script2: MigrationScript<IDB>;
@@ -76,7 +76,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
          * Verifies hooks are called before script execution.
          */
         it('should call onBeforeMigrate for each migration', async () => {
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: mockHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -95,7 +95,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
          * Verifies hooks are called after successful script execution.
          */
         it('should call onAfterMigrate after each successful migration', async () => {
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: mockHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -124,7 +124,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
             const testError = new Error('Migration failed');
             script1.script.up = sinon.stub().rejects(testError);
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: mockHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -153,7 +153,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
         it('should stop execution after first failed migration', async () => {
             script1.script.up = sinon.stub().rejects(new Error('First failed'));
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: mockHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -180,7 +180,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
         it('should handle empty migration result', async () => {
             script1.script.up = sinon.stub().resolves('');
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: mockHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -199,7 +199,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
         it('should handle undefined migration result', async () => {
             script1.script.up = sinon.stub().resolves(undefined);
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: mockHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -226,7 +226,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
                 // No onBeforeMigrate, onAfterMigrate, or onMigrationError
             };
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: noMigrationHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: noMigrationHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -250,7 +250,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
                 // No onAfterMigrate or onMigrationError
             };
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: partialHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: partialHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -275,7 +275,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
 
             script1.script.up = sinon.stub().rejects(new Error('Test error'));
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: errorOnlyHook,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: errorOnlyHook,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -300,7 +300,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
          * Verifies no errors with empty input.
          */
         it('should handle empty scripts array', async () => {
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: mockHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -337,7 +337,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
                 return 'success';
             });
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: orderTrackingHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: orderTrackingHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -371,7 +371,7 @@ describe('MigrationScriptExecutor - Hooks Execution', () => {
                 throw new Error('Failed');
             });
 
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler, hooks: orderTrackingHooks,
+            executor = new MigrationScriptRunner<IDB>({ handler: handler, hooks: orderTrackingHooks,
                 logger: new SilentLogger()
 , config: cfg });
 

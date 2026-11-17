@@ -1,4 +1,4 @@
-import {IMigrationExecutorDependencies} from "../interface/IMigrationExecutorDependencies";
+import {IMigrationRunnerDependencies} from "../interface/IMigrationRunnerDependencies";
 import {IConfigLoader, IDB} from "../interface";
 import {Config} from "../model";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
@@ -42,7 +42,7 @@ import {MigrationWorkflowOrchestrator} from "./MigrationWorkflowOrchestrator";
  * Result of creating migration services via factory.
  *
  * Contains all initialized service facades and infrastructure components
- * needed by MigrationScriptExecutor.
+ * needed by MigrationScriptRunner.
  *
  * @template DB - Database interface type
  *
@@ -77,7 +77,7 @@ export interface MigrationServicesFacades<DB extends IDB, TConfig extends Config
 /**
  * Factory function for creating all migration services.
  *
- * Extracts all initialization logic from MigrationScriptExecutor constructor
+ * Extracts all initialization logic from MigrationScriptRunner constructor
  * into a separate factory function for better separation of concerns.
  *
  * @template DB - Database interface type
@@ -91,7 +91,7 @@ export function createMigrationServices<
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config
 >(
-    dependencies: IMigrationExecutorDependencies<DB, THandler, TConfig>
+    dependencies: IMigrationRunnerDependencies<DB, THandler, TConfig>
 ): MigrationServicesFacades<DB, TConfig> {
 
     const handler = dependencies.handler;
@@ -139,7 +139,7 @@ export function createMigrationServices<
  * @private
  */
 function createHooksComposite<DB extends IDB>(
-    dependencies: IMigrationExecutorDependencies<DB>,
+    dependencies: IMigrationRunnerDependencies<DB>,
     config: Config,
     logger: ILogger,
     handler: IDatabaseMigrationHandler<DB>
@@ -171,7 +171,7 @@ function createHooksComposite<DB extends IDB>(
  * @private
  */
 function createCoreServices<DB extends IDB>(
-    dependencies: IMigrationExecutorDependencies<DB>,
+    dependencies: IMigrationRunnerDependencies<DB>,
     handler: IDatabaseMigrationHandler<DB>,
     config: Config,
     logger: ILogger,
@@ -244,7 +244,7 @@ function createExecutionServices<DB extends IDB>(
  * @private
  */
 function createOutputServices<DB extends IDB>(
-    dependencies: IMigrationExecutorDependencies<DB>,
+    dependencies: IMigrationRunnerDependencies<DB>,
     handler: IDatabaseMigrationHandler<DB>,
     config: Config,
     logger: ILogger

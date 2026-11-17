@@ -169,10 +169,10 @@ services:
 The API approach embeds migration execution directly in your application code.
 
 ```typescript
-import {MigrationScriptExecutor} from '@migration-script-runner/core';
+import {MigrationScriptRunner} from '@migration-script-runner/core';
 
 // Run migrations on app startup
-const executor = new MigrationScriptExecutor({handler, config});
+const executor = new MigrationScriptRunner({handler, config});
 await executor.migrate();
 
 // Then start your app
@@ -226,13 +226,13 @@ await startServer();
 
 **Development with auto-migration:**
 ```typescript
-import {MigrationScriptExecutor, Config} from '@migration-script-runner/core';
+import {MigrationScriptRunner, Config} from '@migration-script-runner/core';
 import {MyHandler} from './database';
 
 async function startApp() {
   const config = new Config();
   const handler = new MyHandler();
-  const executor = new MigrationScriptExecutor({handler, config});
+  const executor = new MigrationScriptRunner({handler, config});
 
   // Only in development
   if (process.env.NODE_ENV === 'development') {
@@ -254,13 +254,13 @@ startApp();
 
 **Testing setup:**
 ```typescript
-import {MigrationScriptExecutor} from '@migration-script-runner/core';
+import {MigrationScriptRunner} from '@migration-script-runner/core';
 
 describe('User API', () => {
-  let executor: MigrationScriptExecutor;
+  let executor: MigrationScriptRunner;
 
   beforeAll(async () => {
-    executor = new MigrationScriptExecutor({handler, config});
+    executor = new MigrationScriptRunner({handler, config});
     await executor.migrate(); // Fresh database
   });
 
@@ -445,7 +445,7 @@ For serverless, consider:
 ```typescript
 // src/migrations.ts
 export async function runMigrations() {
-  const executor = new MigrationScriptExecutor({handler, config});
+  const executor = new MigrationScriptRunner({handler, config});
 
   // Only in development
   if (process.env.NODE_ENV === 'development') {
@@ -477,7 +477,7 @@ npm start
 ```typescript
 // test/setup.ts
 export async function setupTestDatabase() {
-  const executor = new MigrationScriptExecutor({handler, testConfig});
+  const executor = new MigrationScriptRunner({handler, testConfig});
   await executor.migrate();
 }
 

@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 
@@ -9,7 +9,7 @@ import {IDB} from '../../interface';
  * Lists all migrations with their execution status.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor (returns Promise in v0.8.2+)
+ * @param createExecutor - Factory function to create MigrationScriptRunner (returns Promise in v0.8.2+)
  *
  * @example
  * ```bash
@@ -26,7 +26,7 @@ import {IDB} from '../../interface';
  */
 export function addListCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>
+    createExecutor: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     program
         .command('list')

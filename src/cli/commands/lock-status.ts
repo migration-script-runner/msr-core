@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 
@@ -9,7 +9,7 @@ import {IDB} from '../../interface';
  * Displays the current migration lock status including who holds it and when it expires.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor
+ * @param createExecutor - Factory function to create MigrationScriptRunner
  *
  * @example
  * ```bash
@@ -22,7 +22,7 @@ import {IDB} from '../../interface';
  */
 export function addLockStatusCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>
+    createExecutor: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     program
         .command('lock:status')

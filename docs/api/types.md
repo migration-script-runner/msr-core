@@ -31,7 +31,7 @@ import {
   IDatabaseMigrationHandler,
   Config,
   BackupConfig,
-  MigrationScriptExecutor
+  MigrationScriptRunner
 } from '@migration-script-runner/core';
 ```
 

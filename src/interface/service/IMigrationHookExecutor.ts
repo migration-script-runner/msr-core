@@ -10,7 +10,7 @@ import {MigrationScript} from "../../model";
  * - Managing execution order and error propagation
  * - Tracking executed scripts for rollback scenarios
  *
- * Extracted from MigrationScriptExecutor for better separation of concerns.
+ * Extracted from MigrationScriptRunner for better separation of concerns.
  *
  * @template DB - Database interface type
  *

@@ -41,7 +41,7 @@ import {
   CompositeLogger,
   ConsoleLogger,
   FileLogger,
-  MigrationScriptExecutor
+  MigrationScriptRunner
 } from '@migration-script-runner/core';
 
 // Create composite with multiple loggers
@@ -50,7 +50,7 @@ const logger = new CompositeLogger([
   new FileLogger({ logPath: '/var/log/migrations.log' })
 ]);
 
-const executor = new MigrationScriptExecutor({ handler,  logger });
+const executor = new MigrationScriptRunner({ handler,  logger });
 await executor.migrate();
 ```
 
@@ -185,7 +185,7 @@ describe('Migration Tests', () => {
     // Or use SilentLogger explicitly
     const silentLogger = new CompositeLogger([new SilentLogger()]);
 
-    const executor = new MigrationScriptExecutor({ handler,  logger });
+    const executor = new MigrationScriptRunner({ handler,  logger });
     const result = await executor.migrate();
 
     expect(result.success).to.be.true;
@@ -489,7 +489,7 @@ import {
   CompositeLogger,
   ConsoleLogger,
   FileLogger,
-  MigrationScriptExecutor
+  MigrationScriptRunner
 } from '@migration-script-runner/core';
 
 // Create loggers based on environment
@@ -522,7 +522,7 @@ const createLogger = (): CompositeLogger => {
 
 // Use the logger
 const logger = createLogger();
-const executor = new MigrationScriptExecutor({ handler,  logger });
+const executor = new MigrationScriptRunner({ handler,  logger });
 
 const result = await executor.migrate();
 

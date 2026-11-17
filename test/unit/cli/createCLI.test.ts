@@ -5,19 +5,19 @@ import {IDB} from '../../../src/interface';
 import {Config} from '../../../src/model/Config';
 import {BackupMode} from '../../../src/model/BackupMode';
 import {LOGGER_TYPES, LOG_LEVELS, OUTPUT_FORMATS} from '../../../src/cli/utils/flagMapper';
-import {MigrationScriptExecutor} from '../../../src/service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../../src/service/MigrationScriptRunner';
 
 interface MockDB extends IDB {
     data: string;
 }
 
 describe('createCLI', () => {
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptExecutor<MockDB>>;
+    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
     let createExecutorStub: sinon.SinonStub;
 
     beforeEach(() => {
         // Create mock executor
-        mockExecutor = sinon.createStubInstance(MigrationScriptExecutor);
+        mockExecutor = sinon.createStubInstance(MigrationScriptRunner);
 
         // Create factory stub
         createExecutorStub = sinon.stub().returns(mockExecutor);
@@ -308,7 +308,7 @@ describe('createCLI', () => {
                 customField: string;
             }
 
-            const customExecutorStub = sinon.stub().returns(sinon.createStubInstance(MigrationScriptExecutor));
+            const customExecutorStub = sinon.stub().returns(sinon.createStubInstance(MigrationScriptRunner));
             const program = createCLI<CustomDB>({createExecutor: customExecutorStub});
 
             expect(program).to.exist;
@@ -475,14 +475,14 @@ describe('createCLI', () => {
          */
         it('should provide typed createExecutor to extendCLI callback', async () => {
             // Create a custom adapter class with custom method
-            class CustomAdapter extends MigrationScriptExecutor<MockDB> {
+            class CustomRunner extends MigrationScriptRunner<MockDB> {
                 customMethod(): string {
                     return 'custom result';
                 }
             }
 
             // Mock the custom adapter
-            const customAdapter = sinon.createStubInstance(CustomAdapter);
+            const customAdapter = sinon.createStubInstance(CustomRunner);
             (customAdapter as any).customMethod = sinon.stub().returns('custom result');
 
             const customExecutorStub = sinon.stub().returns(customAdapter);
@@ -495,7 +495,7 @@ describe('createCLI', () => {
                     prog
                         .command('custom-typed')
                         .action(async () => {
-                            // TypeScript should infer this as CustomAdapter
+                            // TypeScript should infer this as CustomRunner
                             const adapter = await createExec();
                             capturedExecutor = adapter;
                         });
@@ -861,7 +861,7 @@ describe('createCLI', () => {
             const exitStub = sinon.stub(process, 'exit');
 
             try {
-                const program = createCLI<MockDB, MigrationScriptExecutor<MockDB>, FirebaseConfig>({
+                const program = createCLI<MockDB, MigrationScriptRunner<MockDB>, FirebaseConfig>({
                     createExecutor: createExecutorStub,
                     addCustomOptions: (prog) => {
                         prog
@@ -908,7 +908,7 @@ describe('createCLI', () => {
             const exitStub = sinon.stub(process, 'exit');
 
             try {
-                const program = createCLI<MockDB, MigrationScriptExecutor<MockDB>, FirebaseConfig>({
+                const program = createCLI<MockDB, MigrationScriptRunner<MockDB>, FirebaseConfig>({
                     createExecutor: customCreateExecutor,
                     addCustomOptions: (prog) => {
                         prog.option('--database-url <url>', 'Firebase Database URL');
@@ -947,7 +947,7 @@ describe('createCLI', () => {
 
             try {
                 // No third generic parameter - defaults to Config
-                const program = createCLI<MockDB, MigrationScriptExecutor<MockDB>>({
+                const program = createCLI<MockDB, MigrationScriptRunner<MockDB>>({
                     createExecutor: createExecutorStub,
                     extendFlags: (config, flags) => {
                         // config is typed as base Config
@@ -984,7 +984,7 @@ describe('createCLI', () => {
             const exitStub = sinon.stub(process, 'exit');
 
             try {
-                const program = createCLI<MockDB, MigrationScriptExecutor<MockDB>, FirebaseConfig>({
+                const program = createCLI<MockDB, MigrationScriptRunner<MockDB>, FirebaseConfig>({
                     createExecutor: asyncCreateExecutor,
                     extendFlags: (config, flags) => {
                         config.databaseUrl = 'https://async-test.firebaseio.com';

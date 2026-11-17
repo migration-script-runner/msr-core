@@ -300,7 +300,7 @@ export class MongoDBHandler implements IDatabaseMigrationHandler<IDB> {
 
 ```typescript
 // src/migrate.ts
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MongoDBHandler } from './database/MongoDBHandler';
 
 async function runMigrations() {
@@ -323,7 +323,7 @@ async function runMigrations() {
   config.backup.folder = './backups';
 
   // Create executor
-  const executor = new MigrationScriptExecutor({ handler , config });
+  const executor = new MigrationScriptRunner({ handler , config });
 
   try {
     console.log('Running migrations...');
@@ -568,12 +568,12 @@ export default class AddPreferencesField implements IRunnableScript<IDB> {
 ```typescript
 // test/integration/mongodb-migrations.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MongoDBHandler } from '../../src/database/MongoDBHandler';
 
 describe('MongoDB Migration Integration', () => {
   let handler: MongoDBHandler;
-  let executor: MigrationScriptExecutor;
+  let executor: MigrationScriptRunner;
 
   before(async () => {
     handler = new MongoDBHandler({
@@ -586,7 +586,7 @@ describe('MongoDB Migration Integration', () => {
     const config = new Config();
     config.folder = './migrations';
 
-    executor = new MigrationScriptExecutor({ handler , config });
+    executor = new MigrationScriptRunner({ handler , config });
   });
 
   after(async () => {

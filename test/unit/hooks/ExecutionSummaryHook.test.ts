@@ -6,7 +6,7 @@ import {
     IDatabaseMigrationHandler,
     IDB,
     IMigrationInfo,
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     SilentLogger,
     SummaryFormat,
     IMigrationHooks,
@@ -101,7 +101,7 @@ describe('ExecutionSummaryHook', () => {
 
     describe('with logging enabled and no user hooks', () => {
         it('should create ExecutionSummaryHook automatically', async () => {
-            const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             const result = await executor.up();
 
@@ -111,7 +111,7 @@ describe('ExecutionSummaryHook', () => {
 });
 
         it('should log successful migrations', async () => {
-            const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             await executor.up();
 
@@ -130,7 +130,7 @@ describe('ExecutionSummaryHook', () => {
                 }
             };
 
-            const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: userHooks
 , config: config });
 
@@ -161,7 +161,7 @@ describe('ExecutionSummaryHook', () => {
 
             config.logging.logSuccessful = false; // Only log failures
 
-            const executor = new MigrationScriptExecutor<IDB>({ handler: failingHandler, logger: new SilentLogger() , config: config });
+            const executor = new MigrationScriptRunner<IDB>({ handler: failingHandler, logger: new SilentLogger() , config: config });
 
             try {
                 await executor.up();
@@ -181,7 +181,7 @@ describe('ExecutionSummaryHook', () => {
 
     describe('onAfterMigrate without onBeforeMigrate', () => {
         it('should handle fallback when migration start time is missing', async () => {
-            const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             // Get the hook (it's the ExecutionSummaryHook since logging is enabled)
             const hooks = (executor as any).hooks;
@@ -206,7 +206,7 @@ describe('ExecutionSummaryHook', () => {
 
     describe('onMigrationError direct invocation', () => {
         it('should record migration failure when onMigrationError is called', async () => {
-            const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             // Get the hook (it's the ExecutionSummaryHook since logging is enabled)
             const hooks = (executor as any).hooks;

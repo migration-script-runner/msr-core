@@ -33,16 +33,16 @@ import { AsciiTableRenderStrategy } from '@migration-script-runner/core';
 
 ## Basic Usage
 
-### With MigrationScriptExecutor (Default)
+### With MigrationScriptRunner (Default)
 
 Since AsciiTableRenderStrategy is the default, you don't need to configure anything:
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 // Automatically uses AsciiTableRenderStrategy
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 
@@ -52,7 +52,7 @@ You can explicitly set the strategy if needed:
 
 ```typescript
 import {
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     AsciiTableRenderStrategy,
     ConsoleLogger
 } from '@migration-script-runner/core';
@@ -60,7 +60,7 @@ import {
 const logger = new ConsoleLogger();
 const strategy = new AsciiTableRenderStrategy(logger);
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: strategy
 });
@@ -81,7 +81,7 @@ import {
 const logger = new FileLogger({ logPath: './migrations.log' });
 const strategy = new AsciiTableRenderStrategy(logger);
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: strategy
 });
@@ -198,10 +198,10 @@ Shows whether migration files still exist locally:
 Perfect for interactive development with immediate visual feedback:
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 // Beautiful table output for quick review
 await executor.list();
@@ -243,7 +243,7 @@ Great for scripts that require user review:
 import { AsciiTableRenderStrategy } from '@migration-script-runner/core';
 
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 console.log('Current migration status:');
 await executor.list();
@@ -261,7 +261,7 @@ if (answer === 'y') {
 ```typescript
 // Good: Local development
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 
 // Avoid for CI/CD: Use JsonRenderStrategy instead

@@ -1,15 +1,15 @@
 ## Core Classes
 
-### MigrationScriptExecutor
+### MigrationScriptRunner
 
 The main class for executing database migrations.
 
 ```typescript
-import { MigrationScriptExecutor, IDatabaseMigrationHandler, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, IDatabaseMigrationHandler, Config } from '@migration-script-runner/core';
 
 const handler = new MyDatabaseHandler();
 const config = new Config();
-const executor = new MigrationScriptExecutor(handler, config);
+const executor = new MigrationScriptRunner(handler, config);
 ```
 
 #### Constructor
@@ -18,7 +18,7 @@ const executor = new MigrationScriptExecutor(handler, config);
 constructor(
     handler: IDatabaseMigrationHandler,
     config: Config,
-    dependencies?: IMigrationExecutorDependencies
+    dependencies?: IMigrationRunnerDependencies
 )
 ```
 
@@ -42,7 +42,7 @@ constructor(
 
 #### Public Properties
 
-The `MigrationScriptExecutor` exposes several service instances as public readonly properties for direct access:
+The `MigrationScriptRunner` exposes several service instances as public readonly properties for direct access:
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -58,7 +58,7 @@ The `MigrationScriptExecutor` exposes several service instances as public readon
 
 **Example (Accessing Services):**
 ```typescript
-const executor = new MigrationScriptExecutor(handler, config);
+const executor = new MigrationScriptRunner(handler, config);
 
 // Check if backup should be created
 if (executor.rollbackService.shouldCreateBackup()) {
@@ -75,7 +75,7 @@ const results = await executor.validationService.validateAll(scripts, config);
 **Example (Custom Rollback Logic):**
 ```typescript
 // Access rollbackService for custom workflows
-const executor = new MigrationScriptExecutor(handler, config);
+const executor = new MigrationScriptRunner(handler, config);
 
 try {
   await executor.migrate();

@@ -11,7 +11,7 @@ import {ILockingService} from "./service/ILockingService";
  * **Generic Type Parameters (v0.6.0 - BREAKING CHANGE):**
  * - `DB` - Your specific database interface extending IDB (REQUIRED)
  *
- * Note: Configuration is now passed separately to the MigrationScriptExecutor constructor.
+ * Note: Configuration is now passed separately to the MigrationScriptRunner constructor.
  *
  * @template DB - Database interface type
  *

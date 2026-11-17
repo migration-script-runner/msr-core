@@ -5,7 +5,7 @@ import {
     IDB,
     IMigrationInfo,
     IDatabaseMigrationHandler,
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     ISchemaVersion,
     SilentLogger,
     RollbackStrategy,
@@ -22,7 +22,7 @@ import * as path from "node:path";
  * This is a regression test for the bug where scripts.executed was empty
  * when an error was thrown from executeWithHooks().
  */
-describe('MigrationScriptExecutor - Track Executed Scripts for Rollback', () => {
+describe('MigrationScriptRunner - Track Executed Scripts for Rollback', () => {
 
     let testDir: string;
     let db: IDB;
@@ -132,7 +132,7 @@ describe('MigrationScriptExecutor - Track Executed Scripts for Rollback', () => 
         // Clear global tracker
         (global as any).__testDownCalls = [];
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await executor.migrate();
 
         // Get down calls from global tracker
@@ -221,7 +221,7 @@ describe('MigrationScriptExecutor - Track Executed Scripts for Rollback', () => 
 
         (global as any).__testDownCalls2 = [];
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await executor.migrate();
 
         const calls = (global as any).__testDownCalls2 || [];
@@ -298,7 +298,7 @@ describe('MigrationScriptExecutor - Track Executed Scripts for Rollback', () => 
 
         (global as any).__testDownCalls3 = [];
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: testLogger, config: config });
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
         const result = await executor.migrate();
 
         const calls = (global as any).__testDownCalls3 || [];

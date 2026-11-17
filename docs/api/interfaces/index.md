@@ -209,7 +209,7 @@ All interfaces now require generic type parameters for database-specific type sa
 - `IMetricsCollector` - Metrics collection for observability and performance tracking
 
 ### Constructor Signature Change (Breaking)
-- `MigrationScriptExecutor` constructor now requires dependency injection pattern: `new MigrationScriptExecutor({ handler }, config?)`
+- `MigrationScriptRunner` constructor now requires dependency injection pattern: `new MigrationScriptRunner({ handler }, config?)`
 
 ---
 

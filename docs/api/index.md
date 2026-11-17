@@ -26,7 +26,7 @@ This section contains comprehensive API documentation for all public classes, in
 
 ### [Core Classes](core-classes)
 The main classes you'll interact with:
-- **MigrationScriptExecutor** - Primary class for executing migrations
+- **MigrationScriptRunner** - Primary class for executing migrations
 - **Config** - Configuration management
 - **MigrationScript** - Migration script representation
 
@@ -62,14 +62,14 @@ Type definitions and aliases for TypeScript users
 ## Quick Navigation
 
 **Getting Started?**
-- Start with [MigrationScriptExecutor](core-classes#migrationscriptexecutor)
-- Configure with [Config](core-classes#config)
-- Implement [IDatabaseMigrationHandler](interfaces#idatabasemigrationhandler)
+- Start with [MigrationScriptRunner](core-classes#migrationscriptrunner)
+- Configure with [Config](ConfigLoader#config)
+- Implement [IDatabaseMigrationHandler](interfaces/database-handler#idatabasemigrationhandler)
 
 **Customizing?**
-- Custom loggers: [ILogger](interfaces#ilogger)
-- Custom validators: [IMigrationValidator](interfaces#imigrationvalidator)
-- Lifecycle hooks: [IMigrationHooks](interfaces#imigrationhooks)
+- Custom loggers: [ILogger](../customization/custom-logging#the-ilogger-interface)
+- Custom validators: [IMigrationValidator](../customization/validation/custom-validation#imigrationvalidator-interface)
+- Lifecycle hooks: [IMigrationHooks](../customization/hooks#available-lifecycle-hooks)
 - Metrics collection: [IMetricsCollector](interfaces/metrics-collector)
 
 **Advanced Usage?**

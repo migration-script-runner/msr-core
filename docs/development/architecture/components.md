@@ -31,7 +31,7 @@ graph TB
     end
 
     subgraph "Orchestration Layer"
-        Executor[MigrationScriptExecutor<br/>Main entry point]
+        Executor[MigrationScriptRunner<br/>Main entry point]
         Config[Config<br/>Settings]
     end
 
@@ -148,7 +148,7 @@ graph TB
 
 ## Core Components
 
-### MigrationScriptExecutor
+### MigrationScriptRunner
 
 **Purpose:** Main entry point that initializes and delegates to orchestrator services
 
@@ -177,12 +177,12 @@ graph TB
 - `MigrationScriptSelector`, `MigrationRunner`, `IMigrationValidationService`
 - `ILoaderRegistry`, `ITransactionManager`, `ILogger`, `IMigrationHooks`
 
-**Location:** `src/service/MigrationScriptExecutor.ts`
+**Location:** `src/service/MigrationScriptRunner.ts`
 
 ```typescript
 // Example usage (public API unchanged)
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler,
+const executor = new MigrationScriptRunner({ handler,
     logger: new SilentLogger(),  // Optional DI
     backupService: customBackup  // Optional DI
 });
@@ -194,7 +194,7 @@ const result = await executor.up();  // Delegates to workflowOrchestrator
 
 ## Orchestrator Services (v0.7.0)
 
-The following orchestrators were extracted from MigrationScriptExecutor in v0.7.0 to follow the Single Responsibility Principle. Each handles a specific aspect of the migration workflow.
+The following orchestrators were extracted from MigrationScriptRunner in v0.7.0 to follow the Single Responsibility Principle. Each handles a specific aspect of the migration workflow.
 
 ### MigrationWorkflowOrchestrator
 

@@ -8,7 +8,7 @@ import {
     IDatabaseMigrationHandler,
     IRunnableScript,
     MigrationScript,
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     IBackup,
     ISchemaVersion,
     IMigrationScript,
@@ -17,10 +17,10 @@ import {
 import {TestUtils} from "../../helpers/TestUtils";
 
 /**
- * Integration tests for MigrationScriptExecutor version control features.
+ * Integration tests for MigrationScriptRunner version control features.
  * Tests the migrateTo() and downTo() methods for controlled version upgrades/downgrades.
  */
-describe('MigrationScriptExecutor - Version Control', () => {
+describe('MigrationScriptRunner - Version Control', () => {
 
     let initialized = true;
     let created = true;
@@ -28,7 +28,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
     let scripts: MigrationScript<IDB>[] = [];
     let cfg: Config;
     let handler: IDatabaseMigrationHandler<IDB>;
-    let executor: MigrationScriptExecutor<IDB>;
+    let executor: MigrationScriptRunner<IDB>;
     let removedTimestamps: number[] = [];
 
     before(() => {
@@ -80,7 +80,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
         cfg.validateBeforeRun = false;
         cfg.validateMigratedFiles = false;
 
-        executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
+        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
         initialized = true;
         created = true;
         valid = true;
@@ -393,7 +393,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
          */
         it('should handle hooks object with undefined methods', async () => {
             // Create executor with empty hooks object
-            const executorWithEmptyHooks = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+            const executorWithEmptyHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {} // Hooks object exists but no methods defined
 , config: cfg });
 
@@ -492,7 +492,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
             const onStartSpy = sinon.spy();
             const onCompleteSpy = sinon.spy();
 
-            const executorWithAllHooks = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+            const executorWithAllHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onBeforeBackup: onBeforeBackupSpy,
                     onAfterBackup: onAfterBackupSpy,
@@ -541,7 +541,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
             const onStartSpy = sinon.spy();
             const onCompleteSpy = sinon.spy();
 
-            const executorWithHooks = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+            const executorWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onStart: onStartSpy,
                     onComplete: onCompleteSpy
@@ -982,7 +982,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
          */
         it('should call onStart hook when rolling back', async () => {
             const onStartSpy = sinon.spy();
-            const executorWithHooks = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+            const executorWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onStart: onStartSpy
                 }
@@ -1025,7 +1025,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
         it('should call onBeforeMigrate and onAfterMigrate hooks for each rollback', async () => {
             const onBeforeMigrateSpy = sinon.spy();
             const onAfterMigrateSpy = sinon.spy();
-            const executorWithHooks = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+            const executorWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onBeforeMigrate: onBeforeMigrateSpy,
                     onAfterMigrate: onAfterMigrateSpy
@@ -1071,7 +1071,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
          */
         it('should call onComplete hook after successful rollback', async () => {
             const onCompleteSpy = sinon.spy();
-            const executorWithHooks = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+            const executorWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onComplete: onCompleteSpy
                 }
@@ -1114,7 +1114,7 @@ describe('MigrationScriptExecutor - Version Control', () => {
          */
         it('should call onError hook when rollback fails', async () => {
             const onErrorSpy = sinon.spy();
-            const executorWithHooks = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+            const executorWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onError: onErrorSpy
                 }

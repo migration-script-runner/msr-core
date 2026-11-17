@@ -15,7 +15,7 @@ import {IDatabaseMigrationHandler} from '../interface/IDatabaseMigrationHandler'
  * Automatically tracks migration executions, errors, backups, rollbacks,
  * and transaction events, saving detailed summaries to files based on configuration.
  *
- * This hook is automatically added to MigrationScriptExecutor when
+ * This hook is automatically added to MigrationScriptRunner when
  * `config.logging.enabled` is true.
  *
  * **New in v0.5.0**: Transaction lifecycle tracking with metrics
@@ -27,7 +27,7 @@ import {IDatabaseMigrationHandler} from '../interface/IDatabaseMigrationHandler'
  * // Automatically enabled via config
  * const config = new Config();
  * config.logging.enabled = true;
- * const executor = new MigrationScriptExecutor<DB>(handler, config);
+ * const executor = new MigrationScriptRunner<DB>(handler, config);
  * // Summary logging happens automatically
  * ```
  *
@@ -38,7 +38,7 @@ import {IDatabaseMigrationHandler} from '../interface/IDatabaseMigrationHandler'
  * // Manual usage with CompositeHooks
  * const summaryHook = new ExecutionSummaryHook<DB>(config, logger, handler);
  * const customHooks = new CompositeHooks<DB>([summaryHook, myCustomHook]);
- * const executor = new MigrationScriptExecutor<DB>(handler, config, {
+ * const executor = new MigrationScriptRunner<DB>(handler, config, {
  *     hooks: customHooks
  * });
  * ```

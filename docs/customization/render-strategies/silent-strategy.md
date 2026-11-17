@@ -33,12 +33,12 @@ import { SilentRenderStrategy } from '@migration-script-runner/core';
 
 ## Basic Usage
 
-### With MigrationScriptExecutor
+### With MigrationScriptRunner
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
@@ -48,13 +48,13 @@ await executor.migrate();  // No output produced
 ### In Tests
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy, SilentLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy, SilentLogger } from '@migration-script-runner/core';
 
 describe('Migration Tests', () => {
-    let executor: MigrationScriptExecutor;
+    let executor: MigrationScriptRunner;
 
     beforeEach(() => {
-        executor = new MigrationScriptExecutor({ handler, 
+        executor = new MigrationScriptRunner({ handler,
             logger: new SilentLogger(),
             renderStrategy: new SilentRenderStrategy()
         });
@@ -71,12 +71,12 @@ describe('Migration Tests', () => {
 ### Library Integration
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
 class MyApplication {
     async initDatabase() {
         // Run migrations silently during app startup
-        const executor = new MigrationScriptExecutor({ handler, 
+        const executor = new MigrationScriptRunner({ handler,
             renderStrategy: new SilentRenderStrategy()
         });
 
@@ -112,11 +112,11 @@ strategy.renderIgnored(ignoredScripts);            // No output
 Keep test output clean and focused:
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy, SilentLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy, SilentLogger } from '@migration-script-runner/core';
 
-describe('MigrationScriptExecutor', () => {
+describe('MigrationScriptRunner', () => {
     it('should handle empty migration list', async () => {
-        const executor = new MigrationScriptExecutor({ handler, 
+        const executor = new MigrationScriptRunner({ handler,
             logger: new SilentLogger(),
             renderStrategy: new SilentRenderStrategy()
         });
@@ -131,7 +131,7 @@ describe('MigrationScriptExecutor', () => {
 
 **Without SilentRenderStrategy:**
 ```
-  MigrationScriptExecutor
+  MigrationScriptRunner
   __  __ _                 _   _               ____            _       _
  |  \/  (_) __ _ _ __ __ _| |_(_) ___  _ __   / ___|  ___ _ __(_)_ __ | |_
  ...
@@ -144,7 +144,7 @@ describe('MigrationScriptExecutor', () => {
 
 **With SilentRenderStrategy:**
 ```
-  MigrationScriptExecutor
+  MigrationScriptRunner
     ✓ should handle empty migration list
 ```
 
@@ -153,11 +153,11 @@ describe('MigrationScriptExecutor', () => {
 When embedding MSR in a library:
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
 export class DatabaseManager {
     async initialize() {
-        const executor = new MigrationScriptExecutor({ handler, 
+        const executor = new MigrationScriptRunner({ handler,
             renderStrategy: new SilentRenderStrategy()
         });
 
@@ -177,11 +177,11 @@ export class DatabaseManager {
 For scheduled or background migration tasks:
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
 // Cron job or scheduled task
 async function runScheduledMigrations() {
-    const executor = new MigrationScriptExecutor({ handler, 
+    const executor = new MigrationScriptRunner({ handler,
         renderStrategy: new SilentRenderStrategy()
     });
 
@@ -199,11 +199,11 @@ async function runScheduledMigrations() {
 For fully automated deployments:
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy, FileLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy, FileLogger } from '@migration-script-runner/core';
 
 async function deployApplication() {
     // Run migrations silently, log to file
-    const executor = new MigrationScriptExecutor({ handler, 
+    const executor = new MigrationScriptRunner({ handler,
         logger: new FileLogger({ logPath: './deploy.log' }),
         renderStrategy: new SilentRenderStrategy()
     });
@@ -227,11 +227,11 @@ async function deployApplication() {
 For Docker containers, Lambda functions, etc.:
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
 // Lambda function
 export const handler = async (event) => {
-    const executor = new MigrationScriptExecutor(dbHandler, config, {
+    const executor = new MigrationScriptRunner(dbHandler, config, {
         renderStrategy: new SilentRenderStrategy()
     });
 
@@ -255,7 +255,7 @@ For end-to-end testing:
 describe('E2E Tests', () => {
     beforeAll(async () => {
         // Set up test database silently
-        const executor = new MigrationScriptExecutor(testHandler, config, {
+        const executor = new MigrationScriptRunner(testHandler, config, {
             renderStrategy: new SilentRenderStrategy()
         });
 
@@ -276,13 +276,13 @@ describe('E2E Tests', () => {
 
 ```typescript
 // Good: Complete silence
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     logger: new SilentLogger(),
     renderStrategy: new SilentRenderStrategy()
 });
 
 // Partial: Logger still produces output
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
     // Default ConsoleLogger still logs
 });
@@ -296,10 +296,10 @@ const renderStrategy = process.env.NODE_ENV === 'test'
     ? new SilentRenderStrategy()
     : new AsciiTableRenderStrategy();
 
-const executor = new MigrationScriptExecutor({ handler,  renderStrategy });
+const executor = new MigrationScriptRunner({ handler,  renderStrategy });
 
 // Avoid: Silent in production (makes debugging hard)
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()  // Hard to debug
 });
 ```
@@ -308,7 +308,7 @@ const executor = new MigrationScriptExecutor({ handler,
 
 ```typescript
 // Good: Silent but validate results
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
@@ -329,12 +329,12 @@ await executor.migrate();  // Errors not handled
 // Good: Clear intent
 // Use SilentRenderStrategy to avoid cluttering test output
 // Migration status is checked via result.success
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
 // Avoid: No explanation
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()  // Why?
 });
 ```
@@ -343,7 +343,7 @@ const executor = new MigrationScriptExecutor({ handler,
 
 ```typescript
 // Good: Silent tables, but provide feedback
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 

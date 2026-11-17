@@ -41,13 +41,13 @@ Migration Script Runner includes a comprehensive validation system that checks m
 Validation is enabled by default and runs automatically:
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 
 const config = new Config();
 config.folder = './migrations';
 
 // Validation is enabled by default (validateBeforeRun = true)
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 try {
     await executor.migrate();

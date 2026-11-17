@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 import {Command} from 'commander';
 import {addLockReleaseCommand} from '../../../../src/cli/commands/lock-release';
-import {MigrationScriptExecutor} from '../../../../src/service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../../../src/service/MigrationScriptRunner';
 import {EXIT_CODES} from '../../../../src/cli/utils/exitCodes';
 import {IDB} from '../../../../src/interface';
 import {ILockStatus} from '../../../../src/interface/service/ILockingService';
@@ -13,7 +13,7 @@ interface MockDB extends IDB {
 
 describe('lock:release command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptExecutor<MockDB>>;
+    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
     let createExecutorStub: sinon.SinonStub;
     let consoleLogStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
@@ -28,7 +28,7 @@ describe('lock:release command', () => {
         mockExecutor = {
             getLockStatus: sinon.stub(),
             forceReleaseLock: sinon.stub(),
-        } as unknown as sinon.SinonStubbedInstance<MigrationScriptExecutor<MockDB>>;
+        } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
         createExecutorStub = sinon.stub().returns(mockExecutor);

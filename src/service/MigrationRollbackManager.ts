@@ -73,11 +73,11 @@ export interface MigrationRollbackManagerDependencies<DB extends IDB> {
 /**
  * Manages version-based rollback operations.
  *
- * Extracted from MigrationScriptExecutor to separate rollback orchestration concerns.
+ * Extracted from MigrationScriptRunner to separate rollback orchestration concerns.
  * Handles rolling back to specific target versions by executing down() methods
  * in reverse chronological order.
  *
- * **New in v0.7.0:** Part of MigrationScriptExecutor refactoring (#97 Phase 2)
+ * **New in v0.7.0:** Part of MigrationScriptRunner refactoring (#97 Phase 2)
  *
  * @template DB - Database interface type
  *

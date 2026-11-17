@@ -124,7 +124,7 @@ A database-agnostic migration framework for TypeScript and JavaScript projects.
 - **📦 npm Provenance** - Enhanced supply chain security with build provenance attestations
 - **✅ 100% Backwards Compatible** - Zero breaking changes from v0.7.x, all features are opt-in
 
-**[→ View v0.7.x → v0.8.0 migration guide](version-migration/v0.7-to-v0.8)** | **[→ See full changelog](features#feature-highlights-by-version)**
+**[→ View v0.8.x → v1.0.0 migration guide](version-migration/v0.8-to-v1.0)** | **[→ See full changelog](features#feature-highlights-by-version)**
 {: .fs-5 }
 
 ---
@@ -196,14 +196,14 @@ export default class CreateUsers implements IRunnableScript<IMyDatabase> {
 ### 3. Run Migrations
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MyDatabaseHandler, IMyDatabase } from './database-handler';
 
 const config = new Config();
 config.folder = './migrations';
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor<IMyDatabase>({ handler , config });
+const executor = new MigrationScriptRunner<IMyDatabase>({ handler , config });
 
 // Library usage - returns result object
 const result = await executor.up();

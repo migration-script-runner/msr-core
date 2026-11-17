@@ -56,7 +56,7 @@ class NotificationHooks implements IMigrationHooks {
 }
 
 // Use the hooks
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     hooks: new NotificationHooks()
 });
 
@@ -142,7 +142,7 @@ class SlackHooks implements IMigrationHooks {
 
 // Usage
 const hooks = new SlackHooks(process.env.SLACK_WEBHOOK_URL!);
-const executor = new MigrationScriptExecutor({ handler,  hooks });
+const executor = new MigrationScriptRunner({ handler,  hooks });
 ```
 
 ---
@@ -271,7 +271,7 @@ config.transaction.isolation = IsolationLevel.READ_COMMITTED;
 config.transaction.retries = 3;
 
 const hooks = new TransactionMetricsHooks();
-const executor = new MigrationScriptExecutor({ handler,  hooks });
+const executor = new MigrationScriptRunner({ handler,  hooks });
 
 await executor.migrate();
 ```
@@ -420,7 +420,7 @@ class DryRunHooks implements IMigrationHooks {
 
 // Usage
 const hooks = new DryRunHooks();
-const executor = new MigrationScriptExecutor({ handler,  hooks });
+const executor = new MigrationScriptRunner({ handler,  hooks });
 
 try {
     await executor.migrate();
@@ -558,7 +558,7 @@ const config = new Config();
 config.rollbackStrategy = RollbackStrategy.BACKUP; // Enable backup/restore
 
 const hooks = new BackupMonitoringHooks();
-const executor = new MigrationScriptExecutor({ handler,  hooks });
+const executor = new MigrationScriptRunner({ handler,  hooks });
 
 await executor.migrate();
 ```
@@ -584,7 +584,7 @@ const hooks = new CompositeHooks([
     new ValidationHooks()
 ]);
 
-const executor = new MigrationScriptExecutor({ handler,  hooks });
+const executor = new MigrationScriptRunner({ handler,  hooks });
 await executor.migrate();
 ```
 
@@ -607,7 +607,7 @@ if (process.env.ENABLE_DETAILED_LOGGING === 'true') {
     hooks.addHook(new DetailedFileLoggerHooks('/var/log/migrations.log'));
 }
 
-const executor = new MigrationScriptExecutor({ handler,  hooks });
+const executor = new MigrationScriptRunner({ handler,  hooks });
 ```
 
 ---
@@ -693,7 +693,7 @@ const allHooks = new CompositeHooks([
     loggingHooks
 ]);
 
-const executor = new MigrationScriptExecutor({ handler,  hooks: allHooks });
+const executor = new MigrationScriptRunner({ handler,  hooks: allHooks });
 ```
 
 ---
@@ -811,9 +811,9 @@ describe('SlackHooks', () => {
 **Problem:** Your hook methods are not being invoked.
 
 **Solutions:**
-1. Verify hook is passed to MigrationScriptExecutor:
+1. Verify hook is passed to MigrationScriptRunner:
    ```typescript
-   const executor = new MigrationScriptExecutor({ handler,  hooks: myHooks });
+   const executor = new MigrationScriptRunner({ handler,  hooks: myHooks });
    ```
 
 2. Check method names match IMigrationHooks interface exactly
@@ -882,7 +882,7 @@ function createHooks(env: string): IMigrationHooks {
 
 // Use in your application
 const hooks = createHooks(process.env.NODE_ENV || 'development');
-const executor = new MigrationScriptExecutor({ handler,  hooks });
+const executor = new MigrationScriptRunner({ handler,  hooks });
 
 const result = await executor.migrate();
 

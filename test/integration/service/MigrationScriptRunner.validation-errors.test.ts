@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config, SilentLogger, IDatabaseMigrationHandler, ValidationError, ISchemaVersion, IMigrationInfo, IDB, TransactionMode } from '../../../src';
+import { MigrationScriptRunner, Config, SilentLogger, IDatabaseMigrationHandler, ValidationError, ISchemaVersion, IMigrationInfo, IDB, TransactionMode } from '../../../src';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-describe('MigrationScriptExecutor - Validation Error Paths Coverage', () => {
+describe('MigrationScriptRunner - Validation Error Paths Coverage', () => {
     let tempDir: string;
     let handler: IDatabaseMigrationHandler<IDB>;
     let config: Config;
@@ -83,7 +83,7 @@ describe('MigrationScriptExecutor - Validation Error Paths Coverage', () => {
             })
         }];
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger()
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
         const result = await executor.migrate();
@@ -116,7 +116,7 @@ describe('MigrationScriptExecutor - Validation Error Paths Coverage', () => {
             migrationContent
         );
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger()
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
         // Should succeed with warnings
@@ -147,7 +147,7 @@ describe('MigrationScriptExecutor - Validation Error Paths Coverage', () => {
             migrationContent
         );
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger()
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
         const result = await executor.migrate();
@@ -193,7 +193,7 @@ describe('MigrationScriptExecutor - Validation Error Paths Coverage', () => {
         // Now modify the file to create checksum mismatch
         fs.writeFileSync(filepath, migrationContent + '// Modified');
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger()
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
         const result = await executor.migrate();
@@ -206,7 +206,7 @@ describe('MigrationScriptExecutor - Validation Error Paths Coverage', () => {
 
     /**
      * Test: Transaction validation warnings are logged
-     * Covers lines 1430-1431 in MigrationScriptExecutor.ts
+     * Covers lines 1430-1431 in MigrationScriptRunner.ts
      * Validates that transaction configuration warnings (not errors) are logged appropriately.
      */
     it('should log transaction validation warnings when isolation level not supported', async () => {
@@ -271,7 +271,7 @@ describe('MigrationScriptExecutor - Validation Error Paths Coverage', () => {
             log: (msg: string) => loggedMessages.push(`LOG: ${msg}`)
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: capturingLogger,
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: capturingLogger,
             migrationScanner: mockScanner as any
 , config: config });
 

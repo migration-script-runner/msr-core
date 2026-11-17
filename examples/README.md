@@ -41,12 +41,12 @@ These examples show patterns you can copy into your own adapter implementation. 
 
 ```typescript
 import {createCLI} from '@migration-script-runner/core';
-import {YourAdapter} from './YourAdapter';
+import {YourRunner} from './YourRunner';
 
 const program = createCLI({
   name: 'your-cli',
   version: '1.0.0',
-  createExecutor: (config) => new YourAdapter({config}),
+  createExecutor: (config) => new YourRunner({config}),
 });
 
 program.parse(process.argv);

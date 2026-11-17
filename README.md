@@ -20,6 +20,23 @@
 
 MSR provides a lightweight, flexible framework for managing database migrations without locking you into a specific ORM or database system. Bring your own database implementation and let MSR handle the migration workflow, versioning, validation, and execution.
 
+## Contents
+
+- [The MSR Ecosystem](#msr-ecosystem)
+- [What's New in v0.8.0](#whats-new-v080)
+- [Previous Releases](#previous-releases)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Why MSR Exists](#why-msr-exists)
+- [Why MSR?](#why-msr)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
+
+<a id="msr-ecosystem"></a>
+
 ## The MSR Ecosystem
 
 **One core. Built for different databases.**
@@ -30,6 +47,8 @@ MSR Core powers the Migration Script Runner family with versioned migrations, ch
 - **MSR PostgreSQL** — In development. The MSR foundation, adapted for PostgreSQL.
 
 ---
+
+<a id="whats-new-v080"></a>
 
 ## 🎉 What's New in v0.8.0
 
@@ -49,11 +68,15 @@ MSR Core powers the Migration Script Runner family with versioned migrations, ch
 
 ---
 
+<a id="previous-releases"></a>
+
 ## 📜 Previous Releases
 
 For information about previous releases, see the [Version Migration Guide](https://migration-script-runner.github.io/msr-core/version-migration/).
 
 ---
+
+<a id="features"></a>
 
 ## ✨ Features
 
@@ -77,6 +100,8 @@ For information about previous releases, see the [Version Migration Guide](https
 
 ---
 
+<a id="installation"></a>
+
 ## 📦 Installation
 
 ```bash
@@ -90,6 +115,8 @@ yarn add @migration-script-runner/core
 ```
 
 ---
+
+<a id="quick-start"></a>
 
 ## 🚀 Quick Start
 
@@ -155,7 +182,7 @@ CREATE TABLE users (
 ### 3. Run Migrations
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
 
 const config = new Config();
@@ -163,7 +190,7 @@ config.folder = './migrations';
 config.logLevel = 'info';  // v0.6.0: 'error' | 'warn' | 'info' | 'debug'
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor<IMyDatabase>({ handler, config });
+const executor = new MigrationScriptRunner<IMyDatabase>({ handler, config });
 
 // Library usage - returns structured result
 const result = await executor.up();
@@ -195,7 +222,7 @@ logLevel: debug  # error | warn | info | debug
 
 ```typescript
 // cli.ts
-import { createCLI, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { createCLI, MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
 
 const program = createCLI({
@@ -204,7 +231,7 @@ const program = createCLI({
   description: 'Database migration CLI',
   createExecutor: (config) => {
     const handler = new MyDatabaseHandler();
-    return new MigrationScriptExecutor({ handler, config });
+    return new MigrationScriptRunner({ handler, config });
   }
 });
 
@@ -246,6 +273,8 @@ npx my-db-migrate migrate --config-file .env.production
 
 ---
 
+<a id="documentation"></a>
+
 ## 📚 Documentation
 
 **[📖 Full Documentation](https://migration-script-runner.github.io/msr-core/)** - Complete guides, API reference, and examples
@@ -273,6 +302,8 @@ npx my-db-migrate migrate --config-file .env.production
 
 ---
 
+<a id="why-msr-exists"></a>
+
 ## 🌱 Why MSR Exists
 
 MSR was born from a real problem: In 2017, while building a mobile app with Firebase, a small team needed to backup and restore production data multiple times a week. Manual processes meant constant risk of corrupting critical data before the app even launched. The solution? A JavaScript tool that automated migrations with automatic backups and intelligent rollback.
@@ -284,6 +315,8 @@ Today, MSR powers migrations across multiple database platforms with features tr
 **[Read the full origin story →](https://migration-script-runner.github.io/msr-core/about/origin-story)**
 
 ---
+
+<a id="why-msr"></a>
 
 ## 🎯 Why MSR?
 
@@ -308,6 +341,8 @@ Today, MSR powers migrations across multiple database platforms with features tr
 
 ---
 
+<a id="contributing"></a>
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](https://core.migration-script-runner.dev/development/contributing) for guidelines on code style, testing requirements, and pull request process.
@@ -317,6 +352,8 @@ See our [GitHub Issues](https://github.com/migration-script-runner/msr-core/issu
 See the [Changelog](CHANGELOG.md) for release history and the [Compatibility Guide](https://core.migration-script-runner.dev/compatibility) for supported environments.
 
 ---
+
+<a id="license"></a>
 
 ## 📄 License
 
@@ -331,6 +368,8 @@ This project is licensed under the **MIT License with Commons Clause and Attribu
 See the [LICENSE](LICENSE) file or read the [License Documentation](https://migration-script-runner.github.io/msr-core/license) for detailed examples and FAQ.
 
 ---
+
+<a id="support"></a>
 
 ## 📞 Support
 

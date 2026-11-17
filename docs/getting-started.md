@@ -428,12 +428,12 @@ MSR can be used either as a library or as a CLI tool. **Use CLI for production, 
 Use MSR as a library to integrate migrations into your application without terminating the process:
 
 ```typescript
-import { MigrationScriptExecutor, IMigrationResult, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, IMigrationResult, Config } from '@migration-script-runner/core';
 import { IMyDatabase } from './types';
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor<IMyDatabase>({ handler , config });
+const executor = new MigrationScriptRunner<IMyDatabase>({ handler , config });
 
 // Run migrations and get structured results
 const result: IMigrationResult = await executor.up();
@@ -473,23 +473,23 @@ Most database adapters require async initialization (connections, authentication
 > **Best Practice (v0.8.2+):** Use this pattern for Firebase, MongoDB, PostgreSQL, MySQL, and other databases requiring async connections.
 
 ```typescript
-// MyAdapter.ts - Create your adapter class
+// MyRunner.ts - Create your adapter class
 import {
-    MigrationScriptExecutor,
-    IMigrationExecutorDependencies,
-    IExecutorOptions,
+    MigrationScriptRunner,
+    IMigrationRunnerDependencies,
+    IRunnerOptions,
     IDB
 } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './MyDatabaseHandler';
 
-export class MyAdapter extends MigrationScriptExecutor<IDB, MyDatabaseHandler> {
-    private constructor(deps: IMigrationExecutorDependencies<IDB, MyDatabaseHandler>) {
+export class MyRunner extends MigrationScriptRunner<IDB, MyDatabaseHandler> {
+    private constructor(deps: IMigrationRunnerDependencies<IDB, MyDatabaseHandler>) {
         super(deps);
     }
 
-    static async getInstance(options: IExecutorOptions<IDB>): Promise<MyAdapter> {
-        return MigrationScriptExecutor.createInstance(
-            MyAdapter,
+    static async getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
+        return MigrationScriptRunner.createInstance(
+            MyRunner,
             options,
             async (config) => {
                 // Your async initialization logic
@@ -501,7 +501,7 @@ export class MyAdapter extends MigrationScriptExecutor<IDB, MyDatabaseHandler> {
 
 // create-cli.ts - Create your CLI
 import { createCLI } from '@migration-script-runner/core';
-import { MyAdapter } from './MyAdapter';
+import { MyRunner } from './MyRunner';
 
 const program = createCLI({
     name: 'myapp-migrate',
@@ -510,7 +510,7 @@ const program = createCLI({
 
     // Async executor creation (v0.8.2+)
     createExecutor: async (config) => {
-        return MyAdapter.getInstance({ config });
+        return MyRunner.getInstance({ config });
     }
 });
 
@@ -531,7 +531,7 @@ For simple handlers without async initialization needs:
 
 ```typescript
 // create-cli.ts
-import { createCLI, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { createCLI, MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
 
 const program = createCLI({
@@ -542,7 +542,7 @@ const program = createCLI({
     // Synchronous executor creation
     createExecutor: (config) => {
         const handler = new MyDatabaseHandler();  // Sync initialization
-        return new MigrationScriptExecutor({ handler, config });
+        return new MigrationScriptRunner({ handler, config });
     }
 });
 
@@ -596,12 +596,12 @@ Available on all commands:
 For standalone migration scripts without CLI, control the process exit based on results:
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { IMyDatabase } from './types';
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor<IMyDatabase>({ handler , config });
+const executor = new MigrationScriptRunner<IMyDatabase>({ handler , config });
 
 const result = await executor.up();
 process.exit(result.success ? 0 : 1);

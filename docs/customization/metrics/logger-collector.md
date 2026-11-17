@@ -45,7 +45,7 @@ Send metrics directly to cloud monitoring services:
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+  MigrationScriptRunner,
   LoggerMetricsCollector,
   CloudLogger
 } from '@vlavrynovych/msr';
@@ -56,7 +56,7 @@ const logger = new CloudLogger({
   apiKey: process.env.DD_API_KEY
 });
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -77,14 +77,14 @@ Write metrics to log files for aggregation:
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+  MigrationScriptRunner,
   LoggerMetricsCollector,
   FileLogger
 } from '@vlavrynovych/msr';
 
 const logger = new FileLogger('./logs/metrics.log');
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -108,7 +108,7 @@ import { ConsoleLogger } from '@vlavrynovych/msr';
 
 const logger = new ConsoleLogger();
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -212,7 +212,7 @@ import {
 
 const logger = new FileLogger('./logs/production-metrics.log');
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -243,7 +243,7 @@ const logger = new CompositeLogger([
   })
 ]);
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -268,7 +268,7 @@ const logger = isDevelopment
       new CloudLogger({ service: 'datadog' })
     ]);
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -389,7 +389,7 @@ const appLogger = new CompositeLogger([
 const service = new MyService(appLogger);
 
 // Metrics use same logger
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   logger: appLogger,  // App logging
   metricsCollectors: [
@@ -410,7 +410,7 @@ const executor = new MigrationScriptExecutor({
 const appLogger = new FileLogger('./logs/app.log');
 const metricsLogger = new FileLogger('./logs/metrics-only.log');
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   logger: appLogger,  // Application logs
   metricsCollectors: [

@@ -30,7 +30,7 @@ const program = createCLI({
 
     createExecutor: (config: Config) => {
         console.log('📋 Executor would be created with config:', config);
-        // In a real adapter, you'd return: new YourAdapter({handler, config})
+        // In a real adapter, you'd return: new YourRunner({handler, config})
         throw new Error('Demo only - no executor implementation');
     },
 

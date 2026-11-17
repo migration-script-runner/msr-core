@@ -156,14 +156,14 @@ const config = loader.load({}, {
     configFile: './custom-config.yaml'
 });
 
-// Use with MigrationScriptExecutor
-const executor = new MigrationScriptExecutor({
+// Use with MigrationScriptRunner
+const executor = new MigrationScriptRunner({
     handler,
     config: loader.load()
 });
 
 // Or pass loader to executor
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
     handler,
     configLoader: loader
 });
@@ -738,7 +738,7 @@ ConfigLoader.validateRequired([
 // Please set these variables before running.
 
 // In adapter, ensure critical env vars are set
-class PostgreSQLAdapter {
+class PostgreSQLConfigValidator {
     constructor() {
         ConfigLoader.validateRequired([
             'PG_HOST',
@@ -821,10 +821,10 @@ Unexpected token at line 5, column 3
 **Recommended:** Let MSR load configuration automatically:
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 // Automatically loads: defaults → file → env vars
-const executor = new MigrationScriptExecutor({ handler });
+const executor = new MigrationScriptRunner({ handler });
 await executor.up();
 ```
 
@@ -835,7 +835,7 @@ await executor.up();
 **Advanced:** Load configuration explicitly:
 
 ```typescript
-import { ConfigLoader, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
 
 // Load with waterfall
 const config = ConfigLoader.load();
@@ -846,7 +846,7 @@ const config = ConfigLoader.load({
     strictValidation: true
 });
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 
@@ -938,7 +938,7 @@ ConfigLoader is database-agnostic and does not parse database-specific connectio
 ConfigLoader.parseDatabaseUrl('postgres://...');
 
 // ✅ Use in database adapters
-class PostgreSQLAdapter {
+class PostgreSQLConnectionStringParser {
     parseConnectionString(url: string) {
         // Database-specific parsing
     }
@@ -989,7 +989,7 @@ const host = ConfigLoader.loadFromEnv('HOST', 'localhost');
 ### Complete Production Setup
 
 ```typescript
-import { ConfigLoader, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
 import { PostgreSQLHandler } from '@migration-script-runner/postgresql';
 
 // Validate required environment variables
@@ -1006,7 +1006,7 @@ const config = ConfigLoader.load({
 
 // Create executor
 const handler = new PostgreSQLHandler(process.env.DATABASE_URL);
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 // Run migrations
 await executor.migrate();
@@ -1027,10 +1027,10 @@ MSR_BACKUP_DELETE_BACKUP=true
 ```
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 // v0.7.0+: Automatically loads from .env files
-const executor = new MigrationScriptExecutor({ handler });
+const executor = new MigrationScriptRunner({ handler });
 await executor.up();
 
 // Or configure which .env files to load
@@ -1039,7 +1039,7 @@ config.envFileSources = ['.env.local', '.env']; // Default
 // config.envFileSources = ['.env.production', '.env']; // Production
 // config.envFileSources = []; // Disable .env loading
 
-const executor = new MigrationScriptExecutor({ handler, config });
+const executor = new MigrationScriptRunner({ handler, config });
 await executor.up();
 ```
 

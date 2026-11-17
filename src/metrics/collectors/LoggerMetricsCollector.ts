@@ -38,7 +38,7 @@ export interface LoggerMetricsCollectorConfig {
  * ```typescript
  * const logger = new FileLogger('./logs/metrics.log');
  *
- * const executor = new MigrationScriptExecutor<IDB>({
+ * const executor = new MigrationScriptRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new LoggerMetricsCollector({ logger })

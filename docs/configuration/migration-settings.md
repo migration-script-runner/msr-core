@@ -691,7 +691,7 @@ const config = new Config();
 config.dryRun = process.env.CI === 'true';
 config.validateBeforeRun = true;
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 const result = await executor.migrate();
 
 if (!result.success) {
@@ -751,7 +751,7 @@ Dry run mode respects [`validateBeforeRun`](validation-settings.md#validatebefor
 ## Complete Example
 
 ```typescript
-import { Config, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
 
 const config = new Config();
 
@@ -768,7 +768,7 @@ config.displayLimit = 20;
 config.beforeMigrateName = 'beforeMigrate';
 
 // Initialize and run
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 

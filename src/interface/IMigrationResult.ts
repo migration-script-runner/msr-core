@@ -14,7 +14,7 @@ import {IDB} from "./dao";
  *
  * @example
  * ```typescript
- * const executor = new MigrationScriptExecutor<IDB>(handler);
+ * const executor = new MigrationScriptRunner<IDB>(handler);
  * const result = await executor.migrate();
  *
  * if (result.success) {

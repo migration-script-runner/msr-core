@@ -732,7 +732,7 @@ class ClassNameValidator implements IMigrationValidator {
 import {
     Config,
     DownMethodPolicy,
-    MigrationScriptExecutor
+    MigrationScriptRunner
 } from '@migration-script-runner/core';
 import {
     NamingValidator,
@@ -762,7 +762,7 @@ if (process.env.NODE_ENV === 'production') {
 config.customValidators = validators;
 
 // Run migrations
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.migrate();
 ```
 

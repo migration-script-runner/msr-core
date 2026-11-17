@@ -1,8 +1,8 @@
 import {MigrationScript} from "../model/MigrationScript";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
 import {IMigrationResult} from "../interface/IMigrationResult";
-import {IMigrationExecutorDependencies} from "../interface/IMigrationExecutorDependencies";
-import {IExecutorOptions} from "../interface/IExecutorOptions";
+import {IMigrationRunnerDependencies} from "../interface/IMigrationRunnerDependencies";
+import {IRunnerOptions} from "../interface/IRunnerOptions";
 import {IMigrationHooks} from "../interface/IMigrationHooks";
 import {Config} from "../model";
 import {IValidationResult, IValidationIssue, IDB} from "../interface";
@@ -40,17 +40,17 @@ import {OrchestrationServices} from "./facade/OrchestrationServices";
  *
  * @example
  * ```typescript
- * import { MigrationScriptExecutor } from '@migration-script-runner/core';
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
  *
  * const handler = new MyDatabaseHandler();
  *
  * // Option 1: Minimal - just handler, uses waterfall config loading (backward compatible)
- * const executor = new MigrationScriptExecutor<IDB>({ handler });
+ * const executor = new MigrationScriptRunner<IDB>({ handler });
  * // Loads config from: MSR_* env vars → ./msr.config.js → defaults
  *
  * // Option 2: With explicit config (backward compatible)
  * const config = new Config();
- * const executor = new MigrationScriptExecutor<IDB>({ handler, config });
+ * const executor = new MigrationScriptRunner<IDB>({ handler, config });
  *
  * // Run all pending migrations
  * await executor.up();
@@ -64,7 +64,7 @@ import {OrchestrationServices} from "./facade/OrchestrationServices";
  *     cfg: { host: string };
  * }
  *
- * class MyAdapter extends MigrationScriptExecutor<IDB, MyHandler> {
+ * class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
  *     getConnectionInfo() {
  *         // this.handler is now typed as MyHandler (no casting needed!)
  *         return {
@@ -83,8 +83,8 @@ import {OrchestrationServices} from "./facade/OrchestrationServices";
  *     credentials?: string;
  * }
  *
- * class MyAdapter extends MigrationScriptExecutor<IDB, MyHandler, AppConfig> {
- *     constructor(dependencies: IMigrationExecutorDependencies<IDB, MyHandler, AppConfig>) {
+ * class MyRunner extends MigrationScriptRunner<IDB, MyHandler, AppConfig> {
+ *     constructor(dependencies: IMigrationRunnerDependencies<IDB, MyHandler, AppConfig>) {
  *         super(dependencies);
  *         // this.config is now typed as AppConfig (not base Config!)
  *         console.log(this.config.databaseUrl); // Type-safe access!
@@ -92,7 +92,7 @@ import {OrchestrationServices} from "./facade/OrchestrationServices";
  * }
  * ```
  */
-export class MigrationScriptExecutor<
+export class MigrationScriptRunner<
     DB extends IDB,
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config
@@ -123,7 +123,7 @@ export class MigrationScriptExecutor<
     protected readonly orchestration: OrchestrationServices<DB>;
 
     /**
-     * Creates a new MigrationScriptExecutor instance.
+     * Creates a new MigrationScriptRunner instance.
      *
      * Initializes all required services (backup, schema version tracking, console rendering,
      * migration discovery) and displays the application banner.
@@ -144,37 +144,37 @@ export class MigrationScriptExecutor<
      * @example
      * ```typescript
      * // Minimal - just handler, uses waterfall config loading
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler
      * });
      *
      * // With explicit config (v0.7.0+)
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     config: new Config({ folder: './migrations' })
      * });
      *
      * // With custom config loader (v0.7.0+)
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     configLoader: new CustomConfigLoader()
      * });
      *
      * // With JSON output for CI/CD
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     renderStrategy: new JsonRenderStrategy()
      * });
      *
      * // With silent output for testing
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     renderStrategy: new SilentRenderStrategy(),
      *     logger: new SilentLogger()
      * });
      *
      * // With mock services for testing
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: mockHandler,
      *     config: testConfig,
      *     backupService: mockBackupService,
@@ -182,22 +182,22 @@ export class MigrationScriptExecutor<
      * });
      * ```
      */
-    constructor(dependencies: IMigrationExecutorDependencies<DB, THandler, TConfig>) {
+    constructor(dependencies: IMigrationRunnerDependencies<DB, THandler, TConfig>) {
         // Validate required dependencies with helpful error message
         if (!dependencies.handler) {
             throw new TypeError(
-                'Handler is required in IMigrationExecutorDependencies.\n\n' +
+                'Handler is required in IMigrationRunnerDependencies.\n\n' +
                 'Common causes:\n' +
-                '  1. Using IExecutorOptions in constructor instead of IMigrationExecutorDependencies\n' +
+                '  1. Using IRunnerOptions in constructor instead of IMigrationRunnerDependencies\n' +
                 '  2. Forgetting to create handler before passing to super()\n\n' +
                 'Solutions:\n' +
                 '  • For async initialization: Use a factory method pattern:\n' +
-                '    static async getInstance(options: IExecutorOptions<DB>): Promise<MyExecutor> {\n' +
+                '    static async getInstance(options: IRunnerOptions<DB>): Promise<MyExecutor> {\n' +
                 '      const handler = await MyHandler.connect(options.config);\n' +
                 '      return new MyExecutor({ handler, ...options });\n' +
                 '    }\n\n' +
                 '  • For sync initialization: Create handler before super():\n' +
-                '    constructor(options: IExecutorOptions<DB>) {\n' +
+                '    constructor(options: IRunnerOptions<DB>) {\n' +
                 '      const handler = new MyHandler(options.config);\n' +
                 '      super({ handler, ...options });\n' +
                 '    }\n\n' +
@@ -239,12 +239,12 @@ export class MigrationScriptExecutor<
      *
      * @template DB - Database interface type
      * @template THandler - Handler interface type
-     * @template TExecutor - Executor subclass type
+     * @template TRunner - Runner subclass type
      * @template TConfig - Config type (defaults to base Config class)
-     * @template TOptions - Options type extending IExecutorOptions (allows adapter-specific options)
+     * @template TOptions - Options type extending IRunnerOptions (allows adapter-specific options)
      *
-     * @param ExecutorClass - Constructor of the executor subclass
-     * @param options - Executor options (can be adapter-specific interface extending IExecutorOptions)
+     * @param RunnerClass - Constructor of the runner subclass
+     * @param options - Executor options (can be adapter-specific interface extending IRunnerOptions)
      * @param createHandler - Async factory function for creating the handler
      *
      * @returns Promise resolving to the executor instance
@@ -254,17 +254,17 @@ export class MigrationScriptExecutor<
      * @example
      * ```typescript
      * // Firebase adapter
-     * export interface IFirebaseRunnerOptions extends IExecutorOptions<IFirebaseDB, FirebaseConfig> {
+     * export interface IFirebaseRunnerOptions extends IRunnerOptions<IFirebaseDB, FirebaseConfig> {
      *     // Can add Firebase-specific options here
      * }
      *
-     * export class FirebaseRunner extends MigrationScriptExecutor<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
-     *     private constructor(deps: IMigrationExecutorDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+     * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
+     *     private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
      *         super(deps);
      *     }
      *
      *     static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-     *         return MigrationScriptExecutor.createInstance(
+     *         return MigrationScriptRunner.createInstance(
      *             FirebaseRunner,
      *             options,
      *             (config) => FirebaseHandler.getInstance(config)
@@ -273,13 +273,13 @@ export class MigrationScriptExecutor<
      * }
      *
      * // MongoDB adapter with custom initialization
-     * export class MongoRunner extends MigrationScriptExecutor<IMongoDb, MongoHandler> {
-     *     private constructor(deps: IMigrationExecutorDependencies<IMongoDb, MongoHandler>) {
+     * export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
+     *     private constructor(deps: IMigrationRunnerDependencies<IMongoDb, MongoHandler>) {
      *         super(deps);
      *     }
      *
-     *     static async getInstance(options: IExecutorOptions<IMongoDb>): Promise<MongoRunner> {
-     *         return MigrationScriptExecutor.createInstance(
+     *     static async getInstance(options: IRunnerOptions<IMongoDb>): Promise<MongoRunner> {
+     *         return MigrationScriptRunner.createInstance(
      *             MongoRunner,
      *             options,
      *             async (config) => {
@@ -300,19 +300,19 @@ export class MigrationScriptExecutor<
     protected static async createInstance<
         DB extends IDB,
         THandler extends IDatabaseMigrationHandler<DB>,
-        TExecutor extends MigrationScriptExecutor<DB, THandler, TConfig>,
+        TRunner extends MigrationScriptRunner<DB, THandler, TConfig>,
         TConfig extends Config = Config,
-        TOptions extends IExecutorOptions<DB, TConfig> = IExecutorOptions<DB, TConfig>
+        TOptions extends IRunnerOptions<DB, TConfig> = IRunnerOptions<DB, TConfig>
     >(
-        ExecutorClass: new (deps: IMigrationExecutorDependencies<DB, THandler, TConfig>) => TExecutor,
+        RunnerClass: new (deps: IMigrationRunnerDependencies<DB, THandler, TConfig>) => TRunner,
         options: TOptions,
         createHandler: (config: TConfig) => Promise<THandler>
-    ): Promise<TExecutor> {
+    ): Promise<TRunner> {
         // Create handler using adapter-provided factory
         const handler = await createHandler(options.config as TConfig);
 
         // Construct executor with handler and options
-        return new ExecutorClass({
+        return new RunnerClass({
             handler,
             ...options
         });
@@ -340,7 +340,7 @@ export class MigrationScriptExecutor<
      *
      * @example
      * ```typescript
-     * const executor = new MigrationScriptExecutor<DB>(handler, config);
+     * const executor = new MigrationScriptRunner<DB>(handler, config);
      *
      * // Run all pending migrations
      * const result = await executor.up();
@@ -410,7 +410,7 @@ export class MigrationScriptExecutor<
      * @example
      * ```typescript
      * // Basic usage - access handler properties
-     * const executor = new MigrationScriptExecutor({ handler });
+     * const executor = new MigrationScriptRunner({ handler });
      * const h = executor.getHandler();
      * console.log(`${h.getName()} v${h.getVersion()}`);
      * ```
@@ -421,7 +421,7 @@ export class MigrationScriptExecutor<
      * import { createCLI } from '@migration-script-runner/core';
      *
      * const program = createCLI({
-     *   createExecutor: (config) => new MigrationScriptExecutor({ handler, config }),
+     *   createExecutor: (config) => new MigrationScriptRunner({ handler, config }),
      *   extendCLI: (program, createExecutor) => {
      *     program
      *       .command('vacuum')
@@ -444,7 +444,7 @@ export class MigrationScriptExecutor<
      *   getConnectionInfo(): { host: string; port: number };
      * }
      *
-     * class PostgresAdapter extends MigrationScriptExecutor<IDB, PostgresHandler> {
+     * class PostgresRunner extends MigrationScriptRunner<IDB, PostgresHandler> {
      *   displayPoolStats() {
      *     // this.handler is typed as PostgresHandler (internal use)
      *     console.log(`Pool size: ${this.handler.pool.totalCount}`);
@@ -452,7 +452,7 @@ export class MigrationScriptExecutor<
      * }
      *
      * // External access also type-safe
-     * const adapter = new PostgresAdapter({ handler: postgresHandler });
+     * const adapter = new PostgresRunner({ handler: postgresHandler });
      * const handler = adapter.getHandler();  // Typed as PostgresHandler!
      * console.log(`Idle connections: ${handler.pool.idleCount}`);
      * const info = handler.getConnectionInfo();  // ✓ Type-safe!
@@ -493,7 +493,7 @@ export class MigrationScriptExecutor<
      *
      * @example
      * ```typescript
-     * const executor = new MigrationScriptExecutor<DB>(handler);
+     * const executor = new MigrationScriptRunner<DB>(handler);
      *
      * // List all migrations
      * await executor.list();

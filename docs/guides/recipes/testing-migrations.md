@@ -242,12 +242,12 @@ export class TestDatabaseHandler extends PostgreSQLHandler {
 ```typescript
 // test/integration/migrations.integration.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { TestDatabaseHandler } from './helpers/TestDatabaseHandler';
 
 describe('Migration Integration Tests', () => {
   let handler: TestDatabaseHandler;
-  let executor: MigrationScriptExecutor;
+  let executor: MigrationScriptRunner;
   let config: Config;
 
   before(async () => {
@@ -257,7 +257,7 @@ describe('Migration Integration Tests', () => {
     config.folder = './migrations';
     config.backup.folder = './test/backups';
 
-    executor = new MigrationScriptExecutor({ handler , config });
+    executor = new MigrationScriptRunner({ handler , config });
 
     // Initialize schema version table
     await handler.schemaVersion.init();
@@ -402,7 +402,7 @@ describe('Migration Integration Tests', () => {
       // This test assumes a migration that will fail
       config.folder = './test/fixtures/failing-migrations';
 
-      const failingExecutor = new MigrationScriptExecutor({ handler , config });
+      const failingExecutor = new MigrationScriptRunner({ handler , config });
 
       const result = await failingExecutor.migrate();
 
@@ -524,7 +524,7 @@ export class SpyDatabase implements IDB {
 ```typescript
 // test/unit/migrations-with-mocks.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config, SilentLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, SilentLogger } from '@migration-script-runner/core';
 import { createMockHandler, SpyDatabase } from '../helpers/mocks';
 
 describe('Migrations with Mocks', () => {
@@ -533,7 +533,7 @@ describe('Migrations with Mocks', () => {
     const config = new Config();
     config.folder = './migrations';
 
-    const executor = new MigrationScriptExecutor({ handler, 
+    const executor = new MigrationScriptRunner({ handler,
       logger: new SilentLogger()
     });
 
@@ -665,7 +665,7 @@ Create a validation script that uses dry run mode:
 
 ```typescript
 // test/scripts/validate-migrations.ts
-import { Config, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
 import { createDatabaseHandler } from '../helpers/database';
 
 async function validateMigrations() {
@@ -677,7 +677,7 @@ async function validateMigrations() {
   config.validateBeforeRun = true;
   config.folder = './migrations';
 
-  const executor = new MigrationScriptExecutor({ handler , config });
+  const executor = new MigrationScriptRunner({ handler , config });
 
   try {
     const result = await executor.up();
@@ -787,7 +787,7 @@ it('should normalize all email addresses to lowercase', async () => {});
 ```typescript
 // test/performance/migration-speed.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { TestDatabaseHandler } from '../helpers/TestDatabaseHandler';
 
 describe('Migration Performance', () => {
@@ -796,7 +796,7 @@ describe('Migration Performance', () => {
 
     const handler = new TestDatabaseHandler();
     const config = new Config();
-    const executor = new MigrationScriptExecutor({ handler , config });
+    const executor = new MigrationScriptRunner({ handler , config });
 
     const startTime = Date.now();
     await executor.up();
@@ -867,7 +867,7 @@ const mockDb = {
 ```typescript
 // test/migrations.complete.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config, RollbackStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, RollbackStrategy } from '@migration-script-runner/core';
 import { TestDatabaseHandler } from './helpers/TestDatabaseHandler';
 
 describe('Complete Migration Test Suite', () => {
@@ -889,7 +889,7 @@ describe('Complete Migration Test Suite', () => {
   describe('Standard Migration Flow', () => {
     it('should execute all migrations successfully', async () => {
       const config = new Config();
-      const executor = new MigrationScriptExecutor({ handler , config });
+      const executor = new MigrationScriptRunner({ handler , config });
 
       const result = await executor.up();
 
@@ -902,7 +902,7 @@ describe('Complete Migration Test Suite', () => {
     it('should rollback using BACKUP strategy', async () => {
       const config = new Config();
       config.rollbackStrategy = RollbackStrategy.BACKUP;
-      const executor = new MigrationScriptExecutor({ handler , config });
+      const executor = new MigrationScriptRunner({ handler , config });
 
       // Test with failing migration...
     });
@@ -910,7 +910,7 @@ describe('Complete Migration Test Suite', () => {
     it('should rollback using DOWN strategy', async () => {
       const config = new Config();
       config.rollbackStrategy = RollbackStrategy.DOWN;
-      const executor = new MigrationScriptExecutor({ handler , config });
+      const executor = new MigrationScriptRunner({ handler , config });
 
       // Test rollback...
     });
@@ -919,7 +919,7 @@ describe('Complete Migration Test Suite', () => {
   describe('Version Control', () => {
     it('should migrate to specific version', async () => {
       const config = new Config();
-      const executor = new MigrationScriptExecutor({ handler , config });
+      const executor = new MigrationScriptRunner({ handler , config });
 
       const result = await executor.up(202501220200);
 

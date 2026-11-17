@@ -71,15 +71,15 @@ const program = createCLI({
   name: 'msr-mongodb',
   description: 'MongoDB Migration Runner',
   version: '1.0.0',
-  createRunner: async (config, {logger}) => {
-    return MongoRunner.getInstance({config, logger});
+  createRunner: async (config, {logger, renderStrategy}) => {
+    return MongoRunner.getInstance({config, logger, renderStrategy});
   }
 });
 
 program.parse(process.argv);
 ```
 
-The second `createRunner` argument carries the logger selected with `--logger`. Pass it to the runner options so the CLI choice is used; if `--logger` is omitted, the `logger` property is `undefined` and the runner's default logger applies.
+The second `createRunner` argument carries the logger selected with `--logger` and the render strategy selected with `--format json`. Pass these values to the runner options so the CLI choices are used. If an option is omitted, its property is `undefined` and the runner's default applies.
 
 **Benefits:**
 - ✅ Handles async connections, authentication, pooling

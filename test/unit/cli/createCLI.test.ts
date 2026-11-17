@@ -7,6 +7,7 @@ import sinon from 'sinon';
 import {createCLI} from '../../../src/cli/createCLI';
 import {IDB} from '../../../src/interface';
 import {SilentLogger} from '../../../src/logger/SilentLogger';
+import {JsonRenderStrategy} from '../../../src/service/render/JsonRenderStrategy';
 import {Config} from '../../../src/model/Config';
 import {BackupMode} from '../../../src/model/BackupMode';
 import {LOGGER_TYPES, LOG_LEVELS, OUTPUT_FORMATS} from '../../../src/cli/utils/flagMapper';
@@ -450,6 +451,23 @@ describe('createCLI', () => {
             await program.parseAsync(['node', 'test', 'list', '--logger', 'silent']);
 
             expect(receivedLogger).to.be.instanceOf(SilentLogger);
+        });
+
+        it('passes a JSON render strategy when --format json is selected', async () => {
+            mockRunner.list.resolves();
+            let receivedRenderStrategy: unknown;
+
+            const program = createCLI({
+                createRunner: (_config, {renderStrategy}) => {
+                    receivedRenderStrategy = renderStrategy;
+                    return mockRunner;
+                }
+            });
+            program.exitOverride();
+
+            await program.parseAsync(['node', 'test', 'list', '--format', 'json']);
+
+            expect(receivedRenderStrategy).to.be.instanceOf(JsonRenderStrategy);
         });
 
         /**

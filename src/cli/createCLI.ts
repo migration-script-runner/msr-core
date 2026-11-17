@@ -4,7 +4,9 @@ import {IConfigLoader} from '../interface/IConfigLoader';
 import {Config} from '../model/Config';
 import {BackupMode} from '../model/BackupMode';
 import {IDB, ILogger} from '../interface';
+import {IRenderStrategy} from '../interface/service/IRenderStrategy';
 import {ConfigLoader} from '../util/ConfigLoader';
+import {JsonRenderStrategy} from '../service/render/JsonRenderStrategy';
 import {
     mapFlagsToConfig,
     CLIFlags,
@@ -47,15 +49,15 @@ export interface CLIOptions<
      * Use this when your adapter has FirebaseConfig extends Config with custom properties.
      *
      * @param config - Final merged configuration with CLI flags applied
-     * @param cliOptions - CLI-created dependencies, including the selected logger when overridden
+     * @param cliOptions - CLI-selected dependencies, including logger and render strategy overrides
      * @returns MigrationScriptRunner instance (or Promise) or adapter extending it
      *
      * @example
      * ```typescript
      * // Synchronous runner (backward compatible)
-     * createRunner: (config, {logger}) => {
+     * createRunner: (config, {logger, renderStrategy}) => {
      *   const handler = new MongoHandler(config.mongoUri);
-     *   return new MongoRunner({ handler, config, logger });
+     *   return new MongoRunner({ handler, config, logger, renderStrategy });
      * }
      * ```
      *
@@ -82,7 +84,10 @@ export interface CLIOptions<
      * }
      * ```
      */
-    createRunner: (config: TConfig, cliOptions: {logger?: ILogger}) => TRunner | Promise<TRunner>;
+    createRunner: (config: TConfig, cliOptions: {
+        logger?: ILogger;
+        renderStrategy?: IRenderStrategy<DB>;
+    }) => TRunner | Promise<TRunner>;
 
     /**
      * CLI metadata (optional).
@@ -410,8 +415,12 @@ export function createCLI<
             options.extendFlags(config, opts);
         }
 
-        // 5. Call adapter's factory with merged config and any CLI-created dependencies
-        const runnerOrPromise = options.createRunner(config, {logger});
+        const renderStrategy = opts.format === 'json'
+            ? new JsonRenderStrategy<DB>(true, logger)
+            : undefined;
+
+        // 5. Call adapter's factory with merged config and CLI-selected dependencies
+        const runnerOrPromise = options.createRunner(config, {logger, renderStrategy});
         const runner = runnerOrPromise instanceof Promise
             ? await runnerOrPromise
             : runnerOrPromise;

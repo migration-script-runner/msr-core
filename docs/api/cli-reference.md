@@ -27,7 +27,7 @@ Commands and options registered by `createCLI()` in MSR Core.
 import { createCLI } from '@migration-script-runner/core';
 
 const program = createCLI({
-  createRunner: (config) => new PostgresRunner({ handler, config })
+  createRunner: (config, {logger}) => new PostgresRunner({ handler, config, logger })
 });
 
 program.parse(process.argv);
@@ -52,6 +52,8 @@ The following options are registered on the root command and apply to built-in c
 | `--log-file <path>` | Set the log file path. | Required when `--logger file` is selected. |
 | `--format <format>` | Select the output format. | `table`, `json`. |
 | `--backup-mode <mode>` | Override backup behavior; other values are rejected. | `full`, `create_only`, `restore_only`, `manual`. |
+
+When `--logger` is provided, `createCLI()` passes the selected logger to the second `createRunner` argument as `{logger}`. Pass it into the runner dependencies so the selected logger is used. If the flag is omitted, `logger` is `undefined` and the runner's default applies.
 
 Adapter-defined options are registered with `addCustomOptions`; see [Adapter options and flags](../guides/cli-options-and-flags).
 

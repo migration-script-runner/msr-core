@@ -6,6 +6,7 @@ import * as path from 'node:path';
 import sinon from 'sinon';
 import {createCLI} from '../../../src/cli/createCLI';
 import {IDB} from '../../../src/interface';
+import {SilentLogger} from '../../../src/logger/SilentLogger';
 import {Config} from '../../../src/model/Config';
 import {BackupMode} from '../../../src/model/BackupMode';
 import {LOGGER_TYPES, LOG_LEVELS, OUTPUT_FORMATS} from '../../../src/cli/utils/flagMapper';
@@ -434,17 +435,21 @@ describe('createCLI', () => {
          * Test: Handles CLI flags with logger override
          * Validates that logger CLI flag overrides runner logger
          */
-        it('should handle CLI flags with logger creation', async () => {
+        it('passes the CLI-created logger to the runner factory', async () => {
             mockRunner.list.resolves();
+            let receivedLogger: unknown;
 
-            const program = createCLI({createRunner: createRunnerStub});
+            const program = createCLI({
+                createRunner: (_config, {logger}) => {
+                    receivedLogger = logger;
+                    return mockRunner;
+                }
+            });
             program.exitOverride();
 
             await program.parseAsync(['node', 'test', 'list', '--logger', 'silent']);
 
-            expect(createRunnerStub.calledOnce).to.be.true;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            expect((mockRunner as any).logger).to.exist;
+            expect(receivedLogger).to.be.instanceOf(SilentLogger);
         });
 
         /**

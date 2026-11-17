@@ -3,7 +3,7 @@ import {MigrationScriptRunner} from '../service/MigrationScriptRunner';
 import {IConfigLoader} from '../interface/IConfigLoader';
 import {Config} from '../model/Config';
 import {BackupMode} from '../model/BackupMode';
-import {IDB} from '../interface';
+import {IDB, ILogger} from '../interface';
 import {ConfigLoader} from '../util/ConfigLoader';
 import {
     mapFlagsToConfig,
@@ -47,14 +47,15 @@ export interface CLIOptions<
      * Use this when your adapter has FirebaseConfig extends Config with custom properties.
      *
      * @param config - Final merged configuration with CLI flags applied
+     * @param cliOptions - CLI-created dependencies, including the selected logger when overridden
      * @returns MigrationScriptRunner instance (or Promise) or adapter extending it
      *
      * @example
      * ```typescript
      * // Synchronous runner (backward compatible)
-     * createRunner: (config) => {
+     * createRunner: (config, {logger}) => {
      *   const handler = new MongoHandler(config.mongoUri);
-     *   return new MongoRunner({ handler, config });
+     *   return new MongoRunner({ handler, config, logger });
      * }
      * ```
      *
@@ -81,7 +82,7 @@ export interface CLIOptions<
      * }
      * ```
      */
-    createRunner: (config: TConfig) => TRunner | Promise<TRunner>;
+    createRunner: (config: TConfig, cliOptions: {logger?: ILogger}) => TRunner | Promise<TRunner>;
 
     /**
      * CLI metadata (optional).
@@ -409,19 +410,11 @@ export function createCLI<
             options.extendFlags(config, opts);
         }
 
-        // 5. Call adapter's factory function with final merged config (supports both sync and async)
-        const runnerOrPromise = options.createRunner(config);
+        // 5. Call adapter's factory with merged config and any CLI-created dependencies
+        const runnerOrPromise = options.createRunner(config, {logger});
         const runner = runnerOrPromise instanceof Promise
             ? await runnerOrPromise
             : runnerOrPromise;
-
-        // 6. If logger was created from CLI flags, override runner's logger
-        if (logger) {
-            // Note: This assumes runner has a way to set logger
-            // We'll need to verify this works with the runner's implementation
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (runner as any).logger = logger;
-        }
 
         return runner;
     };

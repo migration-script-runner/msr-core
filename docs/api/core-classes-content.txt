@@ -18,7 +18,7 @@ const executor = new MigrationScriptRunner(handler, config);
 constructor(
     handler: IDatabaseMigrationHandler,
     config: Config,
-    dependencies?: IMigrationRunnerDependencies
+    dependencies?: IRunnerDependencies
 )
 ```
 

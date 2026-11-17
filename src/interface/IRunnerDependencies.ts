@@ -34,7 +34,7 @@ import {Config} from "../model";
  * ```typescript
  * // ✅ CORRECT: Use in private constructor
  * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
- *     private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+ *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
  *         super(deps);  // ✅ Has handler
  *     }
  *
@@ -63,7 +63,7 @@ import {Config} from "../model";
  * @see {@link IRunnerOptions} - Public API for factory methods (no handler)
  * @see https://github.com/migration-script-runner/msr-core/blob/master/docs/guides/cli-adapter-development.md
  */
-export interface IMigrationRunnerDependencies<
+export interface IRunnerDependencies<
     DB extends IDB,
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config

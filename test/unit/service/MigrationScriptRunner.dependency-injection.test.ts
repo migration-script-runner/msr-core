@@ -782,7 +782,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
             expect(() => {
                 // @ts-expect-error - Intentionally missing handler for test
                 new MigrationScriptRunner<IDB>({ config });
-            }).to.throw(TypeError, /Handler is required in IMigrationRunnerDependencies/);
+            }).to.throw(TypeError, /Handler is required in IRunnerDependencies/);
         });
 
         /**

@@ -1,7 +1,7 @@
 import {MigrationScript} from "../model/MigrationScript";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
 import {IMigrationResult} from "../interface/IMigrationResult";
-import {IMigrationRunnerDependencies} from "../interface/IMigrationRunnerDependencies";
+import {IRunnerDependencies} from "../interface/IRunnerDependencies";
 import {IRunnerOptions} from "../interface/IRunnerOptions";
 import {IMigrationHooks} from "../interface/IMigrationHooks";
 import {Config} from "../model";
@@ -84,7 +84,7 @@ import {OrchestrationServices} from "./facade/OrchestrationServices";
  * }
  *
  * class MyRunner extends MigrationScriptRunner<IDB, MyHandler, AppConfig> {
- *     constructor(dependencies: IMigrationRunnerDependencies<IDB, MyHandler, AppConfig>) {
+ *     constructor(dependencies: IRunnerDependencies<IDB, MyHandler, AppConfig>) {
  *         super(dependencies);
  *         // this.config is now typed as AppConfig (not base Config!)
  *         console.log(this.config.databaseUrl); // Type-safe access!
@@ -182,13 +182,13 @@ export class MigrationScriptRunner<
      * });
      * ```
      */
-    constructor(dependencies: IMigrationRunnerDependencies<DB, THandler, TConfig>) {
+    constructor(dependencies: IRunnerDependencies<DB, THandler, TConfig>) {
         // Validate required dependencies with helpful error message
         if (!dependencies.handler) {
             throw new TypeError(
-                'Handler is required in IMigrationRunnerDependencies.\n\n' +
+                'Handler is required in IRunnerDependencies.\n\n' +
                 'Common causes:\n' +
-                '  1. Using IRunnerOptions in constructor instead of IMigrationRunnerDependencies\n' +
+                '  1. Using IRunnerOptions in constructor instead of IRunnerDependencies\n' +
                 '  2. Forgetting to create handler before passing to super()\n\n' +
                 'Solutions:\n' +
                 '  • For async initialization: Use a factory method pattern:\n' +
@@ -259,7 +259,7 @@ export class MigrationScriptRunner<
      * }
      *
      * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
-     *     private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+     *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
      *         super(deps);
      *     }
      *
@@ -274,7 +274,7 @@ export class MigrationScriptRunner<
      *
      * // MongoDB adapter with custom initialization
      * export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
-     *     private constructor(deps: IMigrationRunnerDependencies<IMongoDb, MongoHandler>) {
+     *     private constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
      *         super(deps);
      *     }
      *
@@ -304,7 +304,7 @@ export class MigrationScriptRunner<
         TConfig extends Config = Config,
         TOptions extends IRunnerOptions<DB, TConfig> = IRunnerOptions<DB, TConfig>
     >(
-        RunnerClass: new (deps: IMigrationRunnerDependencies<DB, THandler, TConfig>) => TRunner,
+        RunnerClass: new (deps: IRunnerDependencies<DB, THandler, TConfig>) => TRunner,
         options: TOptions,
         createHandler: (config: TConfig) => Promise<THandler>
     ): Promise<TRunner> {

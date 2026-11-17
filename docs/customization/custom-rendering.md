@@ -27,7 +27,7 @@ By default, MSR uses `AsciiTableRenderStrategy` which outputs formatted ASCII ta
 - Using `SilentRenderStrategy` to suppress all rendering output (testing, library usage)
 - Creating custom render strategy implementations for specialized formats (XML, CSV, HTML, etc.)
 
-All rendering is handled by the `MigrationRenderer` class which accepts a render strategy in its constructor or through `IMigrationRunnerDependencies`.
+All rendering is handled by the `MigrationRenderer` class which accepts a render strategy in its constructor or through `IRunnerDependencies`.
 
 ---
 

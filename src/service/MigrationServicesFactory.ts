@@ -1,4 +1,4 @@
-import {IMigrationRunnerDependencies} from "../interface/IMigrationRunnerDependencies";
+import {IRunnerDependencies} from "../interface/IRunnerDependencies";
 import {IConfigLoader, IDB} from "../interface";
 import {Config} from "../model";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
@@ -90,7 +90,7 @@ export function createMigrationServices<
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config
 >(
-    dependencies: IMigrationRunnerDependencies<DB, THandler, TConfig>
+    dependencies: IRunnerDependencies<DB, THandler, TConfig>
 ): MigrationServicesFacades<DB, TConfig> {
 
     const handler = dependencies.handler;
@@ -138,7 +138,7 @@ export function createMigrationServices<
  * @private
  */
 function createHooksComposite<DB extends IDB>(
-    dependencies: IMigrationRunnerDependencies<DB>,
+    dependencies: IRunnerDependencies<DB>,
     config: Config,
     logger: ILogger,
     handler: IDatabaseMigrationHandler<DB>
@@ -170,7 +170,7 @@ function createHooksComposite<DB extends IDB>(
  * @private
  */
 function createCoreServices<DB extends IDB>(
-    dependencies: IMigrationRunnerDependencies<DB>,
+    dependencies: IRunnerDependencies<DB>,
     handler: IDatabaseMigrationHandler<DB>,
     config: Config,
     logger: ILogger,
@@ -243,7 +243,7 @@ function createExecutionServices<DB extends IDB>(
  * @private
  */
 function createOutputServices<DB extends IDB>(
-    dependencies: IMigrationRunnerDependencies<DB>,
+    dependencies: IRunnerDependencies<DB>,
     handler: IDatabaseMigrationHandler<DB>,
     config: Config,
     logger: ILogger

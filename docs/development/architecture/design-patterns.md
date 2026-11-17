@@ -391,7 +391,7 @@ export class MigrationScriptRunner<DB extends IDB> {
     protected readonly output: OutputServices<DB>;
     protected readonly orchestration: OrchestrationServices<DB>;
 
-    constructor(dependencies: IMigrationRunnerDependencies<DB>) {
+    constructor(dependencies: IRunnerDependencies<DB>) {
         const services = createMigrationServices(dependencies);
 
         this.core = services.core;
@@ -499,7 +499,7 @@ createMigrationServices() Factory
 ```typescript
 // src/service/MigrationServicesFactory.ts
 export function createMigrationServices<DB extends IDB>(
-    dependencies: IMigrationRunnerDependencies<DB>
+    dependencies: IRunnerDependencies<DB>
 ): MigrationServicesFacades<DB> {
 
     const handler = dependencies.handler;
@@ -542,7 +542,7 @@ export function createMigrationServices<DB extends IDB>(
 **Simplified Executor Constructor:**
 ```typescript
 export class MigrationScriptRunner<DB extends IDB> {
-    constructor(dependencies: IMigrationRunnerDependencies<DB>) {
+    constructor(dependencies: IRunnerDependencies<DB>) {
         // Initialize all services via factory
         const services = createMigrationServices(dependencies);
 
@@ -636,7 +636,7 @@ Many database adapters need async initialization (connections, authentication, e
 ```typescript
 // MigrationScriptRunner provides:
 protected static async createInstance<DB, THandler, TRunner, TConfig, TOptions>(
-    RunnerClass: new (deps: IMigrationRunnerDependencies<DB, THandler, TConfig>) => TRunner,
+    RunnerClass: new (deps: IRunnerDependencies<DB, THandler, TConfig>) => TRunner,
     options: TOptions,
     createHandler: (config: TConfig) => Promise<THandler>
 ): Promise<TRunner>
@@ -655,7 +655,7 @@ protected static async createInstance<DB, THandler, TRunner, TConfig, TOptions>(
 
 ```typescript
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
-    private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
         super(deps);
     }
 
@@ -673,7 +673,7 @@ export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseH
 
 ```typescript
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
-    private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
         super(deps);
     }
 

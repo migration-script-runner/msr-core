@@ -20,12 +20,12 @@ import {Config} from "../model";
  * This interface does NOT include the handler - that must be created by your factory method.
  *
  * **⚠️ Do NOT use this interface in your constructor!**
- * Use `IMigrationRunnerDependencies` instead, which includes the required handler.
+ * Use `IRunnerDependencies` instead, which includes the required handler.
  *
  * **Purpose:**
  * - Public API for adapter users to configure the executor
  * - Used in factory methods (sync or async)
- * - Spread into `IMigrationRunnerDependencies` after creating handler
+ * - Spread into `IRunnerDependencies` after creating handler
  *
  * **Generic Type Parameters:**
  * - `DB` - Your specific database interface extending IDB (REQUIRED, v0.7.0)
@@ -40,7 +40,7 @@ import {Config} from "../model";
  * ```typescript
  * // ✅ CORRECT: Use in public factory method
  * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
- *     private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+ *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
  *         super(deps);
  *     }
  *
@@ -63,7 +63,7 @@ import {Config} from "../model";
  * }
  * ```
  *
- * @see {@link IMigrationRunnerDependencies} - Internal API for constructors (includes handler)
+ * @see {@link IRunnerDependencies} - Internal API for constructors (includes handler)
  * @see https://github.com/migration-script-runner/msr-core/blob/master/docs/guides/cli-adapter-development.md
  */
 export interface IRunnerOptions<

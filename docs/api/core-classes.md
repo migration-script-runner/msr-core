@@ -74,7 +74,7 @@ constructor<
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config
 >(
-    dependencies: IMigrationRunnerDependencies<DB, THandler, TConfig>
+    dependencies: IRunnerDependencies<DB, THandler, TConfig>
 )
 ```
 
@@ -84,21 +84,21 @@ constructor<
     DB extends IDB,
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>
 >(
-    dependencies: IMigrationRunnerDependencies<DB, THandler>
+    dependencies: IRunnerDependencies<DB, THandler>
 )
 ```
 
 **Signature (v0.7.0 - v0.7.x):**
 ```typescript
 constructor<DB extends IDB>(
-    dependencies: IMigrationRunnerDependencies<DB>
+    dependencies: IRunnerDependencies<DB>
 )
 ```
 
 **Old Signature (v0.6.x - REMOVED):**
 ```typescript
 constructor<DB extends IDB>(
-    dependencies: IMigrationRunnerDependencies<DB>,
+    dependencies: IRunnerDependencies<DB>,
     config?: Config
 )
 ```
@@ -248,7 +248,7 @@ protected static async createInstance<
     TConfig extends Config = Config,
     TOptions extends IRunnerOptions<DB, TConfig> = IRunnerOptions<DB, TConfig>
 >(
-    RunnerClass: new (deps: IMigrationRunnerDependencies<DB, THandler, TConfig>) => TRunner,
+    RunnerClass: new (deps: IRunnerDependencies<DB, THandler, TConfig>) => TRunner,
     options: TOptions,
     createHandler: (config: TConfig) => Promise<THandler>
 ): Promise<TRunner>
@@ -271,7 +271,7 @@ export interface IFirebaseRunnerOptions extends IRunnerOptions<IFirebaseDB, Fire
 }
 
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
-    private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
         super(deps);
     }
 
@@ -294,7 +294,7 @@ await runner.up();
 **Example (MongoDB Adapter with Custom Initialization):**
 ```typescript
 export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
-    private constructor(deps: IMigrationRunnerDependencies<IMongoDb, MongoHandler>) {
+    private constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
         super(deps);
     }
 

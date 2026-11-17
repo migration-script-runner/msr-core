@@ -476,14 +476,14 @@ Most database adapters require async initialization (connections, authentication
 // MyRunner.ts - Create your adapter class
 import {
     MigrationScriptRunner,
-    IMigrationRunnerDependencies,
+    IRunnerDependencies,
     IRunnerOptions,
     IDB
 } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './MyDatabaseHandler';
 
 export class MyRunner extends MigrationScriptRunner<IDB, MyDatabaseHandler> {
-    private constructor(deps: IMigrationRunnerDependencies<IDB, MyDatabaseHandler>) {
+    private constructor(deps: IRunnerDependencies<IDB, MyDatabaseHandler>) {
         super(deps);
     }
 

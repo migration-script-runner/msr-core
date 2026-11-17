@@ -176,13 +176,11 @@ gh issue create --title "Add feature X" --body "..." \
   --assignee vlavrynovych
 ```
 
-### Milestone Creation Standards
+### Standard Issues for Every Versioned Release
 
-When creating a new **versioned milestone** (vX.Y.Z format like v0.6.0, v0.7.0, v1.0.0):
+For every **versioned release milestone** (vX.Y.Z), ensure exactly one Code Review issue and one Documentation Review issue exist and belong to that milestone. This applies whether the milestone is new or already exists. Search open and closed issues first; create only missing issues. If an equivalent issue already exists, verify its scope, labels, assignee, and milestone.
 
-**ALWAYS create these TWO standard issues:**
-
-The requirement is that both issues exist exactly once for the milestone. Search first; create only an issue that is missing.
+When creating a new versioned milestone, create or verify both standard issues as part of milestone setup.
 
 #### 1. Code Review Issue
 ```bash

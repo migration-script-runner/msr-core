@@ -55,7 +55,7 @@ export interface MigrationValidationOrchestratorDependencies<DB extends IDB> {
 /**
  * Orchestrates migration validation.
  *
- * Extracted from MigrationScriptExecutor to separate validation concerns.
+ * Extracted from MigrationScriptRunner to separate validation concerns.
  * Handles validation of pending and executed migrations with comprehensive
  * error and warning logging.
  *

@@ -8,7 +8,7 @@ import {
     IDatabaseMigrationHandler,
     IRunnableScript,
     MigrationScript,
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     IBackup, ISchemaVersion, IMigrationScript,
     IMigrationResult,
     SilentLogger,
@@ -16,7 +16,7 @@ import {
 } from "../../../src";
 import {TestUtils} from "../../helpers/TestUtils";
 
-describe('MigrationScriptExecutor', () => {
+describe('MigrationScriptRunner', () => {
 
     let initialized = true
     let created = true
@@ -25,7 +25,7 @@ describe('MigrationScriptExecutor', () => {
     let cfg: Config
 
     let handler: IDatabaseMigrationHandler<IDB>
-    let executor: MigrationScriptExecutor<IDB>
+    let executor: MigrationScriptRunner<IDB>
 
     /**
      * Test: Constructor with automatic config loading
@@ -55,7 +55,7 @@ describe('MigrationScriptExecutor', () => {
         };
 
         // Create executor without config - should auto-load via ConfigLoader
-        const testExecutor = new MigrationScriptExecutor<IDB>({ handler: mockHandler , config: cfg });
+        const testExecutor = new MigrationScriptRunner<IDB>({ handler: mockHandler , config: cfg });
 
         // Verify config was loaded (check a default property)
         expect(testExecutor['config']).to.not.be.undefined;
@@ -109,7 +109,7 @@ describe('MigrationScriptExecutor', () => {
     })
 
     beforeEach(() => {
-        executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
+        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
         initialized = true
         created = true
         valid = true
@@ -575,7 +575,7 @@ describe('MigrationScriptExecutor', () => {
         let db: IDB;
         let handler: IDatabaseMigrationHandler<IDB>;
         let config: Config;
-        let executor: MigrationScriptExecutor<IDB>;
+        let executor: MigrationScriptRunner<IDB>;
 
         beforeEach(() => {
             // Create mock database
@@ -612,7 +612,7 @@ describe('MigrationScriptExecutor', () => {
 
         it('should throw error when hybrid migrations detected with transactions enabled', async () => {
             // Create executor with transaction mode enabled
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler , config: config });
+            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);
@@ -652,7 +652,7 @@ describe('MigrationScriptExecutor', () => {
         });
 
         it('should NOT throw error when only SQL migrations', async () => {
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler , config: config });
+            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -670,7 +670,7 @@ describe('MigrationScriptExecutor', () => {
         });
 
         it('should NOT throw error when only TypeScript migrations', async () => {
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler , config: config });
+            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -689,7 +689,7 @@ describe('MigrationScriptExecutor', () => {
 
         it('should NOT throw error when transaction mode is NONE', async () => {
             config.transaction.mode = TransactionMode.NONE;
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler , config: config });
+            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -707,7 +707,7 @@ describe('MigrationScriptExecutor', () => {
         });
 
         it('should NOT check when no pending migrations', async () => {
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler , config: config });
+            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const mockScripts = {
                 all: [],
@@ -730,7 +730,7 @@ describe('MigrationScriptExecutor', () => {
         });
 
         it('should throw error for hybrid with .js files', async () => {
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler , config: config });
+            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const js1 = new MigrationScript<IDB>('V002_InsertData.js', '/path/V002_InsertData.js', 2);
@@ -767,7 +767,7 @@ describe('MigrationScriptExecutor', () => {
 
         it('should include transaction mode in error message', async () => {
             config.transaction.mode = TransactionMode.PER_BATCH;
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler , config: config });
+            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);
@@ -802,7 +802,7 @@ describe('MigrationScriptExecutor', () => {
         });
 
         it('should provide helpful solutions in error message', async () => {
-            executor = new MigrationScriptExecutor<IDB>({ handler: handler , config: config });
+            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);

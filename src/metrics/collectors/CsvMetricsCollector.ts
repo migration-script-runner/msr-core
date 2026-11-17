@@ -45,7 +45,7 @@ interface CsvRow {
  *
  * @example
  * ```typescript
- * const executor = new MigrationScriptExecutor<IDB>({
+ * const executor = new MigrationScriptRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new CsvMetricsCollector({

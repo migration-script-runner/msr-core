@@ -10,7 +10,7 @@ import {MigrationScript} from "../../model";
  * - Coordinating error recovery (rollback)
  * - Providing consistent error handling across migration operations
  *
- * **New in v0.7.0:** Extracted from MigrationScriptExecutor for better separation of concerns (#97 Phase 1)
+ * **New in v0.7.0:** Extracted from MigrationScriptRunner for better separation of concerns (#97 Phase 1)
  *
  * @template DB - Database interface type
  *

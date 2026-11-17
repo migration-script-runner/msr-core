@@ -213,7 +213,7 @@ export class DevelopmentHandler implements IDatabaseMigrationHandler<IDB> {
 
 ```typescript
 // scripts/backup-production.ts
-import { MigrationScriptExecutor, Config, BackupMode } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, BackupMode } from '@migration-script-runner/core';
 import { ProductionHandler } from './prod-handler';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -234,7 +234,7 @@ async function backupProduction() {
     fs.mkdirSync(config.backup.folder, { recursive: true });
   }
 
-  const executor = new MigrationScriptExecutor(prodHandler, config);
+  const executor = new MigrationScriptRunner(prodHandler, config);
 
   console.log('Creating production database backup...');
   const backupPath = await executor.createBackup();
@@ -255,7 +255,7 @@ backupProduction().catch(console.error);
 
 ```typescript
 // scripts/restore-to-development.ts
-import { MigrationScriptExecutor, Config, BackupMode } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, BackupMode } from '@migration-script-runner/core';
 import { DevelopmentHandler } from './dev-handler';
 import * as path from 'path';
 
@@ -266,7 +266,7 @@ async function restoreToDevelopment(backupPath: string) {
   // Configure to use existing backup
   config.backupMode = BackupMode.MANUAL;
 
-  const executor = new MigrationScriptExecutor(devHandler, config);
+  const executor = new MigrationScriptRunner(devHandler, config);
 
   console.log(`Restoring production backup to development...`);
   console.log(`Source: ${backupPath}`);
@@ -287,7 +287,7 @@ restoreToDevelopment(backupPath).catch(console.error);
 
 ```typescript
 // scripts/sync-prod-to-dev.ts
-import { MigrationScriptExecutor, Config, BackupMode, SilentLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, BackupMode, SilentLogger } from '@migration-script-runner/core';
 import { ProductionHandler } from './prod-handler';
 import { DevelopmentHandler } from './dev-handler';
 
@@ -301,7 +301,7 @@ async function syncProdToDev() {
   prodConfig.backupMode = BackupMode.MANUAL;
   prodConfig.backup.folder = './backups/temp';
 
-  const prodExecutor = new MigrationScriptExecutor(prodHandler, prodConfig, {
+  const prodExecutor = new MigrationScriptRunner(prodHandler, prodConfig, {
     logger: new SilentLogger()
   });
 
@@ -316,7 +316,7 @@ async function syncProdToDev() {
   devConfig.backup.folder = './backups/dev-safety';
   devConfig.backup.prefix = 'dev-safety';
 
-  const devExecutor = new MigrationScriptExecutor(devHandler, devConfig);
+  const devExecutor = new MigrationScriptRunner(devHandler, devConfig);
 
   const devSafetyBackup = await devExecutor.createBackup();
   console.log(`✅ Development safety backup: ${devSafetyBackup}\n`);
@@ -451,7 +451,7 @@ const devHandler = new FirebaseHandler(
 
 ```typescript
 // scripts/safe-migration.ts
-import { MigrationScriptExecutor, Config, BackupMode } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, BackupMode } from '@migration-script-runner/core';
 
 async function safeProductionMigration() {
   const handler = new ProductionHandler();
@@ -463,7 +463,7 @@ async function safeProductionMigration() {
   config.backup.prefix = 'pre-migration';
   config.backup.deleteBackup = false; // Keep all backups
 
-  const executor = new MigrationScriptExecutor({ handler , config });
+  const executor = new MigrationScriptRunner({ handler , config });
 
   console.log('🔒 Creating production backup before migration...');
   const backupPath = await executor.createBackup();
@@ -579,7 +579,7 @@ jobs:
 
 ```typescript
 // scripts/create-backup.js
-import { MigrationScriptExecutor, Config, BackupMode } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, BackupMode } from '@migration-script-runner/core';
 import { ProductionHandler } from './prod-handler';
 import * as fs from 'fs';
 
@@ -592,7 +592,7 @@ async function createBackup() {
   config.backup.prefix = 'ci-backup';
   config.backup.timestamp = true;
 
-  const executor = new MigrationScriptExecutor({ handler , config });
+  const executor = new MigrationScriptRunner({ handler , config });
   const backupPath = await executor.createBackup();
 
   // Write backup path for next steps
@@ -612,7 +612,7 @@ createBackup().catch(error => {
 
 ```typescript
 // scripts/run-migrations.js
-import { MigrationScriptExecutor, Config, BackupMode, RollbackStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, BackupMode, RollbackStrategy } from '@migration-script-runner/core';
 import { ProductionHandler } from './prod-handler';
 import * as fs from 'fs';
 
@@ -628,7 +628,7 @@ async function runMigrations() {
   const backupPath = fs.readFileSync('backup-path.txt', 'utf8');
   config.backup.existingBackupPath = backupPath;
 
-  const executor = new MigrationScriptExecutor({ handler , config });
+  const executor = new MigrationScriptRunner({ handler , config });
 
   console.log('Running migrations with backup restore capability...');
   const result = await executor.migrate();
@@ -655,7 +655,7 @@ runMigrations().catch(error => {
 
 ```typescript
 // scripts/create-test-database.ts
-import { MigrationScriptExecutor, Config, BackupMode } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, BackupMode } from '@migration-script-runner/core';
 import { ProductionHandler } from './prod-handler';
 import { TestHandler } from './test-handler';
 
@@ -667,7 +667,7 @@ async function cloneProductionToTest(testDbName: string) {
   const prodConfig = new Config();
   prodConfig.backupMode = BackupMode.MANUAL;
 
-  const prodExecutor = new MigrationScriptExecutor(prodHandler, prodConfig);
+  const prodExecutor = new MigrationScriptRunner(prodHandler, prodConfig);
   const backupPath = await prodExecutor.createBackup();
 
   console.log(`✅ Production backed up: ${backupPath}`);
@@ -680,7 +680,7 @@ async function cloneProductionToTest(testDbName: string) {
 
   // Step 3: Restore production data
   const testConfig = new Config();
-  const testExecutor = new MigrationScriptExecutor(testHandler, testConfig);
+  const testExecutor = new MigrationScriptRunner(testHandler, testConfig);
   await testExecutor.restoreFromBackup(backupPath);
 
   console.log(`✅ Production data restored to: ${testDbName}`);
@@ -777,7 +777,7 @@ cloneProductionToTest(testDbName).catch(console.error);
 ### Monitoring
 
 ```typescript
-async function monitoredBackup(executor: MigrationScriptExecutor) {
+async function monitoredBackup(executor: MigrationScriptRunner) {
   const startTime = Date.now();
 
   try {

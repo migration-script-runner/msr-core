@@ -361,9 +361,9 @@ fi
 For programmatic access, use the API:
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, config });
+const executor = new MigrationScriptRunner({ handler, config });
 
 // Check lock status
 const status = await executor.getLockStatus();

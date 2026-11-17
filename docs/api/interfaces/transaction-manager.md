@@ -23,7 +23,6 @@ The `ITransactionManager` interface provides transaction orchestration with auto
 - [Retry Logic](#retry-logic)
 - [Transaction Hooks](#transaction-hooks)
 - [Usage Examples](#usage-examples)
-- [Related Interfaces](#related-interfaces)
 
 ## Overview
 
@@ -623,7 +622,7 @@ const hooks: ITransactionHooks = {
   }
 };
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
   logger,
   hooks
 });
@@ -682,6 +681,6 @@ const handler: IDatabaseMigrationHandler = {
   getVersion: () => '1.0.0'
 };
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 // Uses custom transaction manager instead of default
 ```

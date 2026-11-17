@@ -1009,7 +1009,7 @@ import {
     ValidationIssueType,
     MigrationScript,
     Config,
-    MigrationScriptExecutor
+    MigrationScriptRunner
 } from '@migration-script-runner/core';
 import * as fs from 'fs';
 
@@ -1082,7 +1082,7 @@ if (process.env.NODE_ENV === 'production') {
 config.customValidators = validators;
 
 // 3. Run migrations
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 try {
     const result = await executor.migrate();

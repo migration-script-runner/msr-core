@@ -3,10 +3,10 @@ import sinon from 'sinon';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { Config, DownMethodPolicy, IDB, IDatabaseMigrationHandler, MigrationScriptExecutor, RollbackStrategy, SilentLogger, ValidationError } from '../../../src';
+import { Config, DownMethodPolicy, IDB, IDatabaseMigrationHandler, MigrationScriptRunner, RollbackStrategy, SilentLogger, ValidationError } from '../../../src';
 
-describe('MigrationScriptExecutor - validate() method', () => {
-    let executor: MigrationScriptExecutor<IDB>;
+describe('MigrationScriptRunner - validate() method', () => {
+    let executor: MigrationScriptRunner<IDB>;
     let handler: IDatabaseMigrationHandler<IDB>;
     let config: Config;
     let tempMigrationsDir: string;
@@ -55,7 +55,7 @@ describe('MigrationScriptExecutor - validate() method', () => {
      * Call this at the start of each test after creating migration files.
      */
     function createExecutor(): void {
-        executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger()
+        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
     }
 

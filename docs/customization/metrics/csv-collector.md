@@ -37,11 +37,11 @@ Spreadsheet-friendly metrics for Excel and data analysis.
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+  MigrationScriptRunner,
   CsvMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new CsvMetricsCollector({

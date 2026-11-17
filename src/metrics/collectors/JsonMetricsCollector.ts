@@ -90,7 +90,7 @@ interface MetricsData {
  *
  * @example
  * ```typescript
- * const executor = new MigrationScriptExecutor<IDB>({
+ * const executor = new MigrationScriptRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new JsonMetricsCollector({

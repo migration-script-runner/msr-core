@@ -10,12 +10,13 @@ Notable changes to MSR Core are recorded here. The project uses [Semantic Versio
 
 ### Changed
 - Updated `auto-envparse` to v3 ([#164](https://github.com/migration-script-runner/msr-core/issues/164)).
+- **Breaking:** Renamed the public runner class and related option/dependency types to `MigrationScriptRunner`, `IRunnerOptions`, and `IMigrationRunnerDependencies`; see the [v0.8.x → v1.0.0 migration guide](docs/version-migration/v0.8-to-v1.0.md) ([#155](https://github.com/migration-script-runner/msr-core/issues/155)).
 - Updated `figlet`, `lodash`, and `moment` to versions without the production dependency advisories present in the previous lockfile ([#163](https://github.com/migration-script-runner/msr-core/issues/163)).
 
 ### Security and community
 - Added vulnerability reporting guidance, contributor templates, compatibility policy, and CI security auditing for the upcoming release ([#163](https://github.com/migration-script-runner/msr-core/issues/163)).
 
-The `1.0.0` package version is set on the release branch. The release has not been tagged or published. Additional API changes planned in the v1.0.0 milestone will be recorded when implemented.
+The target stable version remains `1.0.0`; this branch prepares package version `1.0.0-beta.1` for beta validation. Neither the beta nor the final release has been tagged or published. Additional v1.0.0 API changes will be recorded here as they are implemented.
 
 ## [0.8.4] - 2025-12-20
 ### Added

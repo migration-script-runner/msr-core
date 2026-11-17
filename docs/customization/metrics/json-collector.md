@@ -37,11 +37,11 @@ Detailed structured metrics for analysis and debugging.
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+  MigrationScriptRunner,
   JsonMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new JsonMetricsCollector({

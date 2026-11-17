@@ -11,4 +11,5 @@ has_children: true
 
 Migration guides for older versions of Migration Script Runner.
 
-For the latest migration guide, see [v0.6.x → v0.7.0](../v0.6-to-v0.7).
+- [**v0.7.x → v0.8.0**](v0.7-to-v0.8) - Migration locking, handler generic type, down migration fix, and npm provenance
+- [**v0.6.x → v0.7.0**](v0.6-to-v0.7) - CLI factory, environment loading, and service facades

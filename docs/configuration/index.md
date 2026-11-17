@@ -38,7 +38,7 @@ Migration Script Runner uses the `Config` class to control all aspects of migrat
 ### Basic Configuration
 
 ```typescript
-import { Config, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
 
 // Create configuration
@@ -49,7 +49,7 @@ config.folder = './migrations';
 
 // Initialize and run
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 await executor.up();
 ```
@@ -209,7 +209,7 @@ import {
     DownMethodPolicy,
     TransactionMode,
     IsolationLevel,
-    MigrationScriptExecutor
+    MigrationScriptRunner
 } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
 
@@ -260,7 +260,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Initialize executor
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 // Run migrations
 await executor.migrate();
@@ -280,19 +280,19 @@ Configuration is loaded in this order (highest priority last):
 2. **Config file** - Auto-detected or from `MSR_CONFIG_FILE`
    Supported formats: `.js`, `.json`, `.yaml`, `.yml`, `.toml`, `.xml`
 3. **Environment variables** - `MSR_*` environment variables
-4. **Constructor overrides** - Passed directly to MigrationScriptExecutor
+4. **Constructor overrides** - Passed directly to MigrationScriptRunner
 
 ### Automatic Loading
 
 With v0.5.0+, configuration is loaded automatically if not provided:
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
 
 // Automatically loads config from env vars, files, or defaults
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler });
+const executor = new MigrationScriptRunner({ handler });
 
 await executor.up();
 ```
@@ -302,7 +302,7 @@ await executor.up();
 For more control, use `ConfigLoader.load()`:
 
 ```typescript
-import { ConfigLoader, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
 
 // Load with waterfall approach (auto-detect config file)
 const config = ConfigLoader.load();
@@ -322,7 +322,7 @@ const config = ConfigLoader.load({}, {
 });
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 ```
 
 ---

@@ -789,13 +789,13 @@ executor.deleteBackup();
 ### Complete Manual Workflow Example
 
 ```typescript
-import { MigrationScriptExecutor, Config, BackupMode } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, BackupMode } from '@migration-script-runner/core';
 
 const config = new Config();
 config.backupMode = BackupMode.MANUAL;
 config.backup.deleteBackup = true;
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 // Step 1: Create backup manually
 console.log('Creating backup...');

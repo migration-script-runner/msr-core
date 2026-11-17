@@ -96,7 +96,7 @@ export class HttpMetricsCollector implements IMetricsCollector {
 
 **Usage:**
 ```typescript
-new MigrationScriptExecutor({
+new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new HttpMetricsCollector('https://api.example.com/metrics')
@@ -198,7 +198,7 @@ export class DataDogCollector implements IMetricsCollector {
 ```typescript
 import { DataDogCollector } from './collectors/DataDogCollector';
 
-new MigrationScriptExecutor({
+new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new DataDogCollector({
@@ -356,7 +356,7 @@ export class CloudWatchCollector implements IMetricsCollector {
 ```typescript
 import { CloudWatchCollector } from './collectors/CloudWatchCollector';
 
-new MigrationScriptExecutor({
+new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new CloudWatchCollector({

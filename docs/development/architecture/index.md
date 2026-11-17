@@ -29,7 +29,7 @@ graph TB
     end
 
     subgraph "MSR Core - Orchestration"
-        Executor[MigrationScriptExecutor<br/>Main orchestrator]
+        Executor[MigrationScriptRunner<br/>Main orchestrator]
         Config[Config<br/>Settings and Options]
     end
 
@@ -104,7 +104,7 @@ graph TB
 
 ### [Core Components](components)
 Detailed documentation of the main classes and services:
-- MigrationScriptExecutor - Orchestration layer
+- MigrationScriptRunner - Orchestration layer
 - Service layer components (Backup, Schema Version, Rollback, etc.)
 - Database handler interface
 

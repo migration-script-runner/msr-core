@@ -618,12 +618,12 @@ export class Config {
      *
      * @example
      * ```typescript
-     * import { Config, MigrationScriptExecutor } from '@migration-script-runner/core';
+     * import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
      *
      * const config = new Config();
      * config.dryRun = true;
      *
-     * const executor = new MigrationScriptExecutor<DB>(handler, config);
+     * const executor = new MigrationScriptRunner<DB>(handler, config);
      * await executor.migrate(); // No changes made, only preview
      * ```
      *

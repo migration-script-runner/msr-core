@@ -419,7 +419,7 @@ Migrations execute in timestamp order:
 ### Example Configuration
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 
 const config = new Config();
 config.folder = './migrations';
@@ -428,7 +428,7 @@ config.filePatterns = [
   /^V(\d{12})_.*\.up\.sql$/   // SQL migrations
 ];
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 const result = await executor.up();
 
 console.log(`Executed ${result.executed.length} migrations (TypeScript + SQL)`);
@@ -732,7 +732,7 @@ export class PostgresHandler implements IDatabaseMigrationHandler<IDB> {
 **src/migrate.ts:**
 ```typescript
 import { Pool } from 'pg';
-import { MigrationScriptExecutor, Config, RollbackStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, RollbackStrategy } from '@migration-script-runner/core';
 import { PostgresHandler } from './database/handler';
 
 async function runMigrations() {
@@ -755,7 +755,7 @@ async function runMigrations() {
       /^V(\d{12})_.*\.up\.sql$/
     ];
 
-    const executor = new MigrationScriptExecutor({ handler , config });
+    const executor = new MigrationScriptRunner({ handler , config });
     const result = await executor.up();
 
     if (result.success) {

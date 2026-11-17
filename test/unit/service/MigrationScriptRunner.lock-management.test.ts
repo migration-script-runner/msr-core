@@ -1,11 +1,11 @@
 import {expect} from 'chai';
-import {MigrationScriptExecutor} from '../../../src/service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../../src/service/MigrationScriptRunner';
 import {Config} from '../../../src/model';
 import {IDB, IDatabaseMigrationHandler} from '../../../src/interface';
 import {ILockingService, ILockStatus} from '../../../src/interface/service/ILockingService';
 import {SilentLogger} from '../../../src/logger/SilentLogger';
 
-describe('MigrationScriptExecutor - Lock Management Methods', () => {
+describe('MigrationScriptRunner - Lock Management Methods', () => {
     describe('getLockStatus()', () => {
         it('should return null when locking service is not configured', async () => {
             const handler = {
@@ -22,7 +22,7 @@ describe('MigrationScriptExecutor - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptExecutor<IDB>({
+            const executor = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -66,7 +66,7 @@ describe('MigrationScriptExecutor - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptExecutor<IDB>({
+            const executor = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -110,7 +110,7 @@ describe('MigrationScriptExecutor - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptExecutor<IDB>({
+            const executor = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -138,7 +138,7 @@ describe('MigrationScriptExecutor - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptExecutor<IDB>({
+            const executor = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -183,7 +183,7 @@ describe('MigrationScriptExecutor - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptExecutor<IDB>({
+            const executor = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -221,7 +221,7 @@ describe('MigrationScriptExecutor - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptExecutor<IDB>({
+            const executor = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()

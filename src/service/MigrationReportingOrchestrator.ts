@@ -31,7 +31,7 @@ export interface MigrationReportingOrchestratorDependencies<DB extends IDB> {
 /**
  * Orchestrates migration reporting and display.
  *
- * Extracted from MigrationScriptExecutor to separate reporting concerns.
+ * Extracted from MigrationScriptRunner to separate reporting concerns.
  * Handles all visual output and status logging for migrations.
  *
  * @template DB - Database interface type

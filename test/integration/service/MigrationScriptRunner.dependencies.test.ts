@@ -4,7 +4,7 @@ import {
     Config,
     IDB,
     IDatabaseMigrationHandler,
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     IBackup,
     ISchemaVersion,
     SilentLogger,
@@ -13,10 +13,10 @@ import {
 import {TestUtils} from "../../helpers";
 
 /**
- * Integration tests for MigrationScriptExecutor dependency injection.
+ * Integration tests for MigrationScriptRunner dependency injection.
  * Tests constructor and custom service injection.
  */
-describe('MigrationScriptExecutor - Dependency Injection', () => {
+describe('MigrationScriptRunner - Dependency Injection', () => {
 
     let handler: IDatabaseMigrationHandler<IDB>;
     let cfg: Config;
@@ -59,8 +59,8 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
          * Validates that the default logger parameter works correctly
          */
         it('should use default ConsoleLogger when logger not provided', () => {
-            const executorWithDefaultLogger = new MigrationScriptExecutor<IDB>({ handler , config: cfg });
-            expect(executorWithDefaultLogger).to.be.instanceOf(MigrationScriptExecutor);
+            const executorWithDefaultLogger = new MigrationScriptRunner<IDB>({ handler , config: cfg });
+            expect(executorWithDefaultLogger).to.be.instanceOf(MigrationScriptRunner);
         })
 
         /**
@@ -69,7 +69,7 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
          */
         it('should use custom logger when provided', () => {
             const customLogger = new SilentLogger();
-            const executorWithCustomLogger = new MigrationScriptExecutor<IDB>({ handler: handler, logger: customLogger
+            const executorWithCustomLogger = new MigrationScriptRunner<IDB>({ handler: handler, logger: customLogger
 , config: cfg });
             // Logger should be wrapped with LevelAwareLogger for level filtering
             expect((executorWithCustomLogger as any).output.logger).to.be.instanceOf(LevelAwareLogger);
@@ -85,7 +85,7 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
                 restore: sinon.stub().resolves(),
                 deleteBackup: sinon.stub()
             };
-            const executorWithCustomBackup = new MigrationScriptExecutor<IDB>({ handler: handler, backupService: mockBackupService
+            const executorWithCustomBackup = new MigrationScriptRunner<IDB>({ handler: handler, backupService: mockBackupService
 , config: cfg });
             expect((executorWithCustomBackup as any).core.backup).to.equal(mockBackupService);
         })
@@ -101,7 +101,7 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
                 getAllMigratedScripts: sinon.stub().resolves([]),
                 remove: sinon.stub().resolves()
             };
-            const executorWithCustomSchema = new MigrationScriptExecutor<IDB>({ handler: handler, schemaVersionService: mockSchemaVersionService
+            const executorWithCustomSchema = new MigrationScriptRunner<IDB>({ handler: handler, schemaVersionService: mockSchemaVersionService
 , config: cfg });
             expect((executorWithCustomSchema as any).core.schemaVersion).to.equal(mockSchemaVersionService);
         })
@@ -119,7 +119,7 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
                 drawIgnored: sinon.stub(),
                 drawExecuted: sinon.stub()
             };
-            const executorWithCustomRenderer = new MigrationScriptExecutor<IDB>({ handler: handler, migrationRenderer: mockRenderer
+            const executorWithCustomRenderer = new MigrationScriptRunner<IDB>({ handler: handler, migrationRenderer: mockRenderer
 , config: cfg });
             expect((executorWithCustomRenderer as any).output.renderer).to.equal(mockRenderer);
             expect(mockRenderer.drawFiglet.calledOnce).to.be.true;
@@ -134,7 +134,7 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
                 findMigrationScripts: sinon.stub().resolves([]),
                 findBeforeMigrateScript: sinon.stub().resolves(undefined)
             };
-            const executorWithCustomMigration = new MigrationScriptExecutor<IDB>({ handler: handler, migrationService: mockMigrationService
+            const executorWithCustomMigration = new MigrationScriptRunner<IDB>({ handler: handler, migrationService: mockMigrationService
 , config: cfg });
             expect((executorWithCustomMigration as any).core.migration).to.equal(mockMigrationService);
         })
@@ -153,7 +153,7 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
                     executed: []
                 })
             };
-            const executorWithCustomScanner = new MigrationScriptExecutor<IDB>({ handler: handler, migrationScanner: mockMigrationScanner
+            const executorWithCustomScanner = new MigrationScriptRunner<IDB>({ handler: handler, migrationScanner: mockMigrationScanner
 , config: cfg });
             expect((executorWithCustomScanner as any).core.scanner).to.equal(mockMigrationScanner);
         })
@@ -187,7 +187,7 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
                 findBeforeMigrateScript: sinon.stub().resolves(undefined)
             };
 
-            const executorWithAllCustom = new MigrationScriptExecutor<IDB>({ handler: handler, logger: customLogger,
+            const executorWithAllCustom = new MigrationScriptRunner<IDB>({ handler: handler, logger: customLogger,
                 backupService: mockBackupService,
                 schemaVersionService: mockSchemaVersionService,
                 migrationRenderer: mockRenderer,
@@ -208,10 +208,10 @@ describe('MigrationScriptExecutor - Dependency Injection', () => {
          */
         it('should auto-load config using ConfigLoader when config not provided', () => {
             // Call constructor without config parameter - should use ConfigLoader.load()
-            const executorWithAutoConfig = new MigrationScriptExecutor<IDB>({ handler: handler });
+            const executorWithAutoConfig = new MigrationScriptRunner<IDB>({ handler: handler });
 
             // Verify executor was created successfully
-            expect(executorWithAutoConfig).to.be.instanceOf(MigrationScriptExecutor);
+            expect(executorWithAutoConfig).to.be.instanceOf(MigrationScriptRunner);
 
             // Verify config was loaded (should have default values from ConfigLoader)
             // Note: config is private, so we cast to any for testing

@@ -808,9 +808,9 @@ Fix: Revert the changes to this file. Create a new migration for schema changes.
 Run validation without executing:
 
 ```typescript
-import { MigrationScriptExecutor, ValidationError } from '@migration-script-runner/core';
+import { MigrationScriptRunner, ValidationError } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 try {
     // This will validate but not execute if you catch the error early

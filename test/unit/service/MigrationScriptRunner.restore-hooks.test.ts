@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import {
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     Config,
     SilentLogger,
     IDatabaseMigrationHandler,
@@ -14,11 +14,11 @@ import {
 } from '../../../src';
 
 /**
- * Unit tests for MigrationScriptExecutor restore hooks functionality.
+ * Unit tests for MigrationScriptRunner restore hooks functionality.
  * Tests the onBeforeRestore and onAfterRestore hooks that execute during
  * backup restoration after migration failures.
  */
-describe('MigrationScriptExecutor - Restore Hooks (Unit)', () => {
+describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
     let handler: IDatabaseMigrationHandler<IDB>;
     let config: Config;
     const db: IDB = new class implements IDB {
@@ -59,7 +59,7 @@ describe('MigrationScriptExecutor - Restore Hooks (Unit)', () => {
 
     /**
      * Test: rollbackWithBackup calls onBeforeRestore and onAfterRestore hooks
-     * Covers lines 671-681 in MigrationScriptExecutor.ts
+     * Covers lines 671-681 in MigrationScriptRunner.ts
      * Validates that restore hooks are called when rollback occurs with a valid backup path.
      */
     it('should call onBeforeRestore and onAfterRestore hooks when backupPath is provided', async () => {
@@ -74,7 +74,7 @@ describe('MigrationScriptExecutor - Restore Hooks (Unit)', () => {
             deleteBackup: sinon.stub()
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: restoreHooks,
             backupService: mockBackupService
 , config: config });
@@ -116,7 +116,7 @@ describe('MigrationScriptExecutor - Restore Hooks (Unit)', () => {
             })
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: orderTrackingHooks,
             backupService: mockBackupService
 , config: config });
@@ -144,7 +144,7 @@ describe('MigrationScriptExecutor - Restore Hooks (Unit)', () => {
             deleteBackup: sinon.stub()
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: restoreHooks,
             backupService: mockBackupService
 , config: config });
@@ -169,7 +169,7 @@ describe('MigrationScriptExecutor - Restore Hooks (Unit)', () => {
             deleteBackup: sinon.stub()
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             backupService: mockBackupService
             // No hooks provided
 , config: config });

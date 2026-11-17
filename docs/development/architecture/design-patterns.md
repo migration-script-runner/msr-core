@@ -25,7 +25,7 @@ This UML class diagram shows the main classes, their properties, methods, and re
 
 ```mermaid
 classDiagram
-    class MigrationScriptExecutor {
+    class MigrationScriptRunner {
         #config: Config
         #handler: IDatabaseMigrationHandler
         #loaderRegistry: ILoaderRegistry
@@ -184,10 +184,10 @@ classDiagram
     }
 
     %% Main executor uses facades (v0.7.0 Facade Pattern)
-    MigrationScriptExecutor *-- CoreServices : contains
-    MigrationScriptExecutor *-- ExecutionServices : contains
-    MigrationScriptExecutor *-- OutputServices : contains
-    MigrationScriptExecutor *-- OrchestrationServices : contains
+    MigrationScriptRunner *-- CoreServices : contains
+    MigrationScriptRunner *-- ExecutionServices : contains
+    MigrationScriptRunner *-- OutputServices : contains
+    MigrationScriptRunner *-- OrchestrationServices : contains
 
     %% Facades group related services (v0.7.0 Facade Pattern)
     CoreServices o-- MigrationScanner : groups
@@ -239,7 +239,7 @@ MSR uses the **Orchestrator Pattern** to break down complex workflows into speci
 Instead of a single class handling all migration concerns, MSR delegates to specialized orchestrators:
 
 ```
-MigrationScriptExecutor (Main Entry Point)
+MigrationScriptRunner (Main Entry Point)
 ├── MigrationWorkflowOrchestrator
 │   └── Coordinates: prepare → executeBeforeMigrate → scan → validate → backup → execute → report
 ├── MigrationValidationOrchestrator
@@ -265,7 +265,7 @@ MigrationScriptExecutor (Main Entry Point)
 ### Example: Workflow Delegation
 
 ```typescript
-class MigrationScriptExecutor {
+class MigrationScriptRunner {
     // Delegates to specialized orchestrator
     async up(targetVersion?: number) {
         await this.checkDatabaseConnection();
@@ -285,7 +285,7 @@ class MigrationScriptExecutor {
 
 ```typescript
 // ✅ PUBLIC - Users can inject service implementations via dependencies:
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
     handler,
     logger: customLogger,           // Injected service
     backupService: customBackup,    // Injected service
@@ -298,7 +298,7 @@ const executor = new MigrationScriptExecutor({
 // executor.validationService     // REMOVED in v0.7.0
 
 // ✅ ADAPTERS - Can extend and access protected facades:
-class CustomExecutor extends MigrationScriptExecutor {
+class CustomExecutor extends MigrationScriptRunner {
     async customOperation() {
         const scripts = await this.core.scanner.scan();      // Protected access
         this.output.logger.info('Custom operation');         // Protected access
@@ -323,10 +323,10 @@ This design keeps the public API minimal while enabling adapter extensibility th
 
 ### Pattern Overview
 
-The Facade Pattern provides a simplified, unified interface to a complex subsystem. Instead of MigrationScriptExecutor managing 21+ individual service fields, services are now grouped into 4 logical facades:
+The Facade Pattern provides a simplified, unified interface to a complex subsystem. Instead of MigrationScriptRunner managing 21+ individual service fields, services are now grouped into 4 logical facades:
 
 ```
-MigrationScriptExecutor
+MigrationScriptRunner
 ├── CoreServices (Business Logic)
 │   ├── scanner: IMigrationScanner
 │   ├── schemaVersion: ISchemaVersionService
@@ -385,13 +385,13 @@ export class ExecutionServices<DB extends IDB> {
 }
 
 // Executor uses facades (protected for adapter extensibility)
-export class MigrationScriptExecutor<DB extends IDB> {
+export class MigrationScriptRunner<DB extends IDB> {
     protected readonly core: CoreServices<DB>;
     protected readonly execution: ExecutionServices<DB>;
     protected readonly output: OutputServices<DB>;
     protected readonly orchestration: OrchestrationServices<DB>;
 
-    constructor(dependencies: IMigrationExecutorDependencies<DB>) {
+    constructor(dependencies: IMigrationRunnerDependencies<DB>) {
         const services = createMigrationServices(dependencies);
 
         this.core = services.core;
@@ -424,10 +424,10 @@ export class MigrationScriptExecutor<DB extends IDB> {
 
 ### Adapter Extensibility
 
-Facades are **protected** (not private) to allow adapters to extend MigrationScriptExecutor and access internal services:
+Facades are **protected** (not private) to allow adapters to extend MigrationScriptRunner and access internal services:
 
 ```typescript
-export class CustomMigrationExecutor<DB extends IDB> extends MigrationScriptExecutor<DB> {
+export class CustomMigrationExecutor<DB extends IDB> extends MigrationScriptRunner<DB> {
     public async migrateWithMetrics(): Promise<IMigrationResult<DB>> {
         // Access facade services
         const scripts = await this.core.scanner.scan();
@@ -499,7 +499,7 @@ createMigrationServices() Factory
 ```typescript
 // src/service/MigrationServicesFactory.ts
 export function createMigrationServices<DB extends IDB>(
-    dependencies: IMigrationExecutorDependencies<DB>
+    dependencies: IMigrationRunnerDependencies<DB>
 ): MigrationServicesFacades<DB> {
 
     const handler = dependencies.handler;
@@ -541,8 +541,8 @@ export function createMigrationServices<DB extends IDB>(
 
 **Simplified Executor Constructor:**
 ```typescript
-export class MigrationScriptExecutor<DB extends IDB> {
-    constructor(dependencies: IMigrationExecutorDependencies<DB>) {
+export class MigrationScriptRunner<DB extends IDB> {
+    constructor(dependencies: IMigrationRunnerDependencies<DB>) {
         // Initialize all services via factory
         const services = createMigrationServices(dependencies);
 
@@ -634,12 +634,12 @@ function createTransactionManager<DB extends IDB>(...): ITransactionManager<DB> 
 Many database adapters need async initialization (connections, authentication, etc.). The `createInstance` helper eliminates boilerplate:
 
 ```typescript
-// MigrationScriptExecutor provides:
-protected static async createInstance<DB, THandler, TExecutor, TConfig, TOptions>(
-    ExecutorClass: new (deps: IMigrationExecutorDependencies<DB, THandler, TConfig>) => TExecutor,
+// MigrationScriptRunner provides:
+protected static async createInstance<DB, THandler, TRunner, TConfig, TOptions>(
+    RunnerClass: new (deps: IMigrationRunnerDependencies<DB, THandler, TConfig>) => TRunner,
     options: TOptions,
     createHandler: (config: TConfig) => Promise<THandler>
-): Promise<TExecutor>
+): Promise<TRunner>
 ```
 
 #### Benefits
@@ -654,13 +654,13 @@ protected static async createInstance<DB, THandler, TExecutor, TConfig, TOptions
 **With `createInstance` (Recommended):**
 
 ```typescript
-export class FirebaseRunner extends MigrationScriptExecutor<IFirebaseDB, FirebaseHandler> {
-    private constructor(deps: IMigrationExecutorDependencies<IFirebaseDB, FirebaseHandler>) {
+export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
+    private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
         super(deps);
     }
 
     static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-        return MigrationScriptExecutor.createInstance(
+        return MigrationScriptRunner.createInstance(
             FirebaseRunner,
             options,
             (config) => FirebaseHandler.getInstance(config)
@@ -672,8 +672,8 @@ export class FirebaseRunner extends MigrationScriptExecutor<IFirebaseDB, Firebas
 **Without `createInstance` (Manual):**
 
 ```typescript
-export class FirebaseRunner extends MigrationScriptExecutor<IFirebaseDB, FirebaseHandler> {
-    private constructor(deps: IMigrationExecutorDependencies<IFirebaseDB, FirebaseHandler>) {
+export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
+    private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
         super(deps);
     }
 
@@ -707,7 +707,7 @@ The Facade and Factory patterns work together:
 
 1. **Factory creates facades**: `createMigrationServices()` builds all 4 facades
 2. **Facades group services**: Each facade contains related services
-3. **Executor consumes facades**: MigrationScriptExecutor stores 4 facades instead of 21+ services
+3. **Executor consumes facades**: MigrationScriptRunner stores 4 facades instead of 21+ services
 4. **Protected access for adapters**: Facades are protected for extensibility
 
 **Result**: Clean, maintainable architecture with clear separation of concerns.
@@ -726,11 +726,11 @@ MSR supports optional dependency injection for all services, enabling:
 ```typescript
 // Default (uses built-in dependencies)
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 // Uses: ConsoleLogger, BackupService, SchemaVersionService, etc.
 
 // Custom dependencies
-const executor2 = new MigrationScriptExecutor({ handler, 
+const executor2 = new MigrationScriptRunner({ handler,
     logger: new SilentLogger(),          // Custom logger
     backupService: new S3BackupService(), // Custom backup
     renderStrategy: new JsonRenderStrategy()  // Custom render strategy
@@ -743,7 +743,7 @@ This diagram shows the dependency injection hierarchy and how services are compo
 
 ```mermaid
 graph TD
-    Executor[MigrationScriptExecutor]
+    Executor[MigrationScriptRunner]
 
     Executor --> Logger[ILogger<br/>default: ConsoleLogger]
 
@@ -796,7 +796,7 @@ graph TD
 ## Layer Responsibilities
 
 ### Layer 1: Orchestration
-**Class:** `MigrationScriptExecutor`
+**Class:** `MigrationScriptRunner`
 **Role:** Coordinates workflow, handles errors, manages lifecycle
 
 ### Layer 2: Business Logic
@@ -835,7 +835,7 @@ class CloudLogger implements ILogger {
     // ... implement other methods
 }
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     logger: new CloudLogger()
 });
 ```
@@ -853,7 +853,7 @@ class S3BackupService implements IBackupService {
     // ... implement restore, deleteBackup
 }
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     backupService: new S3BackupService()
 });
 ```
@@ -864,7 +864,7 @@ const executor = new MigrationScriptExecutor({ handler,
 import { IRenderStrategy, JsonRenderStrategy } from '@migration-script-runner/core';
 
 // Use built-in JSON render strategy
-const executor = new MigrationScriptExecutor({ handler,
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)  // pretty-printed JSON
 });
 
@@ -876,7 +876,7 @@ class CustomRenderStrategy implements IRenderStrategy {
     // ... implement other methods
 }
 
-const executor2 = new MigrationScriptExecutor({ handler,
+const executor2 = new MigrationScriptRunner({ handler,
     renderStrategy: new CustomRenderStrategy()
 });
 ```

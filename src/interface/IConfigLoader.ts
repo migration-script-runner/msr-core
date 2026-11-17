@@ -5,7 +5,7 @@ import {ConfigLoaderOptions} from "../util/ConfigLoader";
  * Interface for configuration loaders.
  *
  * Allows adapters to implement custom config loading logic while maintaining
- * compatibility with the core MigrationScriptExecutor.
+ * compatibility with the core MigrationScriptRunner.
  *
  * **New in v0.7.0:**
  * - Enables database adapters to extend ConfigLoader and customize environment variable handling

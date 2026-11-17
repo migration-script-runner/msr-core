@@ -44,12 +44,12 @@ await service.readMigrationScripts(config);
 // Output: [INFO] Reading migration scripts from ./migrations
 ```
 
-### With MigrationScriptExecutor
+### With MigrationScriptRunner
 
 ```typescript
-import { MigrationScriptExecutor, ConsoleLogger } from 'msr-core';
+import { MigrationScriptRunner, ConsoleLogger } from 'msr-core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     logger: new ConsoleLogger()
 });
 
@@ -175,7 +175,7 @@ logger.debug('Object:', { id: 1, name: 'Test', nested: { value: 42 } });
 
 ```typescript
 import {
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     ConsoleLogger,
     IMigrationScriptHandler
 } from 'msr-core';

@@ -14,18 +14,18 @@ import {IMetricsCollector} from "./IMetricsCollector";
 import {Config} from "../model";
 
 /**
- * **PUBLIC API** - Optional services and configuration for MigrationScriptExecutor.
+ * **PUBLIC API** - Optional services and configuration for MigrationScriptRunner.
  *
  * Use this interface in your adapter's **public factory methods** (e.g., `getInstance()`).
  * This interface does NOT include the handler - that must be created by your factory method.
  *
  * **⚠️ Do NOT use this interface in your constructor!**
- * Use `IMigrationExecutorDependencies` instead, which includes the required handler.
+ * Use `IMigrationRunnerDependencies` instead, which includes the required handler.
  *
  * **Purpose:**
  * - Public API for adapter users to configure the executor
  * - Used in factory methods (sync or async)
- * - Spread into `IMigrationExecutorDependencies` after creating handler
+ * - Spread into `IMigrationRunnerDependencies` after creating handler
  *
  * **Generic Type Parameters:**
  * - `DB` - Your specific database interface extending IDB (REQUIRED, v0.7.0)
@@ -39,34 +39,34 @@ import {Config} from "../model";
  * @example
  * ```typescript
  * // ✅ CORRECT: Use in public factory method
- * export class FirebaseRunner extends MigrationScriptExecutor<IFirebaseDB, FirebaseHandler> {
- *     private constructor(deps: IMigrationExecutorDependencies<IFirebaseDB, FirebaseHandler>) {
+ * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
+ *     private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
  *         super(deps);
  *     }
  *
- *     static async getInstance(options: IExecutorOptions<IFirebaseDB>): Promise<FirebaseRunner> {
+ *     static async getInstance(options: IRunnerOptions<IFirebaseDB>): Promise<FirebaseRunner> {
  *         const handler = await FirebaseHandler.connect(options.config);
  *         return new FirebaseRunner({ handler, ...options });  // Spread options into deps
  *     }
  * }
  *
  * // ✅ CORRECT: Extend for adapter-specific options
- * interface IFirebaseRunnerOptions extends IExecutorOptions<IFirebaseDB, FirebaseConfig> {
+ * interface IFirebaseRunnerOptions extends IRunnerOptions<IFirebaseDB, FirebaseConfig> {
  *     credentialPath?: string;  // Add your custom options
  * }
  *
  * // ❌ WRONG: Don't use in constructor
- * class MyAdapter extends MigrationScriptExecutor<IDB, MyHandler> {
- *     constructor(options: IExecutorOptions<IDB>) {  // ❌ Missing handler!
+ * class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
+ *     constructor(options: IRunnerOptions<IDB>) {  // ❌ Missing handler!
  *         super(options);  // ❌ Error: Property 'handler' is missing
  *     }
  * }
  * ```
  *
- * @see {@link IMigrationExecutorDependencies} - Internal API for constructors (includes handler)
+ * @see {@link IMigrationRunnerDependencies} - Internal API for constructors (includes handler)
  * @see https://github.com/migration-script-runner/msr-core/blob/master/docs/guides/cli-adapter-development.md
  */
-export interface IExecutorOptions<
+export interface IRunnerOptions<
     DB extends IDB,
     TConfig extends Config = Config
 > {
@@ -80,7 +80,7 @@ export interface IExecutorOptions<
      * @example
      * ```typescript
      * // Backward compatible - base Config
-     * const options: IExecutorOptions<IDB> = {
+     * const options: IRunnerOptions<IDB> = {
      *     config: new Config({
      *         folder: './migrations',
      *         logLevel: 'debug'
@@ -92,7 +92,7 @@ export interface IExecutorOptions<
      *     databaseUrl?: string;
      * }
      *
-     * const options: IExecutorOptions<IDB, AppConfig> = {
+     * const options: IRunnerOptions<IDB, AppConfig> = {
      *     config: new AppConfig({
      *         folder: './migrations',
      *         databaseUrl: 'https://mydb.example.com'
@@ -187,7 +187,7 @@ export interface IExecutorOptions<
      * @example
      * ```typescript
      * // Add Slack notifications
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     hooks: new SlackNotificationHooks(webhookUrl)
      * });
@@ -211,13 +211,13 @@ export interface IExecutorOptions<
      * @example
      * ```typescript
      * // Single collector - console output
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     metricsCollectors: [new ConsoleMetricsCollector()]
      * });
      *
      * // Multiple collectors simultaneously
-     * const executor = new MigrationScriptExecutor<IDB>({
+     * const executor = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     metricsCollectors: [
      *         new ConsoleMetricsCollector(),
@@ -264,13 +264,13 @@ export interface IExecutorOptions<
      * @example
      * ```typescript
      * // Use default loaders
-     * const executor = new MigrationScriptExecutor<DB>(handler);
+     * const executor = new MigrationScriptRunner<DB>(handler);
      * // Automatically uses TypeScript and SQL loaders
      *
      * // Register custom loader
      * const registry = LoaderRegistry.createDefault();
      * registry.register(new PythonLoader());
-     * const executor = new MigrationScriptExecutor<DB>(handler, {
+     * const executor = new MigrationScriptRunner<DB>(handler, {
      *     loaderRegistry: registry
      * });
      *

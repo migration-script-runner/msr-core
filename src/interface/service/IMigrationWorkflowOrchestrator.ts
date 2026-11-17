@@ -10,7 +10,7 @@ import {IMigrationResult} from "../IMigrationResult";
  * - Handling version-specific migrations
  * - Coordinating hooks, reporting, and error handling
  *
- * Extracted from MigrationScriptExecutor for better separation of concerns.
+ * Extracted from MigrationScriptRunner for better separation of concerns.
  *
  * @template DB - Database interface type
  *

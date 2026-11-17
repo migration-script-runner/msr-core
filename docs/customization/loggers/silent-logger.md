@@ -54,14 +54,14 @@ describe('MigrationService', () => {
 ### In Integration Tests
 
 ```typescript
-import { MigrationScriptExecutor, SilentLogger } from 'msr-core';
+import { MigrationScriptRunner, SilentLogger } from 'msr-core';
 
 describe('Migration execution', () => {
-    let executor: MigrationScriptExecutor;
+    let executor: MigrationScriptRunner;
 
     beforeEach(() => {
         // Silent logger prevents test output pollution
-        executor = new MigrationScriptExecutor({ handler, 
+        executor = new MigrationScriptRunner({ handler,
             logger: new SilentLogger()
         });
     });
@@ -150,10 +150,10 @@ async function runMigrations() {
 When processing many migrations where individual log messages are overwhelming:
 
 ```typescript
-import { MigrationScriptExecutor, SilentLogger } from 'msr-core';
+import { MigrationScriptRunner, SilentLogger } from 'msr-core';
 
 async function batchExecute(scripts: MigrationScript[]) {
-    const executor = new MigrationScriptExecutor({ handler, 
+    const executor = new MigrationScriptRunner({ handler,
         logger: new SilentLogger()
     });
 
@@ -176,7 +176,7 @@ Here's a complete test suite using SilentLogger:
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
     MigrationService,
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     BackupService,
     SilentLogger,
     MigrationConfig

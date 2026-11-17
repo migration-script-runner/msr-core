@@ -78,7 +78,7 @@ Guide for implementing cloud logging services (AWS CloudWatch, Google Cloud Logg
 
 ## Log Level Control
 
-MSR v0.6.0+ includes **automatic log level filtering** through the `LevelAwareLogger` wrapper. When you provide a logger to `MigrationScriptExecutor`, it's automatically wrapped to filter messages based on your configured log level.
+MSR v0.6.0+ includes **automatic log level filtering** through the `LevelAwareLogger` wrapper. When you provide a logger to `MigrationScriptRunner`, it's automatically wrapped to filter messages based on your configured log level.
 
 ### Automatic Wrapping
 
@@ -86,7 +86,7 @@ All loggers are automatically wrapped with level-aware filtering:
 
 ```typescript
 // Your logger is automatically wrapped with log level filtering
-const executor = new MigrationScriptExecutor({ handler }, {
+const executor = new MigrationScriptRunner({ handler }, {
     logLevel: 'error'  // Only errors will be shown
 }, {
     logger: new ConsoleLogger()  // Automatically wrapped

@@ -27,7 +27,7 @@ By default, MSR uses `AsciiTableRenderStrategy` which outputs formatted ASCII ta
 - Using `SilentRenderStrategy` to suppress all rendering output (testing, library usage)
 - Creating custom render strategy implementations for specialized formats (XML, CSV, HTML, etc.)
 
-All rendering is handled by the `MigrationRenderer` class which accepts a render strategy in its constructor or through `IMigrationExecutorDependencies`.
+All rendering is handled by the `MigrationRenderer` class which accepts a render strategy in its constructor or through `IMigrationRunnerDependencies`.
 
 ---
 
@@ -68,9 +68,9 @@ MSR provides three built-in render strategy implementations. For detailed docume
 ### AsciiTableRenderStrategy (Default)
 
 ```typescript
-import { MigrationScriptExecutor, AsciiTableRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, AsciiTableRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new AsciiTableRenderStrategy()
 });
 ```
@@ -80,15 +80,15 @@ const executor = new MigrationScriptExecutor({ handler,
 ### JsonRenderStrategy
 
 ```typescript
-import { MigrationScriptExecutor, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
 
 // Pretty-printed JSON
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Compact JSON
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)
 });
 ```
@@ -98,9 +98,9 @@ const executor = new MigrationScriptExecutor({ handler,
 ### SilentRenderStrategy
 
 ```typescript
-import { MigrationScriptExecutor, SilentRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 ```
@@ -210,11 +210,11 @@ ${scripts.map(s => `  <migration>
 ### Using the Custom Strategy
 
 ```typescript
-import { MigrationScriptExecutor, ConsoleLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner, ConsoleLogger } from '@migration-script-runner/core';
 import { XmlRenderStrategy } from './XmlRenderStrategy';
 
 const logger = new ConsoleLogger();
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new XmlRenderStrategy(logger)
 });
@@ -409,10 +409,10 @@ Render strategies work seamlessly with any logger implementation:
 ### JSON Strategy with File Logger
 
 ```typescript
-import { MigrationScriptExecutor, JsonRenderStrategy, FileLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner, JsonRenderStrategy, FileLogger } from '@migration-script-runner/core';
 
 const logger = new FileLogger({ logPath: './migrations.json' });
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(false)  // Compact JSON
 });
@@ -424,7 +424,7 @@ await executor.migrate();
 ### Custom Strategy with Cloud Logger
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { CloudWatchLogger } from './CloudWatchLogger';
 import { JsonRenderStrategy } from '@migration-script-runner/core';
 
@@ -433,7 +433,7 @@ const logger = new CloudWatchLogger({
     logStreamName: 'production'
 });
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(false)
 });
@@ -450,7 +450,7 @@ Choose strategies based on the environment:
 
 ```typescript
 import {
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     AsciiTableRenderStrategy,
     JsonRenderStrategy,
     SilentRenderStrategy,
@@ -483,7 +483,7 @@ function getRenderStrategy() {
     }
 }
 
-const executor = new MigrationScriptExecutor({ handler, 
+const executor = new MigrationScriptRunner({ handler,
     renderStrategy: getRenderStrategy()
 });
 ```

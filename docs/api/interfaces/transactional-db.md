@@ -21,7 +21,6 @@ The `ITransactionalDB` interface extends the base `IDB` interface to add transac
 - [Type Guards](#type-guards)
 - [Implementation Examples](#implementation-examples)
 - [Usage with Migration Runner](#usage-with-migration-runner)
-- [Related Interfaces](#related-interfaces)
 
 ## Overview
 
@@ -489,7 +488,7 @@ Once you implement `ITransactionalDB`, Migration Script Runner automatically det
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+  MigrationScriptRunner,
   Config,
   TransactionMode
 } from '@migration-script-runner/core';
@@ -510,7 +509,7 @@ config.transaction.mode = TransactionMode.PER_MIGRATION;
 // 3. Wraps migrations in transactions
 // 4. Handles retries on deadlocks
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 await executor.up();
 ```
 

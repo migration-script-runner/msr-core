@@ -113,7 +113,7 @@ export interface MigrationWorkflowOrchestratorDependencies<DB extends IDB> {
 /**
  * Orchestrates migration workflow execution.
  *
- * Extracted from MigrationScriptExecutor to separate workflow orchestration concerns.
+ * Extracted from MigrationScriptRunner to separate workflow orchestration concerns.
  * Coordinates all services to execute the complete migration workflow including:
  * - Preparation (schema version table, beforeMigrate script)
  * - Scanning and validation

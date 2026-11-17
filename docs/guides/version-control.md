@@ -48,11 +48,11 @@ The `up(targetVersion)` method executes all pending migrations up to and includi
 ### Basic Usage
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 // Migrate to specific version
 const targetVersion = 202501220300;
@@ -479,9 +479,9 @@ await metrics.gauge('database.version', currentVersion);
 ## API Reference
 
 For complete API details, see:
-- [up() API Reference](../api#migrateto)
-- [down() API Reference](../api#downto)
-- [MigrationScriptExecutor API Reference](../api#migrationscriptexecutor)
+- [up() API Reference](../api/core-classes#up)
+- [down() API Reference](../api/core-classes#down)
+- [MigrationScriptRunner API Reference](../api/core-classes#migrationscriptrunner)
 
 ---
 

@@ -11,10 +11,11 @@ This section contains guides for upgrading between major versions of MSR. Each g
 
 ## Current Upgrade Guide
 
-- [**v0.7.x → v0.8.0**](v0.7-to-v0.8.md) - **Non-Breaking:** Migration locking, handler generic type, down migration fix, npm provenance
+- [**v0.8.x → v1.0.0**](v0.8-to-v1.0.md) - **Breaking:** Rename `MigrationScriptExecutor` and related public types to `Runner` names
 
 ## Previous Releases
 
+- [**v0.7.x → v0.8.0**](v0.7-to-v0.8.md) - **Non-Breaking:** Migration locking, handler generic type, down migration fix, npm provenance
 - [**v0.6.x → v0.7.0**](v0.6-to-v0.7.md) - **Breaking:** Single parameter constructor, config moved into dependencies, extensible ConfigLoader
 - [**v0.5.x → v0.6.0**](v0.5-to-v0.6.md) - **Breaking:** Generic type parameters (required), constructor signature change, metrics collection
 - [**v0.4.x → v0.5.0**](v0.4-to-v0.5.md) - **Non-Breaking:** Transaction management, environment variables, enhanced hooks

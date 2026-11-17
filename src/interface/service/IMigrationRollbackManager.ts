@@ -11,7 +11,7 @@ import {IMigrationResult} from "../IMigrationResult";
  * - Validating scripts before rollback
  * - Providing consistent rollback workflow
  *
- * **New in v0.7.0:** Extracted from MigrationScriptExecutor for better separation of concerns (#97 Phase 2)
+ * **New in v0.7.0:** Extracted from MigrationScriptRunner for better separation of concerns (#97 Phase 2)
  *
  * @template DB - Database interface type
  *

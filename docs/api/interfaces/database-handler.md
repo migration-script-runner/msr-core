@@ -417,7 +417,7 @@ export class MongoHandler implements IDatabaseMigrationHandler<IDB> {
 ## Usage
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { PostgresHandler } from './postgres-handler';
 import { Pool } from 'pg';
 
@@ -434,7 +434,7 @@ const handler = new PostgresHandler(pool, true);  // with backup
 
 // Create executor
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 // Run migrations
 const result = await executor.up();

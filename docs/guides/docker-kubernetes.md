@@ -535,7 +535,7 @@ kubectl apply -f sealed-secret.yaml
 
 ```typescript
 // src/health.ts
-import {MigrationScriptExecutor} from '@migration-script-runner/core';
+import {MigrationScriptRunner} from '@migration-script-runner/core';
 
 export async function checkHealth() {
   try {
@@ -543,7 +543,7 @@ export async function checkHealth() {
     await db.query('SELECT 1');
 
     // Optionally: check schema version
-    const executor = new MigrationScriptExecutor({handler, config});
+    const executor = new MigrationScriptRunner({handler, config});
     const status = await executor.list(1);
 
     return {

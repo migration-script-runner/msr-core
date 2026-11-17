@@ -472,7 +472,7 @@ class CustomBackup implements IBackup {
 - "schema version" (not "migration version")
 
 **Capitalization:**
-- `MigrationScriptExecutor` - class names
+- `MigrationScriptRunner` - class names
 - `IDatabaseMigrationHandler` - interface names
 - `Config` - class names
 - Migration Script Runner or MSR - product name
@@ -483,7 +483,7 @@ When referencing code in text, use inline code formatting.
 
 **Examples:**
 - Methods: "The `migrate()` method..."
-- Classes: "Create a `MigrationScriptExecutor` instance..."
+- Classes: "Create a `MigrationScriptRunner` instance..."
 - Interfaces: "Implement the `IDatabaseMigrationHandler` interface..."
 - Properties: "Set the `config.folder` property..."
 - Types: "The function returns a `MigrationResult` object..."
@@ -503,7 +503,7 @@ Always specify language for syntax highlighting:
 
 ````markdown
 ```typescript
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 ```
 
 ```bash
@@ -529,14 +529,14 @@ npm install @migration-script-runner/core
 
 **Example (good):**
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
 
 const config = new Config();
 config.folder = './migrations';
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const executor = new MigrationScriptRunner({ handler , config });
 
 const result = await executor.migrate();
 if (result.success) {
@@ -612,6 +612,19 @@ Coverage: 100% Lines | 100% Branches | 100% Functions
 - Leave gaps for future additions (skip 9 for flexibility)
 - Keep sequential within each section
 - Update all affected pages when reordering
+
+### Release Changelogs and Migration Guide Navigation
+
+For a release, keep the root `CHANGELOG.md`, release notes, and migration-guide navigation consistent:
+
+- Add unreleased work to `CHANGELOG.md` under `## [Unreleased]`, grouped under the existing Keep a Changelog categories. Keep each entry concise, describe the user-visible change, and link its issue when one exists.
+- When a release is actually published, move its entries under the matching version heading and use the published release date. Do not label a version as released based only on a package version bump or an open release branch.
+- In `docs/version-migration/index.md`, list only the latest upgrade guide under **Current Upgrade Guide**. Move the previous current guide under **Previous Releases**.
+- Keep the latest historical guide available on `docs/version-migration/previous.md` and in its sidebar submenu. Its front matter must use `parent: Previous`, `grand_parent: Version Migration`, and a sequential `nav_order` with the newest historical guide first.
+- When adding a new current guide, update both the index and the `Previous` page/sidebar metadata. Preserve older migration guides and their historical API examples.
+- Build the documentation site after changing navigation to catch malformed front matter and links.
+
+Use the repository's [publishing guide](publishing) for the release checklist and the Codex `msr-release-changelog` skill, when available, for the MSR-specific editing workflow.
 
 ### Parent/Child Relationships
 

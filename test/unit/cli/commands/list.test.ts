@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 import {Command} from 'commander';
 import {addListCommand} from '../../../../src/cli/commands/list';
-import {MigrationScriptExecutor} from '../../../../src/service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../../../src/service/MigrationScriptRunner';
 import {EXIT_CODES} from '../../../../src/cli/utils/exitCodes';
 import {IDB} from '../../../../src/interface';
 
@@ -12,7 +12,7 @@ interface MockDB extends IDB {
 
 describe('list command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptExecutor<MockDB>>;
+    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
     let createExecutorStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
     let processExitStub: sinon.SinonStub;
@@ -24,7 +24,7 @@ describe('list command', () => {
         // Create mock executor
         mockExecutor = {
             list: sinon.stub(),
-        } as unknown as sinon.SinonStubbedInstance<MigrationScriptExecutor<MockDB>>;
+        } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
         createExecutorStub = sinon.stub().returns(mockExecutor);

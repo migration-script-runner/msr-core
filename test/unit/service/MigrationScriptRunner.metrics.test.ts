@@ -4,7 +4,7 @@ import {
     IDatabaseMigrationHandler,
     IDB,
     IMigrationInfo,
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     SilentLogger,
     TransactionMode,
     IMetricsCollector,
@@ -14,7 +14,7 @@ import { TestUtils } from '../../helpers';
 import { MigrationScript } from '../../../src/model/MigrationScript';
 import { IMigrationResult } from '../../../src/interface/IMigrationResult';
 
-describe('MigrationScriptExecutor with Metrics Collectors', () => {
+describe('MigrationScriptRunner with Metrics Collectors', () => {
     let config: Config;
     let handler: IDatabaseMigrationHandler<IDB>;
     let mockCollector: IMetricsCollector;
@@ -106,7 +106,7 @@ describe('MigrationScriptExecutor with Metrics Collectors', () => {
     });
 
     it('should create MetricsCollectorHook when metricsCollectors provided', async () => {
-        const executor = new MigrationScriptExecutor<IDB>(
+        const executor = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -127,7 +127,7 @@ describe('MigrationScriptExecutor with Metrics Collectors', () => {
     });
 
     it('should not create MetricsCollectorHook when metricsCollectors is empty', async () => {
-        const executor = new MigrationScriptExecutor<IDB>(
+        const executor = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -143,7 +143,7 @@ describe('MigrationScriptExecutor with Metrics Collectors', () => {
     });
 
     it('should not create MetricsCollectorHook when metricsCollectors is undefined', async () => {
-        const executor = new MigrationScriptExecutor<IDB>(
+        const executor = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -158,7 +158,7 @@ describe('MigrationScriptExecutor with Metrics Collectors', () => {
     });
 
     it('should call collectors for each migration lifecycle event', async () => {
-        const executor = new MigrationScriptExecutor<IDB>(
+        const executor = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -200,7 +200,7 @@ describe('MigrationScriptExecutor with Metrics Collectors', () => {
             }
         };
 
-        const executor = new MigrationScriptExecutor<IDB>(
+        const executor = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),

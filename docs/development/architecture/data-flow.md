@@ -75,7 +75,7 @@ graph TD
 
 ```mermaid
 classDiagram
-    class MigrationScriptExecutor {
+    class MigrationScriptRunner {
         -IDatabaseMigrationHandler handler
         -IBackupService backupService
         -ISchemaVersionService schemaVersionService
@@ -127,12 +127,12 @@ classDiagram
         +parseFilename(name) object
     }
 
-    MigrationScriptExecutor --> MigrationScanner
-    MigrationScriptExecutor --> MigrationScriptSelector
-    MigrationScriptExecutor --> MigrationRunner
-    MigrationScriptExecutor --> BackupService
-    MigrationScriptExecutor --> SchemaVersionService
-    MigrationScriptExecutor --> MigrationService
+    MigrationScriptRunner --> MigrationScanner
+    MigrationScriptRunner --> MigrationScriptSelector
+    MigrationScriptRunner --> MigrationRunner
+    MigrationScriptRunner --> BackupService
+    MigrationScriptRunner --> SchemaVersionService
+    MigrationScriptRunner --> MigrationService
 
     MigrationScanner --> MigrationService
     MigrationScanner --> SchemaVersionService

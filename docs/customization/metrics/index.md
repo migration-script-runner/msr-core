@@ -38,12 +38,12 @@ Add metrics collection to your executor in under 30 seconds:
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+  MigrationScriptRunner,
   ConsoleMetricsCollector,
   JsonMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),           // Real-time console output
@@ -307,7 +307,7 @@ new LoggerMetricsCollector({
 Send metrics to multiple destinations simultaneously:
 
 ```typescript
-const executor = new MigrationScriptExecutor({
+const executor = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     // Development feedback

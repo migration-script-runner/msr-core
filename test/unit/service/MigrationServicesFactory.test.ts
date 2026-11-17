@@ -94,7 +94,7 @@ describe('MigrationServicesFactory', () => {
         /**
          * Test: Default executeBeforeMigrate placeholder doesn't throw
          * Covers the arrow function at line 333 in MigrationServicesFactory.ts
-         * This placeholder is always overridden by MigrationScriptExecutor,
+         * This placeholder is always overridden by MigrationScriptRunner,
          * but we test it to achieve 100% function coverage.
          */
         it('should create workflow orchestrator with callable executeBeforeMigrate placeholder', async () => {

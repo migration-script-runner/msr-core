@@ -109,12 +109,17 @@ describe('DefaultTransactionProvider', () => {
 
         it('should skip setting isolation level when DB does not support it', async () => {
             mockDB.setIsolationLevel = undefined;
+            let beginCalled = false;
+            mockDB.beginTransaction = async () => {
+                beginCalled = true;
+            };
 
             config.isolation = IsolationLevel.SERIALIZABLE;
             const manager = new DefaultTransactionProvider(mockDB, config, logger);
 
-            // Should not throw
             await manager.begin();
+
+            expect(beginCalled).to.be.true;
         });
 
         it('should propagate errors from db.beginTransaction()', async () => {
@@ -544,9 +549,9 @@ describe('DefaultTransactionProvider', () => {
             mockDB.setIsolationLevel = undefined;
 
             const manager = new DefaultTransactionProvider(mockDB, config, logger);
+            const result = await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
 
-            // Should not throw
-            await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
+            expect(result).to.be.undefined;
         });
 
         it('should log debug message when setting isolation level', async () => {
@@ -718,21 +723,39 @@ describe('DefaultTransactionProvider', () => {
 
         it('should work without logger in begin() with isolation level', async () => {
             config.isolation = IsolationLevel.SERIALIZABLE;
+            let beginCalled = false;
+            mockDB.beginTransaction = async () => {
+                beginCalled = true;
+            };
             const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
-            await manager.begin();  // Should not throw
+            await manager.begin();
+
+            expect(beginCalled).to.be.true;
         });
 
         it('should work without logger in begin() without isolation level', async () => {
+            let beginCalled = false;
+            mockDB.beginTransaction = async () => {
+                beginCalled = true;
+            };
             const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
-            await manager.begin();  // Should not throw
+            await manager.begin();
+
+            expect(beginCalled).to.be.true;
         });
 
         it('should work without logger in commit() success', async () => {
+            let commitCalled = false;
+            mockDB.commit = async () => {
+                commitCalled = true;
+            };
             const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
-            await manager.commit();  // Should not throw
+            await manager.commit();
+
+            expect(commitCalled).to.be.true;
         });
 
         it('should work without logger in commit() with retry', async () => {
@@ -786,9 +809,15 @@ describe('DefaultTransactionProvider', () => {
         });
 
         it('should work without logger in rollback() success', async () => {
+            let rollbackCalled = false;
+            mockDB.rollback = async () => {
+                rollbackCalled = true;
+            };
             const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
-            await manager.rollback();  // Should not throw
+            await manager.rollback();
+
+            expect(rollbackCalled).to.be.true;
         });
 
         it('should work without logger in rollback() failure', async () => {
@@ -809,17 +838,24 @@ describe('DefaultTransactionProvider', () => {
         });
 
         it('should work without logger in setIsolationLevel() when supported', async () => {
+            let setLevel: string | undefined;
+            mockDB.setIsolationLevel = async (level: string) => {
+                setLevel = level;
+            };
             const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
 
-            await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);  // Should not throw
+            await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
+
+            expect(setLevel).to.equal(IsolationLevel.SERIALIZABLE);
         });
 
         it('should work without logger in setIsolationLevel() when not supported', async () => {
             mockDB.setIsolationLevel = undefined;
 
             const manager = new DefaultTransactionProvider(mockDB, config);  // No logger
+            const result = await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
 
-            await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);  // Should not throw
+            expect(result).to.be.undefined;
         });
     });
 

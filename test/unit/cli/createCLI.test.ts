@@ -99,7 +99,7 @@ describe('createCLI', () => {
          */
         it('should register exactly 7 base commands', () => {
             const program = createCLI({createRunner: createRunnerStub});
-            expect(program.commands.length).to.equal(7);
+            expect(program.commands).to.have.lengthOf(7);
         });
 
         /**
@@ -116,7 +116,7 @@ describe('createCLI', () => {
 
             const commands = program.commands.map(cmd => cmd.name());
             expect(commands).to.include('custom');
-            expect(program.commands.length).to.equal(8);
+            expect(program.commands).to.have.lengthOf(8);
         });
     });
 

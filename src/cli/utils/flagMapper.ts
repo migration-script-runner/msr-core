@@ -70,14 +70,15 @@ export interface CLIFlags {
  * });
  * ```
  */
-export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | undefined {
+function mapNestedFlags(config: Config, flags: CLIFlags): void {
     for (const [key, value] of Object.entries(flags)) {
         if (key.includes('.') && value !== undefined) {
             setNestedValue(config, key, value);
         }
     }
+}
 
-    // Map simple config properties
+function mapStandardConfigFlags(config: Config, flags: CLIFlags): void {
     if (flags.folder !== undefined) {
         config.folder = flags.folder;
     }
@@ -105,7 +106,9 @@ export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | und
     if (flags.logLevel !== undefined) {
         config.logLevel = flags.logLevel;
     }
+}
 
+function createLogger(flags: CLIFlags): ILogger | undefined {
     // Handle logger creation
     let logger: ILogger | undefined;
 
@@ -127,4 +130,10 @@ export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | und
     }
 
     return logger;
+}
+
+export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | undefined {
+    mapNestedFlags(config, flags);
+    mapStandardConfigFlags(config, flags);
+    return createLogger(flags);
 }

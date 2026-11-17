@@ -21,7 +21,7 @@ Required workflow for managing MSR Core GitHub issues, milestones, labels, and r
 
 ## Scope and tools
 
-Use this guide for GitHub issues, milestones, labels, GitHub Releases, release tags, and npm publication.
+Use this guide for GitHub issues, pull requests, milestones, labels, GitHub Releases, release tags, and npm publication.
 
 - Prefer the connected GitHub plugin when it supports the required operation.
 - Use `gh` CLI when the plugin does not support the operation. Check authentication with `gh auth status`; never expose tokens in notes, output, or issue text.
@@ -79,6 +79,31 @@ Use the issue labels and assignee rules above and assign both issues to the new 
 - Treat [`docs/config/labels.yml`](../config/labels.yml) as the repository's label catalog and check the actual GitHub labels before applying them.
 - Use existing labels consistently. Do not create, rename, or delete repository labels unless the user explicitly asks.
 - When an issue's classification is unclear, ask or leave that classification unchanged rather than guessing.
+
+## Pull requests
+
+### Create or update a pull request
+
+Use the project skill [`.agents/skills/msr-github-pr/SKILL.md`](../../.agents/skills/msr-github-pr/SKILL.md) and its helper script after the task branch has been pushed. It creates a pull request when none exists for the branch, or updates the existing open pull request. It derives the target from a versioned issue milestone (`vX.Y.Z` → `release/X.Y.Z`), copies the issue's assignee, milestone, and labels (excluding the investigation-needed label), and verifies the final metadata.
+
+```bash
+node .agents/skills/msr-github-pr/scripts/manage-pr.mjs \
+  --issue 175 \
+  --title "#175: Resolve SonarCloud findings" \
+  --body-file /path/to/pull-request-body.md
+```
+
+For issues without a versioned milestone, pass the approved target explicitly with `--base`. The script requires a clean checkout whose current commit is already present on the remote task branch. It does not commit or push.
+
+### Link the issue in Development
+
+Put the issue relationship in GitHub's **Development** field, not in the PR description. Do not use `Closes #...` in the description. Apart from keeping the PR body focused, closing keywords in a description are only processed when the PR targets the repository's default branch; task PRs target a release branch.
+
+The PR helper manually links the issue using GitHub GraphQL's `addCloseIssueReferences` mutation. It first obtains the issue and pull request node IDs, adds the relationship if it does not already exist, and verifies the issue's `closedByPullRequestsReferences` connection. This is the API equivalent of linking the PR from the issue sidebar's **Development** section. The connector's ordinary PR create/update operations do not create this relationship by themselves.
+
+If linking manually in the GitHub UI, open the issue, use the **Development** section in the sidebar, select the pull request, and apply the change. Verify that the PR appears in Development afterward.
+
+GitHub documents [manual linking in the Development sidebar](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue). Do not close the issue as a side effect; close it only when explicitly requested.
 
 ## Releases
 

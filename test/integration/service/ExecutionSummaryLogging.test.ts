@@ -118,7 +118,7 @@ describe('Execution Summary Logging Integration', () => {
         // Verify summary file was created
         expect(fs.existsSync(testLogDir)).to.be.true;
         const files = fs.readdirSync(testLogDir);
-        expect(files.length).to.equal(1);
+        expect(files).to.have.lengthOf(1);
         expect(files[0]).to.include('migration-success');
         expect(files[0]).to.include('.json');
 
@@ -162,7 +162,7 @@ describe('Execution Summary Logging Integration', () => {
         // Verify both files were created
         expect(fs.existsSync(testLogDir)).to.be.true;
         const files = fs.readdirSync(testLogDir);
-        expect(files.length).to.equal(2);
+        expect(files).to.have.lengthOf(2);
 
         const jsonFile = files.find(f => f.endsWith('.json'));
         const textFile = files.find(f => f.endsWith('.txt'));
@@ -197,7 +197,7 @@ describe('Execution Summary Logging Integration', () => {
         // Verify summary file was still created
         expect(fs.existsSync(testLogDir)).to.be.true;
         const files = fs.readdirSync(testLogDir);
-        expect(files.length).to.equal(1);
+        expect(files).to.have.lengthOf(1);
     });
 
     it('should include migration details in summary', async () => {

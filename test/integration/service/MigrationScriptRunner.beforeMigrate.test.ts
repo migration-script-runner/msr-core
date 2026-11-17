@@ -116,7 +116,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
 
         // Verify migration succeeded without running beforeMigrate
         expect(result.success).to.be.true;
-        expect(result.executed.length).to.equal(0);
+        expect(result.executed).to.have.lengthOf(0);
     });
 
     /**
@@ -308,7 +308,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
 
         // Verify migration succeeds without beforeMigrate
         expect(result.success).to.be.true;
-        expect(result.executed.length).to.equal(1);
+        expect(result.executed).to.have.lengthOf(1);
 
         // Cleanup
         fs.unlinkSync(path.join(tempFolder, 'V202501010001_test.ts'));

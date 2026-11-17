@@ -58,11 +58,19 @@ describe('CallbackTransactionProvider', () => {
 
         it('should initialize operation buffer', async () => {
             const manager = new CallbackTransactionProvider<IDB>(mockDB, config, logger);
+            let operationBeforeBeginExecuted = false;
+            let operationAfterBeginExecuted = false;
+            manager.addOperation(async () => {
+                operationBeforeBeginExecuted = true;
+            });
             await manager.begin();
+            manager.addOperation(async () => {
+                operationAfterBeginExecuted = true;
+            });
+            await manager.commit();
 
-            // No way to directly check buffer, but we can verify behavior
-            // by checking that commit() works after begin()
-            await manager.commit();  // Should not throw
+            expect(operationBeforeBeginExecuted).to.be.false;
+            expect(operationAfterBeginExecuted).to.be.true;
         });
 
         it('should log debug message when logger provided', async () => {
@@ -83,7 +91,14 @@ describe('CallbackTransactionProvider', () => {
 
         it('should work without logger', async () => {
             const manager = new CallbackTransactionProvider<IDB>(mockDB, config);  // No logger
-            await manager.begin();  // Should not throw
+            let operationExecuted = false;
+            await manager.begin();
+            manager.addOperation(async () => {
+                operationExecuted = true;
+            });
+            await manager.commit();
+
+            expect(operationExecuted).to.be.true;
         });
     });
 
@@ -745,9 +760,15 @@ describe('CallbackTransactionProvider', () => {
         it('should work without logger', async () => {
             const manager = new CallbackTransactionProvider<IDB>(mockDB, config);  // No logger
             await manager.begin();
-            manager.addOperation(async () => { /* operation */ });
+            let operationExecuted = false;
+            manager.addOperation(async () => {
+                operationExecuted = true;
+            });
 
-            await manager.rollback();  // Should not throw
+            await manager.rollback();
+            await manager.commit();
+
+            expect(operationExecuted).to.be.false;
         });
     });
 
@@ -780,8 +801,9 @@ describe('CallbackTransactionProvider', () => {
 
         it('should work without logger', async () => {
             const manager = new CallbackTransactionProvider<IDB>(mockDB, config);  // No logger
+            const result = await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
 
-            await manager.setIsolationLevel(IsolationLevel.SERIALIZABLE);  // Should not throw
+            expect(result).to.be.undefined;
         });
     });
 

@@ -29,13 +29,13 @@ The `createCLI()` function accepts a `CLIOptions` object:
 
 #### `createRunner`
 
-Factory function that receives the final merged configuration and returns a `MigrationScriptRunner` instance (your adapter).
+Factory function that receives the final merged configuration and CLI-selected dependencies, then returns a `MigrationScriptRunner` instance (your adapter).
 
-**Type**: `(config: Config) => MigrationScriptRunner<DB>`
+**Type**: `(config: Config, cliOptions: {logger?: ILogger; renderStrategy?: IRenderStrategy<DB>}) => MigrationScriptRunner<DB>`
 
 **Example**:
 ```typescript
-createRunner: (config) => {
+createRunner: (config, {logger, renderStrategy}) => {
   // Initialize your database handler with the merged config
   const handler = new PostgresHandler({
     connectionString: config.postgresUri,
@@ -43,9 +43,11 @@ createRunner: (config) => {
   });
 
   // Return your adapter instance
-  return new PostgresRunner({handler, config});
+  return new PostgresRunner({handler, config, logger, renderStrategy});
 }
 ```
+
+`--log-level` is applied to `config.logLevel`. `cliOptions.logger` contains the logger selected with `--logger`. `cliOptions.renderStrategy` contains a `JsonRenderStrategy` when `--format json` is selected; otherwise it is `undefined` and the runner's default table renderer applies. Forward these options to the runner so the CLI flags take effect.
 
 {: .important-title }
 > Configuration Waterfall
@@ -481,7 +483,7 @@ msr backup delete
 ## Common CLI Flags
 
 All commands support these common flags. Descriptions for options with a finite set
-of values list those values in the CLI help output.
+of values list those values in the CLI help output, and the CLI rejects values outside those choices.
 
 | Flag | Short | Description | Type | Example |
 |------|-------|-------------|------|---------|

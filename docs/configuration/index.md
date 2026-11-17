@@ -40,6 +40,10 @@ Migration Script Runner uses the `Config` class to control all aspects of migrat
 ```typescript
 import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Create configuration
 const config = new Config();
@@ -49,7 +53,7 @@ config.folder = './migrations';
 
 // Initialize and run
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 await runner.up();
 ```
@@ -212,6 +216,11 @@ import {
     MigrationScriptRunner
 } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Create configuration
 const config = new Config();
@@ -260,7 +269,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Initialize runner
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Run migrations
 await runner.migrate();
@@ -289,10 +298,14 @@ With v0.5.0+, configuration is loaded automatically if not provided:
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Automatically loads config from env vars, files, or defaults
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner({ handler });
+const runner = new ExampleRunner({ handler });
 
 await runner.up();
 ```
@@ -303,6 +316,10 @@ For more control, use `ConfigLoader.load()`:
 
 ```typescript
 import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Load with waterfall approach (auto-detect config file)
 const config = ConfigLoader.load();
@@ -322,7 +339,7 @@ const config = ConfigLoader.load({}, {
 });
 
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 ```
 
 ---

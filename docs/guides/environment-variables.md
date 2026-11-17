@@ -93,9 +93,13 @@ if (process.env[ENV.MSR_LOGGING_ENABLED] === 'true') {
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner({ handler });
+const runner = new ExampleRunner({ handler });
 
 await runner.up();
 ```
@@ -116,8 +120,13 @@ npm start
 **3. Override when needed**:
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Env vars are loaded automatically, but you can override
-const runner = new MigrationScriptRunner({ handler }, {
+const runner = new ExampleRunner({ handler }, {
     dryRun: true  // Override for this specific run
 });
 ```
@@ -158,7 +167,12 @@ MSR_LOG_LEVEL=info
 That's it! MSR will automatically load these values:
 
 ```typescript
-const runner = new MigrationScriptRunner({ handler });
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({ handler });
 // Configuration loaded from .env automatically
 ```
 
@@ -675,9 +689,13 @@ MSR_BACKUP_DELETE_BACKUP=true
 ```typescript
 import 'dotenv/config';
 import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Environment variables loaded automatically
-const runner = new MigrationScriptRunner({ handler });
+const runner = new ExampleRunner({ handler });
 await runner.up();
 ```
 
@@ -724,6 +742,10 @@ For advanced use cases, use `ConfigLoader` directly:
 
 ```typescript
 import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Load with waterfall approach
 const config = ConfigLoader.load();
@@ -737,7 +759,7 @@ const config = ConfigLoader.load({
 // Load from specific directory
 const config = ConfigLoader.load({}, '/app');
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 ```
 
 See [ConfigLoader API Reference](../api/ConfigLoader) for detailed documentation.
@@ -1196,11 +1218,15 @@ MSR_BACKUP_FOLDER=/var/backups/database
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { DatabaseHandler } from './database';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const handler = new DatabaseHandler();
 
 // Automatically loads: defaults → file → env vars
-const runner = new MigrationScriptRunner({ handler });
+const runner = new ExampleRunner({ handler });
 
 await runner.migrate();
 ```

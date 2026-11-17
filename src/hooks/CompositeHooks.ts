@@ -17,6 +17,11 @@ import { IMigrationResult } from "../interface/IMigrationResult";
  * @template DB - Database interface type
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * // Combine multiple hooks
  * const hooks = new CompositeHooks<DB>([
  *     new SlackNotificationHooks(webhookUrl),
@@ -24,7 +29,7 @@ import { IMigrationResult } from "../interface/IMigrationResult";
  *     new CustomLoggingHooks()
  * ]);
  *
- * const runner = new MigrationScriptRunner<DB>(handler, { hooks });
+ * const runner = new ExampleRunner<DB>(handler, { hooks });
  * await runner.migrate();
  * ```
  *

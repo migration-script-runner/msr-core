@@ -48,8 +48,12 @@ await service.readMigrationScripts(config);
 
 ```typescript
 import { MigrationScriptRunner, ConsoleLogger } from 'msr-core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({ handler,
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     logger: new ConsoleLogger()
 });
 

@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect } from 'chai';
 import {
     Config,
@@ -54,7 +55,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
             await runner.up();
 
             expect(connectionChecked).to.be.true;
@@ -69,7 +70,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
                 await runner.up();
@@ -92,7 +93,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
                 await runner.up();
@@ -118,7 +119,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
             await runner.down(202501010001);
 
             expect(connectionChecked).to.be.true;
@@ -133,7 +134,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
                 await runner.down(202501010001);
@@ -158,7 +159,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
             await runner.validate();
 
             expect(connectionChecked).to.be.true;
@@ -173,7 +174,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
                 await runner.validate();
@@ -194,7 +195,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
                 await runner.up();
@@ -233,7 +234,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as ISchemaVersion<IDB>
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
             await runner.up();
 
             // checkConnection should be first
@@ -255,7 +256,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
             await runner.migrate();
 
             expect(connectionChecked).to.be.true;
@@ -270,7 +271,7 @@ describe('MigrationScriptRunner - Connection Check', () => {
                 } as IDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
             try {
                 await runner.migrate();

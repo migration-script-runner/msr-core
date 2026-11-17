@@ -503,7 +503,12 @@ Always specify language for syntax highlighting:
 
 ````markdown
 ```typescript
-const runner = new MigrationScriptRunner({ handler , config });
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({ handler , config });
 ```
 
 ```bash
@@ -531,12 +536,16 @@ npm install @migration-script-runner/core
 ```typescript
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.folder = './migrations';
 
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 const result = await runner.migrate();
 if (result.success) {

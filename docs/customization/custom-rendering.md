@@ -69,8 +69,12 @@ MSR provides three built-in render strategy implementations. For detailed docume
 
 ```typescript
 import { MigrationScriptRunner, AsciiTableRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({ handler,
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     renderStrategy: new AsciiTableRenderStrategy()
 });
 ```
@@ -81,14 +85,18 @@ const runner = new MigrationScriptRunner({ handler,
 
 ```typescript
 import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Pretty-printed JSON
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Compact JSON
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)
 });
 ```
@@ -99,8 +107,12 @@ const runner = new MigrationScriptRunner({ handler,
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({ handler,
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 ```
@@ -212,9 +224,13 @@ ${scripts.map(s => `  <migration>
 ```typescript
 import { MigrationScriptRunner, ConsoleLogger } from '@migration-script-runner/core';
 import { XmlRenderStrategy } from './XmlRenderStrategy';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const logger = new ConsoleLogger();
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: new XmlRenderStrategy(logger)
 });
@@ -410,9 +426,13 @@ Render strategies work seamlessly with any logger implementation:
 
 ```typescript
 import { MigrationScriptRunner, JsonRenderStrategy, FileLogger } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const logger = new FileLogger({ logPath: './migrations.json' });
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(false)  // Compact JSON
 });
@@ -427,13 +447,17 @@ await runner.migrate();
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { CloudWatchLogger } from './CloudWatchLogger';
 import { JsonRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const logger = new CloudWatchLogger({
     logGroupName: '/aws/migrations',
     logStreamName: 'production'
 });
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(false)
 });
@@ -450,6 +474,11 @@ Choose strategies based on the environment:
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
     MigrationScriptRunner,
     AsciiTableRenderStrategy,
     JsonRenderStrategy,
@@ -483,7 +512,7 @@ function getRenderStrategy() {
     }
 }
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: getRenderStrategy()
 });
 ```

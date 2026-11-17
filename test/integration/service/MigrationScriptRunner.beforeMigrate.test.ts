@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import fs from 'node:fs';
@@ -70,7 +71,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
         const result = await runner.migrate();
 
         // Verify migration succeeded (beforeMigrate.ts exists in test fixtures)
@@ -110,7 +111,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
         const result = await runner.migrate();
 
         // Verify migration succeeded without running beforeMigrate
@@ -170,7 +171,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: tempCfg });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: tempCfg });
         const result = await runner.migrate();
 
         // Verify migration failed
@@ -248,7 +249,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: tempCfg });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: tempCfg });
         const result = await runner.migrate();
 
         // Verify migration failed
@@ -302,7 +303,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: tempCfg });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: tempCfg });
         const result = await runner.migrate();
 
         // Verify migration succeeds without beforeMigrate
@@ -341,7 +342,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
         const result = await runner.migrate();
 
         // Verify migration completed successfully
@@ -380,7 +381,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: tempCfg });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: tempCfg });
         const result = await runner.migrate();
 
         // Verify migration succeeded without beforeMigrate
@@ -426,7 +427,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
         testCfg.logLevel = 'info';
         testCfg.transaction.mode = TransactionMode.NONE;
 
-        const runner = new MigrationScriptRunner<IDB>({
+        const runner = new TestMigrationScriptRunner<IDB>({
             handler: handler,
             logger: mockLogger
         , config: testCfg });
@@ -504,7 +505,7 @@ describe('MigrationScriptRunner - beforeMigrate File', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: mockLogger, config: tempCfg });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: mockLogger, config: tempCfg });
         const result = await runner.migrate();
 
         // Verify migration succeeds

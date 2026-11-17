@@ -9,13 +9,18 @@ import { ILogger } from "../interface/ILogger";
  *
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * // Log to both console and file
  * const logger = new CompositeLogger([
  *     new ConsoleLogger(),
  *     new FileLogger('/var/log/migrations.log')
  * ]);
  *
- * const runner = new MigrationScriptRunner<DB>(handler, { logger });
+ * const runner = new ExampleRunner<DB>(handler, { logger });
  * ```
  *
  * @example

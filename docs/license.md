@@ -77,8 +77,12 @@ This three-part license combines:
 ```typescript
 // Your commercial web application
 import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({ handler , config });
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 
 // ✅ This is completely free
@@ -249,8 +253,13 @@ https://github.com/migration-script-runner/msr-core
 **Answer:** ✅ **YES!** Use it freely. No attribution required.
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Your app.ts
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 
 // Sell your SaaS product - completely allowed

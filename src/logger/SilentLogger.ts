@@ -10,9 +10,14 @@ import { ILogger } from "../interface/ILogger";
  *
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * // Silent logger for tests
  * const logger = new SilentLogger();
- * const runner = new MigrationScriptRunner<DB>(handler, logger);
+ * const runner = new ExampleRunner<DB>(handler, logger);
  * await runner.migrate(); // No console output
  *
  * // Silent logger for library usage

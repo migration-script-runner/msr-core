@@ -190,13 +190,17 @@ CREATE TABLE users (
 ```typescript
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.folder = './migrations';
 config.logLevel = 'info';  // v0.6.0: 'error' | 'warn' | 'info' | 'debug'
 
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner<IMyDatabase>({ handler, config });
+const runner = new ExampleRunner<IMyDatabase>({ handler, config });
 
 // Library usage - returns structured result
 const result = await runner.up();
@@ -230,6 +234,10 @@ logLevel: debug  # error | warn | info | debug
 // cli.ts
 import { createCLI, MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const program = createCLI({
   name: 'my-db-migrate',
@@ -237,7 +245,7 @@ const program = createCLI({
   description: 'Database migration CLI',
   createRunner: (config) => {
     const handler = new MyDatabaseHandler();
-    return new MigrationScriptRunner({ handler, config });
+    return new ExampleRunner({ handler, config });
   }
 });
 

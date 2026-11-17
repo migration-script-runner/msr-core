@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import {
@@ -69,7 +70,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 validateTransactionConfiguration: sinon.stub().returns([])
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 validationService: customValidationService
 , config: config });
 
@@ -82,7 +83,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * a default MigrationValidationService instance is created.
          */
         it('should create default validationService when not provided', () => {
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
             expect((runner as any).core.validation).to.exist;
@@ -102,7 +103,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 shouldCreateBackup: sinon.stub().returns(true)
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 rollbackService: customRollbackService
 , config: config });
 
@@ -115,7 +116,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * a default RollbackService instance is created.
          */
         it('should create default rollbackService when not provided', () => {
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
             expect((runner as any).core.rollback).to.exist;
@@ -145,7 +146,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 getLoaders: sinon.stub().returns([customLoader])
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 loaderRegistry: customRegistry
 , config: config });
 
@@ -159,7 +160,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * a default LoaderRegistry with TypeScriptLoader and SqlLoader is created.
          */
         it('should create default loaderRegistry when not provided', () => {
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
             const registry = (runner as any).loaderRegistry as ILoaderRegistry<IDB>;
@@ -179,7 +180,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          */
         it('should create default ConfigLoader when configLoader not provided', () => {
             // Don't provide config or configLoader - will use default ConfigLoader
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger()
             });
@@ -205,7 +206,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 applyEnvironmentVariables: sinon.stub()
             };
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger(),
                 configLoader: customConfigLoader
@@ -226,7 +227,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         it('should return undefined when transaction mode is NONE', () => {
             config.transaction.mode = 'NONE' as any;
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
             // Check that transaction manager was not created via factory
@@ -252,7 +253,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 transactionProvider: customTxManager
             };
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler: handlerWithTx as any,
                 logger: new SilentLogger()
             , config: config });
@@ -282,7 +283,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 db: transactionalDB
             };
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler: handlerWithTransactionalDB as any,
                 logger: new SilentLogger()
             , config: config });
@@ -317,7 +318,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 
             config.transaction.mode = 'PER_MIGRATION' as any; // Enable transactions
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler: handlerWithCallbackDB as any,
                 logger: new SilentLogger()
             , config: config });
@@ -365,7 +366,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
 
             // Enable dry run mode
             config.dryRun = true;
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: capturingLogger
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: capturingLogger
 , config: config });
 
             // Mock hookExecutor.executeWithHooks to throw error immediately
@@ -417,7 +418,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * to the constructor, enabling external access to handler functionality.
          */
         it('should return the handler instance', () => {
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger(),
                 config: config
@@ -436,7 +437,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * enabling type-safe access to handler-specific functionality.
          */
         it('should preserve handler type information', () => {
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger(),
                 config: config
@@ -492,7 +493,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          * enabling CLI commands and external integrations to access the handler.
          */
         it('should be accessible as a public method', () => {
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler: handler,
                 logger: new SilentLogger(),
                 config: config
@@ -520,7 +521,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 renderDryRunTable: sinon.stub()
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 migrationRenderer: rendererStub as any
 , config: config });
 
@@ -543,7 +544,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 renderDryRunTable: sinon.stub()
             };
 
-            const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 migrationRenderer: rendererStub as any
 , config: config });
 
@@ -781,7 +782,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         it('should throw helpful error when handler is missing', () => {
             expect(() => {
                 // @ts-expect-error - Intentionally missing handler for test
-                new MigrationScriptRunner<IDB>({ config });
+                new TestMigrationScriptRunner<IDB>({ config });
             }).to.throw(TypeError, /Handler is required in IRunnerDependencies/);
         });
 
@@ -791,7 +792,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         it('should include async factory pattern in error message', () => {
             try {
                 // @ts-expect-error - Intentionally missing handler for test
-                new MigrationScriptRunner<IDB>({ config });
+                new TestMigrationScriptRunner<IDB>({ config });
                 expect.fail('Should have thrown error');
             } catch (error) {
                 expect(error).to.be.instanceOf(TypeError);
@@ -806,7 +807,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         it('should include sync pattern in error message', () => {
             try {
                 // @ts-expect-error - Intentionally missing handler for test
-                new MigrationScriptRunner<IDB>({ config });
+                new TestMigrationScriptRunner<IDB>({ config });
                 expect.fail('Should have thrown error');
             } catch (error) {
                 expect(error).to.be.instanceOf(TypeError);
@@ -821,7 +822,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         it('should include documentation link in error message', () => {
             try {
                 // @ts-expect-error - Intentionally missing handler for test
-                new MigrationScriptRunner<IDB>({ config });
+                new TestMigrationScriptRunner<IDB>({ config });
                 expect.fail('Should have thrown error');
             } catch (error) {
                 expect(error).to.be.instanceOf(TypeError);
@@ -836,7 +837,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
          */
         it('should not throw when handler is provided', () => {
             expect(() => {
-                new MigrationScriptRunner<IDB>({ handler, config, logger: new SilentLogger() });
+                new TestMigrationScriptRunner<IDB>({ handler, config, logger: new SilentLogger() });
             }).to.not.throw();
         });
     });

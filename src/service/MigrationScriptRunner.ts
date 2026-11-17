@@ -41,16 +41,20 @@ import {OrchestrationServices} from "./facade/OrchestrationServices";
  * @example
  * ```typescript
  * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  *
  * const handler = new MyDatabaseHandler();
  *
  * // Option 1: Minimal - just handler, uses waterfall config loading (backward compatible)
- * const runner = new MigrationScriptRunner<IDB>({ handler });
+ * const runner = new ExampleRunner<IDB>({ handler });
  * // Loads config from: MSR_* env vars → ./msr.config.js → defaults
  *
  * // Option 2: With explicit config (backward compatible)
  * const config = new Config();
- * const runner = new MigrationScriptRunner<IDB>({ handler, config });
+ * const runner = new ExampleRunner<IDB>({ handler, config });
  *
  * // Run all pending migrations
  * await runner.up();
@@ -92,7 +96,7 @@ import {OrchestrationServices} from "./facade/OrchestrationServices";
  * }
  * ```
  */
-export class MigrationScriptRunner<
+export abstract class MigrationScriptRunner<
     DB extends IDB,
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config
@@ -143,38 +147,43 @@ export class MigrationScriptRunner<
      *
      * @example
      * ```typescript
+     * import { MigrationScriptRunner } from '@migration-script-runner/core';
+     * import { IDB } from '@migration-script-runner/core';
+     *
+     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     *
      * // Minimal - just handler, uses waterfall config loading
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: myDatabaseHandler
      * });
      *
      * // With explicit config (v0.7.0+)
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     config: new Config({ folder: './migrations' })
      * });
      *
      * // With custom config loader (v0.7.0+)
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     configLoader: new CustomConfigLoader()
      * });
      *
      * // With JSON output for CI/CD
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     renderStrategy: new JsonRenderStrategy()
      * });
      *
      * // With silent output for testing
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     renderStrategy: new SilentRenderStrategy(),
      *     logger: new SilentLogger()
      * });
      *
      * // With mock services for testing
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: mockHandler,
      *     config: testConfig,
      *     backupOrchestrator: mockBackupOrchestrator,
@@ -259,7 +268,7 @@ export class MigrationScriptRunner<
      * }
      *
      * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
-     *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+     *     constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
      *         super(deps);
      *     }
      *
@@ -274,7 +283,7 @@ export class MigrationScriptRunner<
      *
      * // MongoDB adapter with custom initialization
      * export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
-     *     private constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
+     *     constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
      *         super(deps);
      *     }
      *
@@ -340,7 +349,12 @@ export class MigrationScriptRunner<
      *
      * @example
      * ```typescript
-     * const runner = new MigrationScriptRunner<DB>(handler, config);
+     * import { MigrationScriptRunner } from '@migration-script-runner/core';
+     * import { IDB } from '@migration-script-runner/core';
+     *
+     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     *
+     * const runner = new ExampleRunner<DB>(handler, config);
      *
      * // Run all pending migrations
      * const result = await runner.up();
@@ -409,8 +423,13 @@ export class MigrationScriptRunner<
      *
      * @example
      * ```typescript
+     * import { MigrationScriptRunner } from '@migration-script-runner/core';
+     * import { IDB } from '@migration-script-runner/core';
+     *
+     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     *
      * // Basic usage - access handler properties
-     * const runner = new MigrationScriptRunner({ handler });
+     * const runner = new ExampleRunner({ handler });
      * const h = runner.getHandler();
      * console.log(`${h.getName()} v${h.getVersion()}`);
      * ```
@@ -419,9 +438,14 @@ export class MigrationScriptRunner<
      * ```typescript
      * // CLI custom commands - database operations
      * import { createCLI } from '@migration-script-runner/core';
+     * import { MigrationScriptRunner } from '@migration-script-runner/core';
+     * import { IDB } from '@migration-script-runner/core';
+     *
+     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     *
      *
      * const program = createCLI({
-     *   createRunner: (config) => new MigrationScriptRunner({ handler, config }),
+     *   createRunner: (config) => new ExampleRunner({ handler, config }),
      *   extendCLI: (program, createRunner) => {
      *     program
      *       .command('vacuum')
@@ -493,7 +517,12 @@ export class MigrationScriptRunner<
      *
      * @example
      * ```typescript
-     * const runner = new MigrationScriptRunner<DB>(handler);
+     * import { MigrationScriptRunner } from '@migration-script-runner/core';
+     * import { IDB } from '@migration-script-runner/core';
+     *
+     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     *
+     * const runner = new ExampleRunner<DB>(handler);
      *
      * // List all migrations
      * await runner.list();

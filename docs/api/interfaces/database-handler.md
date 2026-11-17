@@ -420,6 +420,10 @@ export class MongoHandler implements IDatabaseMigrationHandler<IDB> {
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { PostgresHandler } from './postgres-handler';
 import { Pool } from 'pg';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Create database connection
 const pool = new Pool({
@@ -434,7 +438,7 @@ const handler = new PostgresHandler(pool, true);  // with backup
 
 // Create runner
 const config = new Config();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Run migrations
 const result = await runner.up();

@@ -390,6 +390,10 @@ export class PostgreSQLHandler implements IDatabaseMigrationHandler<IDB> {
 // src/migrate.ts
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { PostgreSQLHandler } from './database/PostgreSQLHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function runMigrations() {
   // Configure PostgreSQL connection
@@ -411,7 +415,7 @@ async function runMigrations() {
   config.backup.deleteBackup = false;  // Keep backups in production
 
   // Create runner
-  const runner = new MigrationScriptRunner({ handler , config });
+  const runner = new ExampleRunner({ handler , config });
 
   try {
     console.log('Running migrations...');
@@ -577,6 +581,10 @@ describe('PostgreSQLHandler', () => {
 // test/integration/migrations.test.ts
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { PostgreSQLHandler } from '../../src/database/PostgreSQLHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration Integration', () => {
   let handler: PostgreSQLHandler;
@@ -594,7 +602,7 @@ describe('Migration Integration', () => {
     const config = new Config();
     config.folder = './test/fixtures/migrations';
 
-    runner = new MigrationScriptRunner({ handler , config });
+    runner = new ExampleRunner({ handler , config });
   });
 
   after(async () => {

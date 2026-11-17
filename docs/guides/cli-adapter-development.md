@@ -44,13 +44,13 @@ Most database adapters require async initialization. Use the `createInstance` he
 > **Best Practice:** Use this pattern for MongoDB, PostgreSQL, Firebase, MySQL, and most production databases.
 
 ```typescript
-import {createCLI, MigrationScriptRunner, IRunnerOptions} from '@migration-script-runner/core';
+import {createCLI, MigrationScriptRunner, IRunnerDependencies, IRunnerOptions} from '@migration-script-runner/core';
 import {MongoHandler} from './MongoHandler';
 import {IMongoDb} from './types';
 
 // Define your adapter with async initialization
 class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
-  private constructor(deps: any) {
+  constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
     super(deps);
   }
 
@@ -118,12 +118,16 @@ For handlers without async initialization needs (in-memory databases, file-based
 ```typescript
 import {createCLI, MigrationScriptRunner} from '@migration-script-runner/core';
 import {SimpleHandler} from './SimpleHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const program = createCLI({
   name: 'msr-simple',
   createRunner: (config) => {
     const handler = new SimpleHandler();  // Synchronous
-    return new MigrationScriptRunner({handler, config});
+    return new ExampleRunner({handler, config});
   }
 });
 
@@ -1026,7 +1030,7 @@ Without the factory pattern, every adapter must implement the same boilerplate:
 
 ```typescript
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
-    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+    constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
         super(deps);
     }
 
@@ -1050,7 +1054,7 @@ MSR Core v0.8.2 provides a `protected static createInstance()` helper that stand
 
 ```typescript
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
-    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+    constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
         super(deps);
     }
 
@@ -1103,7 +1107,7 @@ export interface IFirebaseRunnerOptions extends IRunnerOptions<IFirebaseDB, Fire
 }
 
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
-    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+    constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
         super(deps);
     }
 
@@ -1135,7 +1139,7 @@ await runner.up();
 
 ```typescript
 export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
-    private constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
+    constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
         super(deps);
     }
 
@@ -1327,7 +1331,7 @@ import {
 import {MongoHandler, MongoDBInterface} from './MongoHandler';
 
 export class MongoRunner extends MigrationScriptRunner<MongoDBInterface, MongoHandler> {
-  private constructor(deps: IRunnerDependencies<MongoDBInterface, MongoHandler>) {
+  constructor(deps: IRunnerDependencies<MongoDBInterface, MongoHandler>) {
     super(deps);
   }
 
@@ -1583,7 +1587,7 @@ TypeError: Handler is required in IRunnerDependencies.
 ```typescript
 // ✅ CORRECT
 export class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
-    private constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
+    constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
         super(deps);  // ✅ Has handler
     }
 
@@ -1648,13 +1652,13 @@ constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
 | Interface | Use In | Includes Handler? | Purpose |
 |-----------|--------|-------------------|---------|
 | `IRunnerOptions` | Public factory methods (`getInstance()`) | ❌ No | Public API for users |
-| `IRunnerDependencies` | Private constructor | ✅ Yes (required) | Internal API for construction |
+| `IRunnerDependencies` | Constructor | ✅ Yes (required) | Internal API for construction |
 
 **Pattern:**
 ```typescript
 export class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
-    // Private constructor - uses IRunnerDependencies
-    private constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
+    // Constructor - uses IRunnerDependencies
+    constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
         super(deps);
     }
 
@@ -1683,7 +1687,7 @@ class AppConfig extends Config {
 
 // Use TConfig generic parameter
 export class MyRunner extends MigrationScriptRunner<IDB, MyHandler, AppConfig> {
-    private constructor(deps: IRunnerDependencies<IDB, MyHandler, AppConfig>) {
+    constructor(deps: IRunnerDependencies<IDB, MyHandler, AppConfig>) {
         super(deps);
         // this.config is now typed as AppConfig
         console.log(this.config.databaseUrl);  // ✅ Type-safe!
@@ -1706,7 +1710,7 @@ export class MyRunner extends MigrationScriptRunner<IDB, MyHandler, AppConfig> {
 
 ```typescript
 export class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
-    private constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
+    constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
         super(deps);
     }
 

@@ -85,8 +85,13 @@ MSR v0.6.0+ includes **automatic log level filtering** through the `LevelAwareLo
 All loggers are automatically wrapped with level-aware filtering:
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Your logger is automatically wrapped with log level filtering
-const runner = new MigrationScriptRunner({ handler }, {
+const runner = new ExampleRunner({ handler }, {
     logLevel: 'error'  // Only errors will be shown
 }, {
     logger: new ConsoleLogger()  // Automatically wrapped

@@ -41,11 +41,16 @@ Zero-configuration metrics output for development and debugging.
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   MigrationScriptRunner,
   ConsoleMetricsCollector
 } from '@vlavrynovych/msr';
 
-const runner = new MigrationScriptRunner({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector()  // That's it!
@@ -246,8 +251,13 @@ This means:
 
 ```typescript
 import { ConsoleMetricsCollector } from '@vlavrynovych/msr';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [new ConsoleMetricsCollector()], 
   config 
@@ -261,7 +271,12 @@ await runner.up();
 ### With Other Collectors
 
 ```typescript
-const runner = new MigrationScriptRunner({
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),  // Real-time feedback
@@ -278,6 +293,11 @@ const runner = new MigrationScriptRunner({
 ### Environment-Based
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const collectors: IMetricsCollector[] = [];
 
 // Only use console in development
@@ -290,7 +310,7 @@ collectors.push(new JsonMetricsCollector({
   filePath: `./metrics/${process.env.NODE_ENV}.json`
 }));
 
-const runner = new MigrationScriptRunner({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: collectors, 
   config

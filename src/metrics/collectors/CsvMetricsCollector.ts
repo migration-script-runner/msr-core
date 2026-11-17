@@ -45,7 +45,12 @@ interface CsvRow {
  *
  * @example
  * ```typescript
- * const runner = new MigrationScriptRunner<IDB>({
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
+ * const runner = new ExampleRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new CsvMetricsCollector({

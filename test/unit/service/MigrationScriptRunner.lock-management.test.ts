@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect} from 'chai';
 import {MigrationScriptRunner} from '../../../src/service/MigrationScriptRunner';
 import {Config} from '../../../src/model';
@@ -22,7 +23,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -66,7 +67,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -110,7 +111,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -138,7 +139,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -183,7 +184,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -221,7 +222,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()

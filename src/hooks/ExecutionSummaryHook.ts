@@ -24,10 +24,15 @@ import {IDatabaseMigrationHandler} from '../interface/IDatabaseMigrationHandler'
  * @template DB - Database interface type
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * // Automatically enabled via config
  * const config = new Config();
  * config.logging.enabled = true;
- * const runner = new MigrationScriptRunner<DB>(handler, config);
+ * const runner = new ExampleRunner<DB>(handler, config);
  * // Summary logging happens automatically
  * ```
  *
@@ -35,10 +40,15 @@ import {IDatabaseMigrationHandler} from '../interface/IDatabaseMigrationHandler'
  * @template DB - Database interface type
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * // Manual usage with CompositeHooks
  * const summaryHook = new ExecutionSummaryHook<DB>(config, logger, handler);
  * const customHooks = new CompositeHooks<DB>([summaryHook, myCustomHook]);
- * const runner = new MigrationScriptRunner<DB>(handler, config, {
+ * const runner = new ExampleRunner<DB>(handler, config, {
  *     hooks: customHooks
  * });
  * ```

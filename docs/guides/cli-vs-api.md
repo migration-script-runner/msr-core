@@ -170,9 +170,13 @@ The API approach embeds migration execution directly in your application code.
 
 ```typescript
 import {MigrationScriptRunner} from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Run migrations on app startup
-const runner = new MigrationScriptRunner({handler, config});
+const runner = new ExampleRunner({handler, config});
 await runner.migrate();
 
 // Then start your app
@@ -228,11 +232,15 @@ await startServer();
 ```typescript
 import {MigrationScriptRunner, Config} from '@migration-script-runner/core';
 import {MyHandler} from './database';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function startApp() {
   const config = new Config();
   const handler = new MyHandler();
-  const runner = new MigrationScriptRunner({handler, config});
+  const runner = new ExampleRunner({handler, config});
 
   // Only in development
   if (process.env.NODE_ENV === 'development') {
@@ -255,12 +263,16 @@ startApp();
 **Testing setup:**
 ```typescript
 import {MigrationScriptRunner} from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('User API', () => {
   let runner: MigrationScriptRunner;
 
   beforeAll(async () => {
-    runner = new MigrationScriptRunner({handler, config});
+    runner = new ExampleRunner({handler, config});
     await runner.migrate(); // Fresh database
   });
 
@@ -443,9 +455,14 @@ For serverless, consider:
 ### Development: API + Production: CLI
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // src/migrations.ts
 export async function runMigrations() {
-  const runner = new MigrationScriptRunner({handler, config});
+  const runner = new ExampleRunner({handler, config});
 
   // Only in development
   if (process.env.NODE_ENV === 'development') {
@@ -475,9 +492,14 @@ npm start
 ### Testing: Always API
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // test/setup.ts
 export async function setupTestDatabase() {
-  const runner = new MigrationScriptRunner({handler, testConfig});
+  const runner = new ExampleRunner({handler, testConfig});
   await runner.migrate();
 }
 

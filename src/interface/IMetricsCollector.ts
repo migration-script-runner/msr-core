@@ -33,13 +33,18 @@ export interface IMigrationContext {
  *
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * class CustomMetricsCollector implements IMetricsCollector {
  *   recordScriptComplete(script: IMigrationScript, duration: number): void {
  *     console.log(`Migration ${script.name} took ${duration}ms`);
  *   }
  * }
  *
- * const runner = new MigrationScriptRunner<IDB>({
+ * const runner = new ExampleRunner<IDB>({
  *   handler,
  *   metricsCollectors: [new CustomMetricsCollector()]
  * }, config);

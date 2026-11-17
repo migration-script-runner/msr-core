@@ -42,12 +42,16 @@ Validation is enabled by default and runs automatically:
 
 ```typescript
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.folder = './migrations';
 
 // Validation is enabled by default (validateBeforeRun = true)
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 try {
     await runner.migrate();

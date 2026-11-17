@@ -28,11 +28,16 @@ export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
  *
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * // Using the default console logger
- * const runner = new MigrationScriptRunner<DB>(handler);
+ * const runner = new ExampleRunner<DB>(handler);
  *
  * // Using a silent logger (no output)
- * const runner = new MigrationScriptRunner<DB>(handler, new SilentLogger());
+ * const runner = new ExampleRunner<DB>(handler, new SilentLogger());
  *
  * // Using a custom logger
  * class MyLogger implements ILogger {
@@ -41,7 +46,7 @@ export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
  *   }
  *   // ... implement other methods
  * }
- * const runner = new MigrationScriptRunner<DB>(handler, new MyLogger());
+ * const runner = new ExampleRunner<DB>(handler, new MyLogger());
  * ```
  */
 export interface ILogger {

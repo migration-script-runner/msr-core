@@ -37,8 +37,12 @@ import { SilentRenderStrategy } from '@migration-script-runner/core';
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({ handler,
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
@@ -49,12 +53,16 @@ await runner.migrate();  // No output produced
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy, SilentLogger } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration Tests', () => {
     let runner: MigrationScriptRunner;
 
     beforeEach(() => {
-        runner = new MigrationScriptRunner({ handler,
+        runner = new ExampleRunner({ handler,
             logger: new SilentLogger(),
             renderStrategy: new SilentRenderStrategy()
         });
@@ -72,11 +80,15 @@ describe('Migration Tests', () => {
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class MyApplication {
     async initDatabase() {
         // Run migrations silently during app startup
-        const runner = new MigrationScriptRunner({ handler,
+        const runner = new ExampleRunner({ handler,
             renderStrategy: new SilentRenderStrategy()
         });
 
@@ -113,10 +125,14 @@ Keep test output clean and focused:
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy, SilentLogger } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('MigrationScriptRunner', () => {
     it('should handle empty migration list', async () => {
-        const runner = new MigrationScriptRunner({ handler,
+        const runner = new ExampleRunner({ handler,
             logger: new SilentLogger(),
             renderStrategy: new SilentRenderStrategy()
         });
@@ -154,10 +170,14 @@ When embedding MSR in a library:
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 export class DatabaseManager {
     async initialize() {
-        const runner = new MigrationScriptRunner({ handler,
+        const runner = new ExampleRunner({ handler,
             renderStrategy: new SilentRenderStrategy()
         });
 
@@ -178,10 +198,14 @@ For scheduled or background migration tasks:
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Cron job or scheduled task
 async function runScheduledMigrations() {
-    const runner = new MigrationScriptRunner({ handler,
+    const runner = new ExampleRunner({ handler,
         renderStrategy: new SilentRenderStrategy()
     });
 
@@ -200,10 +224,14 @@ For fully automated deployments:
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy, FileLogger } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function deployApplication() {
     // Run migrations silently, log to file
-    const runner = new MigrationScriptRunner({ handler,
+    const runner = new ExampleRunner({ handler,
         logger: new FileLogger({ logPath: './deploy.log' }),
         renderStrategy: new SilentRenderStrategy()
     });
@@ -228,10 +256,14 @@ For Docker containers, Lambda functions, etc.:
 
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Lambda function
 export const handler = async (event) => {
-    const runner = new MigrationScriptRunner(dbHandler, config, {
+    const runner = new ExampleRunner(dbHandler, config, {
         renderStrategy: new SilentRenderStrategy()
     });
 
@@ -252,10 +284,15 @@ export const handler = async (event) => {
 For end-to-end testing:
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 describe('E2E Tests', () => {
     beforeAll(async () => {
         // Set up test database silently
-        const runner = new MigrationScriptRunner(testHandler, config, {
+        const runner = new ExampleRunner(testHandler, config, {
             renderStrategy: new SilentRenderStrategy()
         });
 
@@ -275,14 +312,19 @@ describe('E2E Tests', () => {
 ### 1. Combine with SilentLogger for Complete Silence
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Good: Complete silence
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger: new SilentLogger(),
     renderStrategy: new SilentRenderStrategy()
 });
 
 // Partial: Logger still produces output
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
     // Default ConsoleLogger still logs
 });
@@ -291,15 +333,20 @@ const runner = new MigrationScriptRunner({ handler,
 ### 2. Use in Test Environments Only
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Good: Environment-specific configuration
 const renderStrategy = process.env.NODE_ENV === 'test'
     ? new SilentRenderStrategy()
     : new AsciiTableRenderStrategy();
 
-const runner = new MigrationScriptRunner({ handler,  renderStrategy });
+const runner = new ExampleRunner({ handler,  renderStrategy });
 
 // Avoid: Silent in production (makes debugging hard)
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()  // Hard to debug
 });
 ```
@@ -307,8 +354,13 @@ const runner = new MigrationScriptRunner({ handler,
 ### 3. Still Check Migration Results
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Good: Silent but validate results
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
@@ -326,15 +378,20 @@ await runner.migrate();  // Errors not handled
 ### 4. Document Why Silence is Needed
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Good: Clear intent
 // Use SilentRenderStrategy to avoid cluttering test output
 // Migration status is checked via result.success
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 
 // Avoid: No explanation
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()  // Why?
 });
 ```
@@ -342,8 +399,13 @@ const runner = new MigrationScriptRunner({ handler,
 ### 5. Provide Alternative Feedback
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Good: Silent tables, but provide feedback
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 

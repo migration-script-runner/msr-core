@@ -36,9 +36,14 @@ export interface LoggerMetricsCollectorConfig {
  *
  * @example Basic usage
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * const logger = new FileLogger('./logs/metrics.log');
  *
- * const runner = new MigrationScriptRunner<IDB>({
+ * const runner = new ExampleRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new LoggerMetricsCollector({ logger })

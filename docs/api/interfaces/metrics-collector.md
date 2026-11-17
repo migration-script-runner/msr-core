@@ -290,8 +290,12 @@ class SimpleMetricsCollector implements IMetricsCollector {
 
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new SimpleMetricsCollector()
@@ -305,7 +309,12 @@ await runner.up();
 ### Multiple Collectors
 
 ```typescript
-const runner = new MigrationScriptRunner({
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),      // Real-time feedback

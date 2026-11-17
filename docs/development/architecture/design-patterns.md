@@ -284,8 +284,13 @@ class MigrationScriptRunner {
 **Important:** All internal services and orchestrators are **encapsulated within facades** (not exposed as public properties):
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // ✅ PUBLIC - Users can inject service implementations via dependencies:
-const runner = new MigrationScriptRunner({
+const runner = new ExampleRunner({
     handler,
     logger: customLogger,           // Injected service
     backupOrchestrator: customBackup,    // Injected service
@@ -724,13 +729,18 @@ MSR supports optional dependency injection for all services, enabling:
 ### Default vs Custom Dependencies
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Default (uses built-in dependencies)
 const config = new Config();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 // Uses: ConsoleLogger, BackupOrchestrator, SchemaVersionOrchestrator, etc.
 
 // Custom dependencies
-const runner2 = new MigrationScriptRunner({ handler,
+const runner2 = new ExampleRunner({ handler,
     logger: new SilentLogger(),          // Custom logger
     backupOrchestrator: new S3BackupOrchestrator(), // Custom backup
     renderStrategy: new JsonRenderStrategy()  // Custom render strategy
@@ -827,6 +837,11 @@ graph TD
 
 ```typescript
 import { ILogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class CloudLogger implements ILogger {
     log(message: string) {
@@ -835,7 +850,7 @@ class CloudLogger implements ILogger {
     // ... implement other methods
 }
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger: new CloudLogger()
 });
 ```
@@ -844,6 +859,11 @@ const runner = new MigrationScriptRunner({ handler,
 
 ```typescript
 import { IBackupOrchestrator } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class S3BackupOrchestrator implements IBackupOrchestrator {
     async backup() {
@@ -853,7 +873,7 @@ class S3BackupOrchestrator implements IBackupOrchestrator {
     // ... implement restore, deleteBackup
 }
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     backupOrchestrator: new S3BackupOrchestrator()
 });
 ```
@@ -862,9 +882,14 @@ const runner = new MigrationScriptRunner({ handler,
 
 ```typescript
 import { IRenderStrategy, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Use built-in JSON render strategy
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)  // pretty-printed JSON
 });
 
@@ -876,7 +901,7 @@ class CustomRenderStrategy implements IRenderStrategy {
     // ... implement other methods
 }
 
-const runner2 = new MigrationScriptRunner({ handler,
+const runner2 = new ExampleRunner({ handler,
     renderStrategy: new CustomRenderStrategy()
 });
 ```

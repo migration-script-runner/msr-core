@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import fs from 'node:fs';
@@ -55,7 +56,7 @@ describe('MigrationScriptRunner - validate() method', () => {
      * Call this at the start of each test after creating migration files.
      */
     function createRunner(): void {
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
     }
 

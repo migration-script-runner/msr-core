@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {
@@ -68,7 +69,7 @@ describe('MigrationScriptRunner - Rollback Strategies', () => {
             getVersion(): string { return "1.0.0-test" },
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         // Should succeed (no migrations to run)
@@ -105,7 +106,7 @@ describe('MigrationScriptRunner - Rollback Strategies', () => {
             getVersion(): string { return "1.0.0-test" },
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         // Should succeed without backup
@@ -145,7 +146,7 @@ describe('MigrationScriptRunner - Rollback Strategies', () => {
             getVersion(): string { return "1.0.0-test" },
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         // Should succeed and have created backup
@@ -185,7 +186,7 @@ describe('MigrationScriptRunner - Rollback Strategies', () => {
             getVersion(): string { return "1.0.0-test" },
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         // Should succeed without creating backup
@@ -220,7 +221,7 @@ describe('MigrationScriptRunner - Rollback Strategies', () => {
             getVersion(): string { return "1.0.0-test" },
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         expect(result.success).to.be.true;
@@ -261,7 +262,7 @@ describe('MigrationScriptRunner - Rollback Strategies', () => {
             getVersion(): string { return "1.0.0-test" },
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         // Should succeed even without backup
@@ -297,7 +298,7 @@ describe('MigrationScriptRunner - Rollback Strategies', () => {
             getVersion(): string { return "1.0.0-test" },
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         expect(result.success).to.be.true;

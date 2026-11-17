@@ -198,12 +198,16 @@ export default class CreateUsers implements IRunnableScript<IMyDatabase> {
 ```typescript
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MyDatabaseHandler, IMyDatabase } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.folder = './migrations';
 
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner<IMyDatabase>({ handler , config });
+const runner = new ExampleRunner<IMyDatabase>({ handler , config });
 
 // Library usage - returns result object
 const result = await runner.up();

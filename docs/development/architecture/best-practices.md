@@ -62,6 +62,11 @@ test/integration/service/
 
 ```typescript
 import { ILogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class CloudLogger implements ILogger {
     log(message: string) {
@@ -70,7 +75,7 @@ class CloudLogger implements ILogger {
     // ... implement other methods
 }
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger: new CloudLogger()
 });
 ```
@@ -79,6 +84,11 @@ const runner = new MigrationScriptRunner({ handler,
 
 ```typescript
 import { IBackupOrchestrator } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class S3BackupOrchestrator implements IBackupOrchestrator {
     async backup() {
@@ -88,7 +98,7 @@ class S3BackupOrchestrator implements IBackupOrchestrator {
     // ... implement restore, deleteBackup
 }
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     backupOrchestrator: new S3BackupOrchestrator()
 });
 ```
@@ -97,9 +107,14 @@ const runner = new MigrationScriptRunner({ handler,
 
 ```typescript
 import { IRenderStrategy, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Use built-in JSON render strategy
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)  // pretty-printed JSON
 });
 
@@ -111,7 +126,7 @@ class CustomRenderStrategy implements IRenderStrategy {
     // ... implement other methods
 }
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new CustomRenderStrategy()
 });
 ```
@@ -163,7 +178,12 @@ for (const script of scripts) {
 
 ✅ **Good:** Use dependency injection for testability
 ```typescript
-new MigrationScriptRunner({ handler,
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+new ExampleRunner({ handler,
     logger: mockLogger,
     backupOrchestrator: mockBackup
 });

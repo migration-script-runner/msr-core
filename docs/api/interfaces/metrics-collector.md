@@ -357,7 +357,7 @@ Send metrics through any ILogger implementation.
 import { LoggerMetricsCollector, FileLogger } from '@migration-script-runner/core';
 
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 ```
 

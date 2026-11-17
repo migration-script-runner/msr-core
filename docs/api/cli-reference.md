@@ -27,7 +27,7 @@ Commands and options registered by `createCLI()` in MSR Core.
 import { createCLI } from '@migration-script-runner/core';
 
 const program = createCLI({
-  createRunner: (config) => new PostgresRunner({ handler, config })
+  createRunner: (config, {logger, renderStrategy}) => new PostgresRunner({ handler, config, logger, renderStrategy })
 });
 
 program.parse(process.argv);
@@ -51,7 +51,15 @@ The following options are registered on the root command and apply to built-in c
 | `--log-level <level>` | Set output verbosity. | `error`, `warn`, `info`, `debug`. |
 | `--log-file <path>` | Set the log file path. | Required when `--logger file` is selected. |
 | `--format <format>` | Select the output format. | `table`, `json`. |
-| `--backup-mode <mode>` | Override backup behavior. | `full`, `create_only`, `restore_only`, `manual`. |
+| `--backup-mode <mode>` | Override backup behavior; other values are rejected. | `full`, `create_only`, `restore_only`, `manual`. |
+
+Values outside the documented choices for `--logger`, `--log-level`, `--format`, and `--backup-mode` are rejected before a runner is created.
+
+When `--logger` is provided, `createCLI()` passes the selected logger to the second `createRunner` argument as `{logger}`. Pass it into the runner dependencies so the selected logger is used. If the flag is omitted, `logger` is `undefined` and the runner's default applies.
+
+When `--log-level` is provided, `createCLI()` applies it to `config.logLevel` before calling the runner factory. If omitted, a level loaded from configuration or the default remains in effect.
+
+When `--format json` is provided, `createCLI()` passes a `JsonRenderStrategy` to the runner factory. `--format table` and an omitted `--format` use the runner's default table strategy.
 
 Adapter-defined options are registered with `addCustomOptions`; see [Adapter options and flags](../guides/cli-options-and-flags).
 

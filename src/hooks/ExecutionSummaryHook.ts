@@ -24,15 +24,20 @@ import {IDatabaseMigrationHandler} from '../interface/IDatabaseMigrationHandler'
  * @template DB - Database interface type
  * @example
  * ```typescript
- * import { MigrationScriptRunner } from '@migration-script-runner/core';
- * import { IDB } from '@migration-script-runner/core';
+ * import {
+ *   Config,
+ *   IDB,
+ *   IDatabaseMigrationHandler,
+ *   MigrationScriptRunner
+ * } from '@migration-script-runner/core';
  *
- * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ * class ExampleRunner extends MigrationScriptRunner<IDB> {}
+ * declare const handler: IDatabaseMigrationHandler<IDB>;
  *
  * // Automatically enabled via config
  * const config = new Config();
  * config.logging.enabled = true;
- * const runner = new ExampleRunner<DB>(handler, config);
+ * const runner = new ExampleRunner({ handler, config });
  * // Summary logging happens automatically
  * ```
  *
@@ -40,17 +45,27 @@ import {IDatabaseMigrationHandler} from '../interface/IDatabaseMigrationHandler'
  * @template DB - Database interface type
  * @example
  * ```typescript
- * import { MigrationScriptRunner } from '@migration-script-runner/core';
- * import { IDB } from '@migration-script-runner/core';
+ * import {
+ *   CompositeHooks,
+ *   Config,
+ *   ExecutionSummaryHook,
+ *   IDB,
+ *   IDatabaseMigrationHandler,
+ *   ILogger,
+ *   IMigrationHooks,
+ *   MigrationScriptRunner
+ * } from '@migration-script-runner/core';
  *
- * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ * class ExampleRunner extends MigrationScriptRunner<IDB> {}
+ * declare const handler: IDatabaseMigrationHandler<IDB>;
+ * declare const logger: ILogger;
+ * declare const myCustomHook: IMigrationHooks<IDB>;
  *
  * // Manual usage with CompositeHooks
- * const summaryHook = new ExecutionSummaryHook<DB>(config, logger, handler);
- * const customHooks = new CompositeHooks<DB>([summaryHook, myCustomHook]);
- * const runner = new ExampleRunner<DB>(handler, config, {
- *     hooks: customHooks
- * });
+ * const config = new Config();
+ * const summaryHook = new ExecutionSummaryHook<IDB>(config, logger, handler);
+ * const customHooks = new CompositeHooks<IDB>([summaryHook, myCustomHook]);
+ * const runner = new ExampleRunner({ handler, config, hooks: customHooks });
  * ```
  */
 export class ExecutionSummaryHook<DB extends IDB> implements IMigrationHooks<DB>, ITransactionHooks<DB> {

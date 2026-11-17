@@ -102,6 +102,10 @@ export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | und
         config.backupMode = flags.backupMode;
     }
 
+    if (flags.logLevel !== undefined) {
+        config.logLevel = flags.logLevel;
+    }
+
     // Handle logger creation
     let logger: ILogger | undefined;
 

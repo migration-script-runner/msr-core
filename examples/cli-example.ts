@@ -17,70 +17,69 @@
  */
 
 import {createCLI} from '../src/cli/createCLI';
-import {IDB, IDatabaseMigrationHandler} from '../src/interface';
+import {IDB, IDatabaseMigrationHandler, ISchemaVersion, MigrationScript} from '../src';
 import {Command} from 'commander';
+import {MigrationScriptRunner} from '../src/service/MigrationScriptRunner';
 
 // Example: Mock database type for demonstration
 interface MockDB extends IDB {
     collections: string[];
 }
 
-// Example: Mock database handler for demonstration
-class MockDatabaseHandler implements IDatabaseMigrationHandler<MockDB> {
-    async connect(): Promise<MockDB> {
-        console.log('Connecting to mock database...');
-        return {collections: ['migrations']};
-    }
+class MockDatabase implements MockDB {
+    [key: string]: unknown;
+    collections = ['migrations'];
 
-    async disconnect(db: MockDB): Promise<void> {
-        console.log('Disconnecting from mock database...');
-    }
-
-    async getCurrentVersion(db: MockDB): Promise<number> {
-        console.log('Getting current version from mock database...');
-        return 0;
-    }
-
-    async setCurrentVersion(db: MockDB, version: number): Promise<void> {
-        console.log(`Setting current version to ${version} in mock database...`);
-    }
-
-    async getExecutedMigrations(db: MockDB): Promise<Array<{version: number; executedAt: Date; checksum: string}>> {
-        console.log('Getting executed migrations from mock database...');
-        return [];
-    }
-
-    async addExecutedMigration(
-        db: MockDB,
-        version: number,
-        checksum: string
-    ): Promise<void> {
-        console.log(`Adding executed migration ${version} to mock database...`);
-    }
-
-    async removeExecutedMigration(db: MockDB, version: number): Promise<void> {
-        console.log(`Removing executed migration ${version} from mock database...`);
-    }
-
-    async backup(db: MockDB, backupPath: string): Promise<void> {
-        console.log(`Creating backup at ${backupPath}...`);
-    }
-
-    async restore(db: MockDB, backupPath: string): Promise<void> {
-        console.log(`Restoring from backup at ${backupPath}...`);
+    async checkConnection(): Promise<boolean> {
+        return true;
     }
 }
+
+class MockSchemaVersion implements ISchemaVersion<MockDB> {
+    migrationRecords: ISchemaVersion<MockDB>['migrationRecords'] = {
+        getAllExecuted: async (): Promise<MigrationScript<MockDB>[]> => [],
+        save: async () => {},
+        remove: async () => {},
+    };
+
+    async isInitialized(): Promise<boolean> {
+        return true;
+    }
+
+    async createTable(): Promise<boolean> {
+        return true;
+    }
+
+    async validateTable(): Promise<boolean> {
+        return true;
+    }
+}
+
+class MockDatabaseHandler implements IDatabaseMigrationHandler<MockDB> {
+    readonly db = new MockDatabase();
+    readonly schemaVersion = new MockSchemaVersion();
+
+    getName(): string {
+        return 'Mock Database';
+    }
+
+    getVersion(): string {
+        return '1.0.0';
+    }
+}
+
+class MockRunner extends MigrationScriptRunner<MockDB> {}
 
 // Example: Create CLI program with base commands
 const program: Command = createCLI<MockDB>({
     name: 'msr-example',
     description: 'Example Migration Script Runner CLI',
     version: '1.0.0',
-    createExecutor: (config) => {
+    createRunner: (config) => {
         // Adapter developers receive the final merged config
-        // They can use it to initialize their handler and executor
+        // They can use it to initialize their handler and runner
         const handler = new MockDatabaseHandler();
-        return new MigrationScriptRunner<MockDB>({
+        return new MockRunner({
             handler,
             config,
         });
@@ -137,7 +136,7 @@ program.parse(process.argv);
  *   name: 'msr-mongodb',
  *   description: 'MongoDB Migration Script Runner',
  *   version: require('../package.json').version,
- *   createExecutor: (config) => {
+ *   createRunner: (config) => {
  *     // Initialize handler with config
  *     const handler = new MongoHandler(config.mongoUri || 'mongodb://localhost:27017');
  *     // Return adapter instance with merged config

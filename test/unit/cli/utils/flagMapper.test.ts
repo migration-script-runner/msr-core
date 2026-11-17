@@ -86,6 +86,17 @@ describe('flagMapper', () => {
             expect(config.backupMode).to.equal(BackupMode.MANUAL);
         });
 
+        it('should map logLevel flag to config.logLevel', () => {
+            mapFlagsToConfig(config, {logLevel: 'debug'});
+            expect(config.logLevel).to.equal('debug');
+        });
+
+        it('should preserve config.logLevel when the flag is undefined', () => {
+            config.logLevel = 'warn';
+            mapFlagsToConfig(config, {});
+            expect(config.logLevel).to.equal('warn');
+        });
+
         it('should map dot-notation flags to nested config and preserve existing values', () => {
             const configWithDatabase = Object.assign(config, {
                 db: {url: 'old', credentials: {path: 'key.json'}}

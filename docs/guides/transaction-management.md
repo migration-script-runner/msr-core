@@ -1393,7 +1393,7 @@ const runner = new ExampleRunner(
 
 - Read [Configuration: Transaction Settings](../configuration/transaction-settings.md) for detailed API reference
 - Review [API: ITransactionalDB](../api/interfaces/transactional-db#itransactionaldb-interface) interface documentation
-- See [API: ITransactionProvider<IDB>](../api/interfaces/index.md#itransactionmanager) for custom implementations
+- See [API: ITransactionProvider<IDB>](../api/interfaces/transaction-provider#interface-definition) for custom implementations
 - Check [Recipes: Testing Migrations](recipes/testing-migrations.md) for testing strategies
 
 ---

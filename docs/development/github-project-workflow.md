@@ -63,9 +63,11 @@ Before assigning an issue, list the repository's milestones and confirm the exac
 
 Do not guess milestone due dates or change an existing milestone's title, description, due date, or state without an explicit request.
 
-### Creating a versioned milestone
+### Standard issues for every versioned release
 
-When the user asks to create a new versioned milestone, create or verify both standard tracking issues below. Search first and do not create duplicates if the corresponding issues already exist.
+For every versioned release milestone (`vX.Y.Z`), ensure exactly one Code Review issue and one Documentation Review issue exist and belong to that milestone. This applies to existing milestones as well as newly created ones. Search open and closed issues before writing; create only missing issues. If an equivalent issue exists, verify that its scope, labels, assignee, and milestone match the release.
+
+When creating a new versioned milestone, create or verify both issues as part of milestone setup.
 
 1. **Code review issue**, based on #109. Include SonarQube analysis, code quality, complexity, duplication, type safety, performance, architecture, test completeness, and documentation completeness.
 2. **Documentation review issue**, based on #110. Include a migration guide from the previous version, a systematic `docs/` review, README release information, version references, and link validation.

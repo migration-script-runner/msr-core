@@ -1,10 +1,12 @@
-import {Command} from 'commander';
+import {Command, InvalidArgumentError} from 'commander';
 import {MigrationScriptRunner} from '../service/MigrationScriptRunner';
 import {IConfigLoader} from '../interface/IConfigLoader';
 import {Config} from '../model/Config';
 import {BackupMode} from '../model/BackupMode';
-import {IDB} from '../interface';
+import {IDB, ILogger} from '../interface';
+import {IRenderStrategy} from '../interface/service/IRenderStrategy';
 import {ConfigLoader} from '../util/ConfigLoader';
+import {JsonRenderStrategy} from '../service/render/JsonRenderStrategy';
 import {
     mapFlagsToConfig,
     CLIFlags,
@@ -47,14 +49,15 @@ export interface CLIOptions<
      * Use this when your adapter has FirebaseConfig extends Config with custom properties.
      *
      * @param config - Final merged configuration with CLI flags applied
+     * @param cliOptions - CLI-selected dependencies, including logger and render strategy overrides
      * @returns MigrationScriptRunner instance (or Promise) or adapter extending it
      *
      * @example
      * ```typescript
      * // Synchronous runner (backward compatible)
-     * createRunner: (config) => {
+     * createRunner: (config, {logger, renderStrategy}) => {
      *   const handler = new MongoHandler(config.mongoUri);
-     *   return new MongoRunner({ handler, config });
+     *   return new MongoRunner({ handler, config, logger, renderStrategy });
      * }
      * ```
      *
@@ -81,7 +84,10 @@ export interface CLIOptions<
      * }
      * ```
      */
-    createRunner: (config: TConfig) => TRunner | Promise<TRunner>;
+    createRunner: (config: TConfig, cliOptions: {
+        logger?: ILogger;
+        renderStrategy?: IRenderStrategy<DB>;
+    }) => TRunner | Promise<TRunner>;
 
     /**
      * CLI metadata (optional).
@@ -210,7 +216,10 @@ export interface CLIOptions<
      *     }
      *   },
      *
-     *   createRunner: (config) => new MongoRunner({ config })
+     *   createRunner: (config) => {
+     *     const handler = new MongoHandler(config.mongoUri);
+     *     return new MongoRunner({ handler, config });
+     *   }
      * });
      * ```
      *
@@ -372,11 +381,11 @@ export function createCLI<
         .option('--display-limit <number>', 'Maximum migrations to display', parseInt)
         .option('--dry-run', 'Simulate without executing')
         .option('--no-lock', 'Disable migration locking for this run')
-        .option('--logger <type>', `Logger type (${loggerTypes})`)
-        .option('--log-level <level>', `Log level (${logLevels})`)
+        .option('--logger <type>', `Logger type (${loggerTypes})`, parseLoggerType)
+        .option('--log-level <level>', `Log level (${logLevels})`, parseLogLevel)
         .option('--log-file <path>', 'Log file path (required with --logger file)')
-        .option('--format <format>', `Output format (${outputFormats})`)
-        .option('--backup-mode <mode>', `Backup behavior (${backupModes})`);
+        .option('--format <format>', `Output format (${outputFormats})`, parseOutputFormat)
+        .option('--backup-mode <mode>', `Backup behavior (${backupModes})`, parseBackupMode);
 
     // Call adapter's custom options callback if provided
     if (options.addCustomOptions) {
@@ -406,19 +415,15 @@ export function createCLI<
             options.extendFlags(config, opts);
         }
 
-        // 5. Call adapter's factory function with final merged config (supports both sync and async)
-        const runnerOrPromise = options.createRunner(config);
+        const renderStrategy = opts.format === 'json'
+            ? new JsonRenderStrategy<DB>(true, logger)
+            : undefined;
+
+        // 5. Call adapter's factory with merged config and CLI-selected dependencies
+        const runnerOrPromise = options.createRunner(config, {logger, renderStrategy});
         const runner = runnerOrPromise instanceof Promise
             ? await runnerOrPromise
             : runnerOrPromise;
-
-        // 6. If logger was created from CLI flags, override runner's logger
-        if (logger) {
-            // Note: This assumes runner has a way to set logger
-            // We'll need to verify this works with the runner's implementation
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (runner as any).logger = logger;
-        }
 
         return runner;
     };
@@ -438,4 +443,38 @@ export function createCLI<
     }
 
     return program;
+}
+
+function parseBackupMode(value: string): BackupMode {
+    const backupModes = Object.values(BackupMode);
+    if (isBackupMode(value)) {
+        return value;
+    }
+
+    throw new InvalidArgumentError(`Invalid backup mode '${value}'. Allowed values: ${backupModes.join('|')}`);
+}
+
+function parseLoggerType(value: string): typeof LOGGER_TYPES[number] {
+    return parseAllowedOptionValue(value, '--logger', LOGGER_TYPES);
+}
+
+function parseLogLevel(value: string): typeof LOG_LEVELS[number] {
+    return parseAllowedOptionValue(value, '--log-level', LOG_LEVELS);
+}
+
+function parseOutputFormat(value: string): typeof OUTPUT_FORMATS[number] {
+    return parseAllowedOptionValue(value, '--format', OUTPUT_FORMATS);
+}
+
+function parseAllowedOptionValue<T extends string>(value: string, option: string, allowedValues: readonly T[]): T {
+    const match = allowedValues.find((allowedValue) => allowedValue === value);
+    if (match !== undefined) {
+        return match;
+    }
+
+    throw new InvalidArgumentError(`Invalid value '${value}' for ${option}. Allowed values: ${allowedValues.join('|')}`);
+}
+
+function isBackupMode(value: string): value is BackupMode {
+    return Object.values(BackupMode).some((backupMode) => backupMode === value);
 }

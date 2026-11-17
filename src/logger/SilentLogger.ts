@@ -17,7 +17,7 @@ import { ILogger } from "../interface/ILogger";
  *
  * // Silent logger for tests
  * const logger = new SilentLogger();
- * const runner = new ExampleRunner<DB>(handler, logger);
+ * const runner = new ExampleRunner<IDB>({ handler, logger });
  * await runner.migrate(); // No console output
  *
  * // Silent logger for library usage

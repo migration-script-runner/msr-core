@@ -92,7 +92,7 @@ class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
   FileLogger
 } from '@vlavrynovych/msr';
 
-const logger = new FileLogger('./logs/metrics.log');
+const logger = new FileLogger({ logPath: './logs/metrics.log' });
 
 const runner = new ExampleRunner({
   handler,
@@ -167,7 +167,7 @@ The `ILogger` implementation to use:
 ```typescript
 // FileLogger - Write to file
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 
 // ConsoleLogger - Console output
@@ -183,7 +183,7 @@ new LoggerMetricsCollector({
 // CompositeLogger - Multiple destinations
 new LoggerMetricsCollector({
   logger: new CompositeLogger([
-    new FileLogger('./logs/app.log'),
+    new FileLogger({ logPath: './logs/app.log' }),
     new CloudLogger({ service: 'datadog' })
   ])
 })
@@ -230,7 +230,7 @@ class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
   FileLogger
 } from '@vlavrynovych/msr';
 
-const logger = new FileLogger('./logs/production-metrics.log');
+const logger = new FileLogger({ logPath: './logs/production-metrics.log' });
 
 const runner = new ExampleRunner({
   handler,
@@ -259,8 +259,8 @@ class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
 } from '@vlavrynovych/msr';
 
 const logger = new CompositeLogger([
-  new FileLogger('./logs/app.log'),
-  new FileLogger('./logs/metrics-only.log'),
+  new FileLogger({ logPath: './logs/app.log' }),
+  new FileLogger({ logPath: './logs/metrics-only.log' }),
   new CloudLogger({
     service: 'cloudwatch',
     region: 'us-east-1',
@@ -294,7 +294,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const logger = isDevelopment
   ? new ConsoleLogger()
   : new CompositeLogger([
-      new FileLogger('./logs/app.log'),
+      new FileLogger({ logPath: './logs/app.log' }),
       new CloudLogger({ service: 'datadog' })
     ]);
 
@@ -333,7 +333,7 @@ import { LevelAwareLogger, FileLogger } from '@vlavrynovych/msr';
 
 // Only log 'info' and above
 const logger = new LevelAwareLogger(
-  new FileLogger('./logs/metrics.log'),
+  new FileLogger({ logPath: './logs/metrics.log' }),
   'info'
 );
 
@@ -416,7 +416,7 @@ class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
 
 // Single logger for app and metrics
 const appLogger = new CompositeLogger([
-  new FileLogger('./logs/application.log'),
+  new FileLogger({ logPath: './logs/application.log' }),
   new CloudLogger({ service: 'datadog' })
 ]);
 
@@ -447,8 +447,8 @@ import { IDB } from '@migration-script-runner/core';
 class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
 
 // Separate loggers for app and metrics
-const appLogger = new FileLogger('./logs/app.log');
-const metricsLogger = new FileLogger('./logs/metrics-only.log');
+const appLogger = new FileLogger({ logPath: './logs/app.log' });
+const metricsLogger = new FileLogger({ logPath: './logs/metrics-only.log' });
 
 const runner = new ExampleRunner({
   handler,
@@ -526,7 +526,7 @@ recordScriptComplete(script: MigrationScript, duration: number): void {
    fs.mkdirSync('./logs', { recursive: true });
 
    new LoggerMetricsCollector({
-     logger: new FileLogger('./logs/metrics.log')
+     logger: new FileLogger({ logPath: './logs/metrics.log' })
    });
    ```
 

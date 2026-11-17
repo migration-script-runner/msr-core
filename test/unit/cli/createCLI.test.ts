@@ -1,10 +1,13 @@
 import {expect} from 'chai';
+import {CommanderError} from 'commander';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import sinon from 'sinon';
 import {createCLI} from '../../../src/cli/createCLI';
 import {IDB} from '../../../src/interface';
+import {SilentLogger} from '../../../src/logger/SilentLogger';
+import {JsonRenderStrategy} from '../../../src/service/render/JsonRenderStrategy';
 import {Config} from '../../../src/model/Config';
 import {BackupMode} from '../../../src/model/BackupMode';
 import {LOGGER_TYPES, LOG_LEVELS, OUTPUT_FORMATS} from '../../../src/cli/utils/flagMapper';
@@ -419,21 +422,67 @@ describe('createCLI', () => {
             });
         }
 
+        it('rejects unsupported --backup-mode values before creating a runner', () => {
+            const program = createCLI({createRunner: createRunnerStub});
+            program.exitOverride();
+
+            expect(() => program.parse([
+                'node', 'test', 'migrate', '--backup-mode', 'unsupported'
+            ])).to.throw(CommanderError, /backup-mode.*unsupported.*Allowed values/s);
+            expect(createRunnerStub.called).to.be.false;
+        });
+
+        for (const [option, invalidValue, allowedValues] of [
+            ['--logger', 'unsupported', 'console|file|silent'],
+            ['--log-level', 'trace', 'error|warn|info|debug'],
+            ['--format', 'yaml', 'table|json']
+        ]) {
+            it(`rejects unsupported ${option} values before creating a runner`, () => {
+                const program = createCLI({createRunner: createRunnerStub});
+                program.exitOverride();
+
+                expect(() => program.parse(['node', 'test', 'migrate', option, invalidValue]))
+                    .to.throw(CommanderError, new RegExp(`${option}.*${invalidValue}.*${allowedValues}`));
+                expect(createRunnerStub.called).to.be.false;
+            });
+        }
+
         /**
          * Test: Handles CLI flags with logger override
          * Validates that logger CLI flag overrides runner logger
          */
-        it('should handle CLI flags with logger creation', async () => {
+        it('passes the CLI-created logger to the runner factory', async () => {
             mockRunner.list.resolves();
+            let receivedLogger: unknown;
 
-            const program = createCLI({createRunner: createRunnerStub});
+            const program = createCLI({
+                createRunner: (_config, {logger}) => {
+                    receivedLogger = logger;
+                    return mockRunner;
+                }
+            });
             program.exitOverride();
 
             await program.parseAsync(['node', 'test', 'list', '--logger', 'silent']);
 
-            expect(createRunnerStub.calledOnce).to.be.true;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            expect((mockRunner as any).logger).to.exist;
+            expect(receivedLogger).to.be.instanceOf(SilentLogger);
+        });
+
+        it('passes a JSON render strategy when --format json is selected', async () => {
+            mockRunner.list.resolves();
+            let receivedRenderStrategy: unknown;
+
+            const program = createCLI({
+                createRunner: (_config, {renderStrategy}) => {
+                    receivedRenderStrategy = renderStrategy;
+                    return mockRunner;
+                }
+            });
+            program.exitOverride();
+
+            await program.parseAsync(['node', 'test', 'list', '--format', 'json']);
+
+            expect(receivedRenderStrategy).to.be.instanceOf(JsonRenderStrategy);
         });
 
         /**

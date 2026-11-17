@@ -51,7 +51,7 @@ describe('Sonar remediation helpers', () => {
         assert.equal(codexStep.with['openai-api-key'], '${{ secrets.OMNIROUTE_API_KEY }}');
         assert.equal(codexStep.with['responses-api-endpoint'], 'https://omniroute.lavrynovych.net/v1/responses');
         assert.equal(codexStep.with.model, 'combo/github');
-        assert.equal(titleCheckout.with.ref, '${{ github.event.pull_request.base.sha }}');
+        assert.equal(titleCheckout.with.ref, 'refs/pull/${{ github.event.pull_request.number }}/merge');
         assert.equal(workflow.jobs.codex.permissions.contents, 'read');
         assert.equal(workflow.jobs.codex.permissions['pull-requests'], 'read');
         assert.deepEqual(workflow.jobs['create-remediation-pr'].permissions, {contents: 'read'});

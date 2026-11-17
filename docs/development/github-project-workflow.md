@@ -86,6 +86,8 @@ Use the issue labels and assignee rules above and assign both issues to the new 
 
 Use the project skill [`.agents/skills/msr-github-pr/SKILL.md`](../../.agents/skills/msr-github-pr/SKILL.md) and its helper script after the task branch has been pushed. It creates a pull request when none exists for the branch, or updates the existing open pull request. It derives the target from a versioned issue milestone (`vX.Y.Z` → `release/X.Y.Z`), copies the issue's assignee, milestone, and labels (excluding the investigation-needed label), and verifies the final metadata.
 
+The PR title validation workflow checks out the pull request merge ref without persisting Git credentials. This makes the validator script available when it is introduced or updated by that pull request.
+
 ```bash
 node .agents/skills/msr-github-pr/scripts/manage-pr.mjs \
   --issue 175 \

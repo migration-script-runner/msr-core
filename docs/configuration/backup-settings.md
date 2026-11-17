@@ -561,7 +561,7 @@ Complete automatic backup and restore workflow:
 config.backupMode = BackupMode.FULL;
 config.rollbackStrategy = RollbackStrategy.BACKUP;
 
-await executor.migrate();
+await runner.migrate();
 // Backup created → migrations run → backup deleted on success
 // OR: Backup created → migrations fail → restore from backup
 ```
@@ -578,7 +578,7 @@ config.backupMode = BackupMode.CREATE_ONLY;
 config.rollbackStrategy = RollbackStrategy.DOWN;
 config.backup.deleteBackup = false;
 
-await executor.migrate();
+await runner.migrate();
 // Backup created → migrations run → down() methods used on failure
 // Backup file kept for safety/manual restore
 ```
@@ -600,7 +600,7 @@ config.backupMode = BackupMode.RESTORE_ONLY;
 config.rollbackStrategy = RollbackStrategy.BACKUP;
 config.backup.existingBackupPath = './backups/pre-deploy.bkp';
 
-await executor.migrate();
+await runner.migrate();
 // No backup creation → migrations run → restore from existing on failure
 ```
 
@@ -633,12 +633,12 @@ config.backupMode = BackupMode.MANUAL;
 config.rollbackStrategy = RollbackStrategy.BACKUP;
 
 // Manual workflow
-const backupPath = await executor.createBackup();
+const backupPath = await runner.createBackup();
 try {
-  await executor.migrate();
-  executor.deleteBackup();
+  await runner.migrate();
+  runner.deleteBackup();
 } catch (error) {
-  await executor.restoreFromBackup(backupPath);
+  await runner.restoreFromBackup(backupPath);
 }
 ```
 
@@ -734,7 +734,7 @@ When using `BackupMode.MANUAL` or for custom workflows, MSR provides public meth
 Create a database backup manually.
 
 ```typescript
-const backupPath = await executor.createBackup();
+const backupPath = await runner.createBackup();
 console.log(`Backup created: ${backupPath}`);
 // Backup created: ./backups/backup-2025-01-22-01-30-45.bkp
 ```
@@ -752,10 +752,10 @@ Restore database from backup file.
 
 ```typescript
 // Restore from specific backup
-await executor.restoreFromBackup('./backups/my-backup.bkp');
+await runner.restoreFromBackup('./backups/my-backup.bkp');
 
 // Restore from most recent backup (created by createBackup())
-await executor.restoreFromBackup();
+await runner.restoreFromBackup();
 ```
 
 **Parameters:**
@@ -773,7 +773,7 @@ await executor.restoreFromBackup();
 Delete backup file from disk.
 
 ```typescript
-executor.deleteBackup();
+runner.deleteBackup();
 ```
 
 **Behavior:**
@@ -795,47 +795,47 @@ const config = new Config();
 config.backupMode = BackupMode.MANUAL;
 config.backup.deleteBackup = true;
 
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 // Step 1: Create backup manually
 console.log('Creating backup...');
-const backupPath = await executor.createBackup();
+const backupPath = await runner.createBackup();
 console.log(`Backup created: ${backupPath}`);
 
 try {
   // Step 2: Run migrations
   console.log('Running migrations...');
-  await executor.migrate();
+  await runner.migrate();
 
   // Step 3: Success - clean up
   console.log('Migrations successful!');
-  executor.deleteBackup();
+  runner.deleteBackup();
 
 } catch (error) {
   // Step 4: Failure - restore
   console.error('Migration failed:', error.message);
   console.log('Restoring from backup...');
 
-  await executor.restoreFromBackup(backupPath);
+  await runner.restoreFromBackup(backupPath);
   console.log('Database restored to previous state');
 
   // Optional: Keep backup for investigation
-  // executor.deleteBackup(); // Uncomment to delete
+  // runner.deleteBackup(); // Uncomment to delete
 }
 ```
 
 ### Conditional Restore Example
 
 ```typescript
-const backupPath = await executor.createBackup();
+const backupPath = await runner.createBackup();
 
 try {
-  await executor.migrate();
-  executor.deleteBackup();
+  await runner.migrate();
+  runner.deleteBackup();
 } catch (error) {
   // Only restore for certain error types
   if (shouldRestore(error)) {
-    await executor.restoreFromBackup(backupPath);
+    await runner.restoreFromBackup(backupPath);
   } else {
     console.log('Keeping database as-is for debugging');
   }
@@ -854,19 +854,19 @@ function shouldRestore(error: Error): boolean {
 config.backup.deleteBackup = false;
 
 // Before migrations
-const beforeBackup = await executor.createBackup();
+const beforeBackup = await runner.createBackup();
 
 // After first batch
 await runFirstBatch();
-const midpointBackup = await executor.createBackup();
+const midpointBackup = await runner.createBackup();
 
 // After all migrations
 await runSecondBatch();
-const finalBackup = await executor.createBackup();
+const finalBackup = await runner.createBackup();
 
 // Selective restore based on which batch failed
 if (secondBatchFailed) {
-  await executor.restoreFromBackup(midpointBackup);
+  await runner.restoreFromBackup(midpointBackup);
 }
 ```
 

@@ -36,10 +36,10 @@ export interface MigrationHookExecutorDependencies<DB extends IDB> {
  * const hookExecutor = new MigrationHookExecutor({
  *     runner: new MigrationRunner({
  *         handler,
- *         schemaVersionService,
+ *         schemaVersionOrchestrator,
  *         logger,
  *         config,
- *         transactionManager
+ *         transactionProvider
  *     }),
  *     hooks: {
  *         onBeforeMigrate: async (script) => console.log(`Starting ${script.name}`),

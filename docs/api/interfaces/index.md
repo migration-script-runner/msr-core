@@ -40,9 +40,14 @@ MSR provides a set of well-defined interfaces that you implement to integrate wi
 - **[IRunnableScript](runnable-script)** - Migration script implementation
 - **IMigrationResult** - Migration operation results
 
-### Transaction Management
+### Adapter providers
 
-- **[ITransactionManager](transaction-manager)** - Transaction lifecycle management
+- **[ILockingProvider](locking-provider)** - Database-specific migration lock operations
+- **[ITransactionProvider](transaction-provider)** - Database transaction capability
+
+### Core orchestrators
+
+- **[Orchestration contracts](orchestrators)** - Backup, schema version, and locking orchestration
 
 ### Rollback & Backup
 
@@ -199,7 +204,7 @@ All interfaces now require generic type parameters for database-specific type sa
 - `IRunnableScript` → `IRunnableScript<DB extends IDB>`
 - `ISchemaVersion` → `ISchemaVersion<DB extends IDB>`
 - `IBackup` → `IBackup<DB extends IDB>`
-- `ITransactionManager` → `ITransactionManager<DB extends IDB>`
+- `ITransactionProvider` → `ITransactionProvider<DB extends IDB>`
 
 **Benefits:** Full IDE autocomplete, compile-time validation, no more `as any` casting
 

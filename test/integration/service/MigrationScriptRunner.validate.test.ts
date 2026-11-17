@@ -6,7 +6,7 @@ import os from 'node:os';
 import { Config, DownMethodPolicy, IDB, IDatabaseMigrationHandler, MigrationScriptRunner, RollbackStrategy, SilentLogger, ValidationError } from '../../../src';
 
 describe('MigrationScriptRunner - validate() method', () => {
-    let executor: MigrationScriptRunner<IDB>;
+    let runner: MigrationScriptRunner<IDB>;
     let handler: IDatabaseMigrationHandler<IDB>;
     let config: Config;
     let tempMigrationsDir: string;
@@ -46,16 +46,16 @@ describe('MigrationScriptRunner - validate() method', () => {
             getVersion: () => '1.0.0-test',
         } as any;
 
-        // Note: executor creation is deferred to each test after migration files are created
+        // Note: runner creation is deferred to each test after migration files are created
         // This ensures the MigrationService picks up the correct files
     });
 
     /**
-     * Helper to create executor after migration files are set up.
+     * Helper to create runner after migration files are set up.
      * Call this at the start of each test after creating migration files.
      */
-    function createExecutor(): void {
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+    function createRunner(): void {
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
     }
 
@@ -75,10 +75,10 @@ describe('MigrationScriptRunner - validate() method', () => {
          * folder returns successfully with empty results.
          */
         it('should succeed when no migrations exist', async () => {
-            createExecutor();
+            createRunner();
 
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending).to.be.an('array').that.is.empty;
             expect(result.migrated).to.be.an('array').that.is.empty;
@@ -94,9 +94,9 @@ describe('MigrationScriptRunner - validate() method', () => {
             createValidMigration(tempMigrationsDir, 1, 'create_users_table');
             createValidMigration(tempMigrationsDir, 2, 'add_email_column');
 
-            createExecutor();
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending).to.have.lengthOf(2);
             expect(result.pending[0].valid).to.be.true;
@@ -121,8 +121,8 @@ describe('MigrationScriptRunner - validate() method', () => {
                 invalidContent
             );
 
-            createExecutor();
-            await expect(executor.validate())
+            createRunner();
+            await expect(runner.validate())
                 .to.be.rejectedWith(ValidationError, 'Pending migration validation failed');
         });
 
@@ -134,8 +134,8 @@ describe('MigrationScriptRunner - validate() method', () => {
         it('should return correct validation results structure', async () => {
             createValidMigration(tempMigrationsDir, 1, 'test_migration');
 
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result).to.have.property('pending');
             expect(result).to.have.property('migrated');
@@ -163,8 +163,8 @@ describe('MigrationScriptRunner - validate() method', () => {
                 invalidContent
             );
 
-            createExecutor();
-            await expect(executor.validate())
+            createRunner();
+            await expect(runner.validate())
                 .to.be.rejectedWith(ValidationError);
         });
 
@@ -180,8 +180,8 @@ describe('MigrationScriptRunner - validate() method', () => {
             // Create migration without down() method
             createValidMigration(tempMigrationsDir, 1, 'no_down');
 
-            createExecutor();
-            await expect(executor.validate())
+            createRunner();
+            await expect(runner.validate())
                 .to.be.rejectedWith(ValidationError, 'Pending migration validation failed');
         });
 
@@ -196,8 +196,8 @@ describe('MigrationScriptRunner - validate() method', () => {
 
             createValidMigration(tempMigrationsDir, 1, 'no_down');
 
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending).to.have.lengthOf(1);
             expect(result.pending[0].valid).to.be.true;
@@ -214,8 +214,8 @@ describe('MigrationScriptRunner - validate() method', () => {
 
             createValidMigration(tempMigrationsDir, 1, 'no_down');
 
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending).to.have.lengthOf(1);
             expect(result.pending[0].valid).to.be.true;
@@ -234,8 +234,8 @@ describe('MigrationScriptRunner - validate() method', () => {
 
             createValidMigration(tempMigrationsDir, 1, 'no_down');
 
-            createExecutor();
-            await expect(executor.validate())
+            createRunner();
+            await expect(runner.validate())
                 .to.be.rejectedWith(ValidationError, 'Strict validation');
         });
 
@@ -255,8 +255,8 @@ describe('MigrationScriptRunner - validate() method', () => {
             );
 
             // Should not throw because validation is disabled
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending).to.be.empty;
         });
@@ -285,8 +285,8 @@ describe('MigrationScriptRunner - validate() method', () => {
                 checksum: originalChecksum
             }]);
 
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending).to.be.empty;
             expect(result.migrated).to.be.empty; // No issues
@@ -319,8 +319,8 @@ describe('MigrationScriptRunner - validate() method', () => {
                 checksum: originalChecksum
             }]);
 
-            createExecutor();
-            await expect(executor.validate())
+            createRunner();
+            await expect(runner.validate())
                 .to.be.rejectedWith(ValidationError, 'Migration file integrity check failed');
         });
 
@@ -340,8 +340,8 @@ describe('MigrationScriptRunner - validate() method', () => {
                 checksum: 'some-checksum'
             }]);
 
-            createExecutor();
-            await expect(executor.validate())
+            createRunner();
+            await expect(runner.validate())
                 .to.be.rejectedWith(ValidationError, 'Migration file integrity check failed');
         });
 
@@ -362,8 +362,8 @@ describe('MigrationScriptRunner - validate() method', () => {
             }]);
 
             // Should not throw, just log warning
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.migrated).to.be.empty; // No error, just warning in logs
         });
@@ -385,8 +385,8 @@ describe('MigrationScriptRunner - validate() method', () => {
             }]);
 
             // Should not throw because integrity checking is disabled
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.migrated).to.be.empty;
         });
@@ -418,8 +418,8 @@ describe('MigrationScriptRunner - validate() method', () => {
                 checksum: checksum
             }]);
 
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending).to.have.lengthOf(1);
             expect(result.pending[0].valid).to.be.true;
@@ -443,8 +443,8 @@ describe('MigrationScriptRunner - validate() method', () => {
             );
 
             try {
-                createExecutor();
-            await executor.validate();
+                createRunner();
+            await runner.validate();
                 expect.fail('Should have thrown ValidationError');
             } catch (error) {
                 expect(error).to.be.instanceOf(ValidationError);
@@ -462,8 +462,8 @@ describe('MigrationScriptRunner - validate() method', () => {
             createValidMigration(tempMigrationsDir, 1, 'test');
 
             // Should not throw even though DB not initialized
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending).to.have.lengthOf(1);
         });
@@ -490,8 +490,8 @@ describe('MigrationScriptRunner - validate() method', () => {
 
             createValidMigration(tempMigrationsDir, 1, 'test');
 
-            createExecutor();
-            await executor.validate();
+            createRunner();
+            await runner.validate();
 
             expect(customValidatorSpy.called).to.be.true;
         });
@@ -518,8 +518,8 @@ describe('MigrationScriptRunner - validate() method', () => {
 
             createValidMigration(tempMigrationsDir, 1, 'test');
 
-            createExecutor();
-            const result = await executor.validate();
+            createRunner();
+            const result = await runner.validate();
 
             expect(result.pending[0].issues).to.have.lengthOf(1);
             expect(result.pending[0].issues[0].code).to.equal('CUSTOM_WARNING');
@@ -541,8 +541,8 @@ describe('MigrationScriptRunner - validate() method', () => {
 
             let exitCode = 0;
             try {
-                createExecutor();
-            await executor.validate();
+                createRunner();
+            await runner.validate();
                 exitCode = 0;
             } catch (error) {
                 exitCode = 1;
@@ -561,8 +561,8 @@ describe('MigrationScriptRunner - validate() method', () => {
 
             let exitCode = 1;
             try {
-                createExecutor();
-            await executor.validate();
+                createRunner();
+            await runner.validate();
                 exitCode = 0;
             } catch (error) {
                 exitCode = 1;
@@ -583,8 +583,8 @@ describe('MigrationScriptRunner - validate() method', () => {
             }
 
             const startTime = Date.now();
-            createExecutor();
-            await executor.validate();
+            createRunner();
+            await runner.validate();
             const duration = Date.now() - startTime;
 
             // Should complete in less than 2 seconds for 10 migrations

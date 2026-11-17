@@ -10,7 +10,8 @@ Notable changes to MSR Core are recorded here. The project uses [Semantic Versio
 
 ### Changed
 - Updated `auto-envparse` to v3 ([#164](https://github.com/migration-script-runner/msr-core/issues/164)).
-- **Breaking:** Renamed the public runner class and related option/dependency types to `MigrationScriptRunner`, `IRunnerOptions`, and `IMigrationRunnerDependencies`; see the [v0.8.x → v1.0.0 migration guide](docs/version-migration/v0.8-to-v1.0.md) ([#155](https://github.com/migration-script-runner/msr-core/issues/155)).
+- **Breaking:** Renamed the public runner class and related option/dependency types to `MigrationScriptRunner`, `IRunnerOptions`, and `IRunnerDependencies`; see the [v0.8.x → v1.0.0 migration guide](docs/version-migration/v0.8-to-v1.0.md) ([#155](https://github.com/migration-script-runner/msr-core/issues/155)).
+- **Breaking:** Standardized provider and orchestrator API names, including `ILockingProvider`, `ITransactionProvider`, `BackupOrchestrator`, and `SchemaVersionOrchestrator`; renamed handler and runner option properties, the CLI factory to `createRunner`, and lock owner identifiers to `runnerId` / `runner_id`. See the [v0.8.x → v1.0.0 migration guide](docs/version-migration/v0.8-to-v1.0.md) ([#156](https://github.com/migration-script-runner/msr-core/issues/156)).
 - Updated `figlet`, `lodash`, and `moment` to versions without the production dependency advisories present in the previous lockfile ([#163](https://github.com/migration-script-runner/msr-core/issues/163)).
 
 ### Security and community

@@ -94,8 +94,8 @@ describe('MigrationScriptRunner - Rollback Edge Cases', () => {
             // No backup interface
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const result = await runner.migrate();
 
         expect(result.success).to.be.false;
         expect(warnMessages.some(msg => msg.includes('No backup available'))).to.be.true;
@@ -162,8 +162,8 @@ describe('MigrationScriptRunner - Rollback Edge Cases', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const result = await runner.migrate();
 
         expect(result.success).to.be.false;
         // Should warn about missing down() for the successful migration
@@ -244,8 +244,8 @@ describe('MigrationScriptRunner - Rollback Edge Cases', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const result = await runner.migrate();
 
         expect(result.success).to.be.false;
 
@@ -310,11 +310,11 @@ describe('MigrationScriptRunner - Rollback Edge Cases', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
 
         // Test rollbackService.rollback with DOWN strategy and empty array
         // This simulates a scenario where rollback is called but no migrations were executed
-        await (executor as any).core.rollback.rollback([], undefined);
+        await (runner as any).core.rollback.rollback([], undefined);
 
         // Should log "No migrations to rollback"
         expect(infoMessages.some(msg => msg.includes('No migrations to rollback'))).to.be.true;
@@ -369,8 +369,8 @@ describe('MigrationScriptRunner - Rollback Edge Cases', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
-        const result = await executor.migrate();
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const result = await runner.migrate();
 
         expect(result.success).to.be.false;
 

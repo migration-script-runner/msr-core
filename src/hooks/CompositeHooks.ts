@@ -24,8 +24,8 @@ import { IMigrationResult } from "../interface/IMigrationResult";
  *     new CustomLoggingHooks()
  * ]);
  *
- * const executor = new MigrationScriptRunner<DB>(handler, { hooks });
- * await executor.migrate();
+ * const runner = new MigrationScriptRunner<DB>(handler, { hooks });
+ * await runner.migrate();
  * ```
  *
  *

@@ -1,4 +1,4 @@
-import { ITransactionManager } from '../interface/service/ITransactionManager';
+import { ITransactionProvider } from '../interface/service/ITransactionProvider';
 import { IDB } from '../interface/dao';
 import { ITransactionalDB } from '../interface/dao/ITransactionalDB';
 import { IsolationLevel } from '../model/IsolationLevel';
@@ -6,7 +6,7 @@ import { TransactionConfig } from '../model/TransactionConfig';
 import { ILogger } from '../interface/ILogger';
 
 /**
- * Default implementation of {@link ITransactionManager}.
+ * Default implementation of {@link ITransactionProvider}.
  *
  * Wraps an {@link ITransactionalDB} instance and provides automatic retry logic
  * for commit operations. This is the standard transaction manager used by MSR
@@ -35,29 +35,29 @@ import { ILogger } from '../interface/ILogger';
  * @template DB - Database interface type
  * @example
  * ```typescript
- * import { DefaultTransactionManager } from '@migration-script-runner/core';
+ * import { DefaultTransactionProvider } from '@migration-script-runner/core';
  *
  * // Create transaction manager
- * const transactionManager = new DefaultTransactionManager<DB>(
+ * const transactionProvider = new DefaultTransactionProvider<DB>(
  *   db,                // ITransactionalDB instance
  *   config.transaction, // TransactionConfig
  *   logger             // Optional logger
  * );
  *
  * // Use in migrations
- * await transactionManager.begin();
+ * await transactionProvider.begin();
  * try {
  *   // Execute migrations...
- *   await transactionManager.commit();  // Automatic retry on retriable errors
+ *   await transactionProvider.commit();  // Automatic retry on retriable errors
  * } catch (error) {
- *   await transactionManager.rollback();
+ *   await transactionProvider.rollback();
  *   throw error;
  * }
  * ```
  */
-export class DefaultTransactionManager<DB extends IDB> implements ITransactionManager<DB> {
+export class DefaultTransactionProvider<DB extends IDB> implements ITransactionProvider<DB> {
     /**
-     * Create a new DefaultTransactionManager.
+     * Create a new DefaultTransactionProvider.
      *
      * @param db - Database instance implementing ITransactionalDB
      * @param config - Transaction configuration with retry settings
@@ -67,7 +67,7 @@ export class DefaultTransactionManager<DB extends IDB> implements ITransactionMa
  * @template DB - Database interface type
      * @example
      * ```typescript
-     * const txManager = new DefaultTransactionManager<DB>(
+     * const txManager = new DefaultTransactionProvider<DB>(
      *   myDB,
      *   new TransactionConfig(),
      *   new ConsoleLogger()
@@ -91,7 +91,7 @@ export class DefaultTransactionManager<DB extends IDB> implements ITransactionMa
  * @template DB - Database interface type
      * @example
      * ```typescript
-     * await transactionManager.begin();
+     * await transactionProvider.begin();
      * ```
      */
     async begin(): Promise<void> {
@@ -119,10 +119,10 @@ export class DefaultTransactionManager<DB extends IDB> implements ITransactionMa
      * @example
      * ```typescript
      * try {
-     *   await transactionManager.commit();  // Retries automatically
+     *   await transactionProvider.commit();  // Retries automatically
      * } catch (error) {
      *   console.error('Commit failed after all retries:', error);
-     *   await transactionManager.rollback();
+     *   await transactionProvider.rollback();
      * }
      * ```
      */
@@ -181,7 +181,7 @@ export class DefaultTransactionManager<DB extends IDB> implements ITransactionMa
      * @example
      * ```typescript
      * try {
-     *   await transactionManager.rollback();
+     *   await transactionProvider.rollback();
      * } catch (error) {
      *   console.error('CRITICAL: Rollback failed:', error);
      *   // Manual intervention may be required
@@ -209,8 +209,8 @@ export class DefaultTransactionManager<DB extends IDB> implements ITransactionMa
  * @template DB - Database interface type
      * @example
      * ```typescript
-     * await transactionManager.setIsolationLevel(IsolationLevel.SERIALIZABLE);
-     * await transactionManager.begin();
+     * await transactionProvider.setIsolationLevel(IsolationLevel.SERIALIZABLE);
+     * await transactionProvider.begin();
      * ```
      */
     async setIsolationLevel(level: IsolationLevel): Promise<void> {

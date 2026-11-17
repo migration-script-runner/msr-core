@@ -5,7 +5,7 @@ import {IDB} from "../dao";
  * Interface for managing database transactions.
  *
  * Provides transaction lifecycle management with automatic retry logic
- * for commit operations. MSR provides a default implementation ({@link DefaultTransactionManager})
+ * for commit operations. MSR provides a default implementation ({@link DefaultTransactionProvider})
  * that wraps {@link ITransactionalDB}, but users can provide custom implementations
  * for advanced scenarios (distributed transactions, savepoints, etc.).
  *
@@ -24,10 +24,10 @@ import {IDB} from "../dao";
  *   async commit(): Promise<void> { await this.pool.query('COMMIT'); }
  *   async rollback(): Promise<void> { await this.pool.query('ROLLBACK'); }
  * }
- * // MSR automatically creates DefaultTransactionManager wrapping PostgresDB
+ * // MSR automatically creates DefaultTransactionProvider wrapping PostgresDB
  *
  * // Custom implementation (advanced)
- * class CustomTransactionManager implements ITransactionManager<IDB> {
+ * class CustomTransactionProvider implements ITransactionProvider<IDB> {
  *   constructor(private db: IDB) {}
  *
  *   async begin(): Promise<void> {
@@ -43,13 +43,13 @@ import {IDB} from "../dao";
  *
  * const handler: IDatabaseMigrationHandler<IDB> = {
  *   db: myDB,
- *   transactionManager: new CustomTransactionManager(myDB),  // Override
+ *   transactionProvider: new CustomTransactionProvider(myDB),  // Override
  *   // ...
  * };
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface ITransactionManager<DB extends IDB> {
+export interface ITransactionProvider<DB extends IDB> {
     /**
      * Begin a new transaction.
      *
@@ -84,7 +84,7 @@ export interface ITransactionManager<DB extends IDB> {
      * Commit the current transaction.
      *
      * Called by MSR after successful migration execution. The default
-     * implementation ({@link DefaultTransactionManager}) automatically retries
+     * implementation ({@link DefaultTransactionProvider}) automatically retries
      * this operation on retriable errors (deadlocks, serialization failures).
      *
      * **Retriable Errors:**

@@ -106,7 +106,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
     });
 
     it('should create MetricsCollectorHook when metricsCollectors provided', async () => {
-        const executor = new MigrationScriptRunner<IDB>(
+        const runner = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -115,7 +115,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
             }
         );
 
-        await executor.up();
+        await runner.up();
 
         // Verify MetricsCollectorHook was created and called the collector
         expect(collectorCalls['recordMigrationStart']).to.exist;
@@ -127,7 +127,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
     });
 
     it('should not create MetricsCollectorHook when metricsCollectors is empty', async () => {
-        const executor = new MigrationScriptRunner<IDB>(
+        const runner = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -136,14 +136,14 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
             }
         );
 
-        await executor.up();
+        await runner.up();
 
         // Collector should not be called when array is empty
         expect(collectorCalls['recordMigrationStart']).to.be.undefined;
     });
 
     it('should not create MetricsCollectorHook when metricsCollectors is undefined', async () => {
-        const executor = new MigrationScriptRunner<IDB>(
+        const runner = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -151,14 +151,14 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
             }
         );
 
-        await executor.up();
+        await runner.up();
 
         // Collector should not be called when not provided
         expect(collectorCalls['recordMigrationStart']).to.be.undefined;
     });
 
     it('should call collectors for each migration lifecycle event', async () => {
-        const executor = new MigrationScriptRunner<IDB>(
+        const runner = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -167,7 +167,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
             }
         );
 
-        await executor.up();
+        await runner.up();
 
         // Verify all lifecycle events were called
         expect(collectorCalls['recordMigrationStart']).to.have.lengthOf(1);
@@ -200,7 +200,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
             }
         };
 
-        const executor = new MigrationScriptRunner<IDB>(
+        const runner = new MigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -209,7 +209,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
             }
         );
 
-        await executor.up();
+        await runner.up();
 
         // Both collectors should be called
         expect(collectorCalls['recordMigrationStart']).to.have.lengthOf(1);

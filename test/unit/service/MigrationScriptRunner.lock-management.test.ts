@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import {MigrationScriptRunner} from '../../../src/service/MigrationScriptRunner';
 import {Config} from '../../../src/model';
 import {IDB, IDatabaseMigrationHandler} from '../../../src/interface';
-import {ILockingService, ILockStatus} from '../../../src/interface/service/ILockingService';
+import {ILockingProvider, ILockStatus} from '../../../src/interface/service/ILockingProvider';
 import {SilentLogger} from '../../../src/logger/SilentLogger';
 
 describe('MigrationScriptRunner - Lock Management Methods', () => {
@@ -16,32 +16,32 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                // No lockingService
+                // No lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            const status = await executor.getLockStatus();
+            const status = await runner.getLockStatus();
             expect(status).to.be.null;
         });
 
         it('should return lock status when locking service is configured', async () => {
             const mockLockStatus: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt: new Date('2025-12-18T10:00:00Z'),
                 expiresAt: new Date('2025-12-18T10:10:00Z'),
                 processId: '12345'
             };
 
-            const lockingService: ILockingService<IDB> = {
+            const lockingProvider: ILockingProvider<IDB> = {
                 initLockStorage: async () => {},
                 ensureLockStorageAccessible: async () => true,
                 acquireLock: async () => true,
@@ -60,19 +60,19 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                lockingService
+                lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            const status = await executor.getLockStatus();
+            const status = await runner.getLockStatus();
             expect(status).to.deep.equal(mockLockStatus);
         });
 
@@ -85,7 +85,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 processId: undefined
             };
 
-            const lockingService: ILockingService<IDB> = {
+            const lockingProvider: ILockingProvider<IDB> = {
                 initLockStorage: async () => {},
                 ensureLockStorageAccessible: async () => true,
                 acquireLock: async () => true,
@@ -104,19 +104,19 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                lockingService
+                lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            const status = await executor.getLockStatus();
+            const status = await runner.getLockStatus();
             expect(status).to.deep.equal(mockLockStatus);
             expect(status?.isLocked).to.be.false;
         });
@@ -132,20 +132,20 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                // No lockingService
+                // No lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.forceReleaseLock();
+                await runner.forceReleaseLock();
                 expect.fail('Should have thrown');
             } catch (error) {
                 expect((error as Error).message).to.include('Locking service is not configured');
@@ -156,7 +156,7 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
         it('should call forceReleaseLock on locking service', async () => {
             let forceReleaseWasCalled = false;
 
-            const lockingService: ILockingService<IDB> = {
+            const lockingProvider: ILockingProvider<IDB> = {
                 initLockStorage: async () => {},
                 ensureLockStorageAccessible: async () => true,
                 acquireLock: async () => true,
@@ -177,24 +177,24 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                lockingService
+                lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.forceReleaseLock();
+            await runner.forceReleaseLock();
             expect(forceReleaseWasCalled).to.be.true;
         });
 
         it('should propagate errors from locking service', async () => {
-            const lockingService: ILockingService<IDB> = {
+            const lockingProvider: ILockingProvider<IDB> = {
                 initLockStorage: async () => {},
                 ensureLockStorageAccessible: async () => true,
                 acquireLock: async () => true,
@@ -215,20 +215,20 @@ describe('MigrationScriptRunner - Lock Management Methods', () => {
                 checkConnection: async () => true,
                 getName: () => 'TestHandler',
                 getVersion: () => '1.0.0',
-                lockingService
+                lockingProvider
             } as unknown as IDatabaseMigrationHandler<IDB>;
 
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.forceReleaseLock();
+                await runner.forceReleaseLock();
                 expect.fail('Should have thrown');
             } catch (error) {
                 expect((error as Error).message).to.equal('Database error: failed to release lock');

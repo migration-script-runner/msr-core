@@ -12,11 +12,11 @@ import { ILogger } from "../interface/ILogger";
  * ```typescript
  * // Silent logger for tests
  * const logger = new SilentLogger();
- * const executor = new MigrationScriptRunner<DB>(handler, logger);
- * await executor.migrate(); // No console output
+ * const runner = new MigrationScriptRunner<DB>(handler, logger);
+ * await runner.migrate(); // No console output
  *
  * // Silent logger for library usage
- * const result = await executor.migrate();
+ * const result = await runner.migrate();
  * if (result.success) {
  *   myOwnLogger.info('Migrations complete');
  * }

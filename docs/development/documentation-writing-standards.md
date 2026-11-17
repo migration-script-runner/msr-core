@@ -293,13 +293,13 @@ Keep sequence diagrams simple with 4-6 participants maximum:
 ```mermaid
 sequenceDiagram
     participant User
-    participant Executor
+    participant Runner
     participant Service
 
-    User->>Executor: migrate()
-    Executor->>Service: init()
-    Service-->>Executor: Ready
-    Executor-->>User: Success
+    User->>Runner: migrate()
+    Runner->>Service: init()
+    Service-->>Runner: Ready
+    Runner-->>User: Success
 ```
 ````
 
@@ -308,7 +308,7 @@ sequenceDiagram
 ````markdown
 ```mermaid
 classDiagram
-    class MigrationExecutor {
+    class MigrationRunner {
         -handler: Handler
         -service: Service
         +migrate() Promise
@@ -319,7 +319,7 @@ classDiagram
         +execute() Promise
     }
 
-    MigrationExecutor --> Service
+    MigrationRunner --> Service
 ```
 ````
 
@@ -490,7 +490,7 @@ When referencing code in text, use inline code formatting.
 
 **File references with line numbers:**
 ```
-The backup implementation in src/services/BackupService.ts:42
+The backup implementation in src/services/BackupOrchestrator.ts:42
 ```
 
 ---
@@ -503,7 +503,7 @@ Always specify language for syntax highlighting:
 
 ````markdown
 ```typescript
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 ```
 
 ```bash
@@ -536,9 +536,9 @@ const config = new Config();
 config.folder = './migrations';
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
-const result = await executor.migrate();
+const result = await runner.migrate();
 if (result.success) {
   console.log('✅ Migrations completed');
 }
@@ -547,7 +547,7 @@ if (result.success) {
 **Example (bad):**
 ```typescript
 // Incomplete, missing imports and context
-executor.migrate();
+runner.migrate();
 ```
 
 ### Comments

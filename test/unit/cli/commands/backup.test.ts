@@ -12,8 +12,8 @@ interface MockDB extends IDB {
 
 describe('backup command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
-    let createExecutorStub: sinon.SinonStub;
+    let mockRunner: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
+    let createRunnerStub: sinon.SinonStub;
     let consoleLogStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
     let processExitStub: sinon.SinonStub;
@@ -22,15 +22,15 @@ describe('backup command', () => {
         program = new Command();
         program.exitOverride(); // Prevent actual process exit in tests
 
-        // Create mock executor
-        mockExecutor = {
+        // Create mock runner
+        mockRunner = {
             createBackup: sinon.stub(),
             restoreFromBackup: sinon.stub(),
             deleteBackup: sinon.stub(),
         } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
-        createExecutorStub = sinon.stub().returns(mockExecutor);
+        createRunnerStub = sinon.stub().returns(mockRunner);
 
         // Stub console and process.exit
         consoleLogStub = sinon.stub(console, 'log');
@@ -38,7 +38,7 @@ describe('backup command', () => {
         processExitStub = sinon.stub(process, 'exit');
 
         // Add command
-        addBackupCommand(program, createExecutorStub);
+        addBackupCommand(program, createRunnerStub);
     });
 
     afterEach(() => {
@@ -105,12 +105,12 @@ describe('backup command', () => {
          */
         it('should create backup successfully', async () => {
             const backupPath = './backups/backup-2025-12-10.bkp';
-            mockExecutor.createBackup.resolves(backupPath);
+            mockRunner.createBackup.resolves(backupPath);
 
             await program.parseAsync(['node', 'test', 'backup', 'create']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            expect(mockExecutor.createBackup.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            expect(mockRunner.createBackup.calledOnce).to.be.true;
             expect(consoleLogStub.calledWith(`✓ Backup created successfully: ${backupPath}`)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -121,7 +121,7 @@ describe('backup command', () => {
          */
         it('should handle backup creation failure', async () => {
             const error = new Error('Insufficient disk space');
-            mockExecutor.createBackup.rejects(error);
+            mockRunner.createBackup.rejects(error);
 
             await program.parseAsync(['node', 'test', 'backup', 'create']);
 
@@ -131,10 +131,10 @@ describe('backup command', () => {
 
         /**
          * Test: Handles non-Error exception during backup creation
-         * Validates error handling when executor throws non-Error object
+         * Validates error handling when runner throws non-Error object
          */
         it('should handle non-Error exception during backup creation', async () => {
-            mockExecutor.createBackup.callsFake(async () => {
+            mockRunner.createBackup.callsFake(async () => {
                 throw 'String error';
             });
 
@@ -151,7 +151,7 @@ describe('backup command', () => {
         it('should handle Error with empty message during backup creation', async () => {
             const errorWithoutMessage = new Error();
             errorWithoutMessage.message = '';
-            mockExecutor.createBackup.rejects(errorWithoutMessage);
+            mockRunner.createBackup.rejects(errorWithoutMessage);
 
             await program.parseAsync(['node', 'test', 'backup', 'create']);
 
@@ -167,13 +167,13 @@ describe('backup command', () => {
          */
         it('should restore from specific backup path', async () => {
             const backupPath = './backups/backup-2025-12-10.bkp';
-            mockExecutor.restoreFromBackup.resolves();
+            mockRunner.restoreFromBackup.resolves();
 
             await program.parseAsync(['node', 'test', 'backup', 'restore', backupPath]);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            expect(mockExecutor.restoreFromBackup.calledOnce).to.be.true;
-            expect(mockExecutor.restoreFromBackup.calledWith(backupPath)).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            expect(mockRunner.restoreFromBackup.calledOnce).to.be.true;
+            expect(mockRunner.restoreFromBackup.calledWith(backupPath)).to.be.true;
             expect(consoleLogStub.calledWith(`✓ Database restored successfully from ${backupPath}`)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -183,12 +183,12 @@ describe('backup command', () => {
          * Validates that restoreFromBackup() is called without path parameter
          */
         it('should restore from most recent backup when no path specified', async () => {
-            mockExecutor.restoreFromBackup.resolves();
+            mockRunner.restoreFromBackup.resolves();
 
             await program.parseAsync(['node', 'test', 'backup', 'restore']);
 
-            expect(mockExecutor.restoreFromBackup.calledOnce).to.be.true;
-            expect(mockExecutor.restoreFromBackup.calledWith(undefined)).to.be.true;
+            expect(mockRunner.restoreFromBackup.calledOnce).to.be.true;
+            expect(mockRunner.restoreFromBackup.calledWith(undefined)).to.be.true;
             expect(consoleLogStub.calledWith('✓ Database restored successfully from most recent backup')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -199,7 +199,7 @@ describe('backup command', () => {
          */
         it('should handle restore failure', async () => {
             const error = new Error('Backup file corrupted');
-            mockExecutor.restoreFromBackup.rejects(error);
+            mockRunner.restoreFromBackup.rejects(error);
 
             await program.parseAsync(['node', 'test', 'backup', 'restore']);
 
@@ -214,7 +214,7 @@ describe('backup command', () => {
         it('should handle restore failure with specific backup path', async () => {
             const backupPath = './backups/missing.bkp';
             const error = new Error('Backup file not found');
-            mockExecutor.restoreFromBackup.rejects(error);
+            mockRunner.restoreFromBackup.rejects(error);
 
             await program.parseAsync(['node', 'test', 'backup', 'restore', backupPath]);
 
@@ -224,10 +224,10 @@ describe('backup command', () => {
 
         /**
          * Test: Handles non-Error exception during restore
-         * Validates error handling when executor throws non-Error object
+         * Validates error handling when runner throws non-Error object
          */
         it('should handle non-Error exception during restore', async () => {
-            mockExecutor.restoreFromBackup.callsFake(async () => {
+            mockRunner.restoreFromBackup.callsFake(async () => {
                 throw 'String error';
             });
 
@@ -244,7 +244,7 @@ describe('backup command', () => {
         it('should handle Error with empty message during restore', async () => {
             const errorWithoutMessage = new Error();
             errorWithoutMessage.message = '';
-            mockExecutor.restoreFromBackup.rejects(errorWithoutMessage);
+            mockRunner.restoreFromBackup.rejects(errorWithoutMessage);
 
             await program.parseAsync(['node', 'test', 'backup', 'restore']);
 
@@ -259,12 +259,12 @@ describe('backup command', () => {
          * Validates that deleteBackup() is called and success message is displayed
          */
         it('should delete backup successfully', async () => {
-            mockExecutor.deleteBackup.returns();
+            mockRunner.deleteBackup.returns();
 
             await program.parseAsync(['node', 'test', 'backup', 'delete']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            expect(mockExecutor.deleteBackup.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            expect(mockRunner.deleteBackup.calledOnce).to.be.true;
             expect(consoleLogStub.calledWith('✓ Backup deleted successfully')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -275,7 +275,7 @@ describe('backup command', () => {
          */
         it('should handle delete failure', async () => {
             const error = new Error('Backup file not found');
-            mockExecutor.deleteBackup.throws(error);
+            mockRunner.deleteBackup.throws(error);
 
             await program.parseAsync(['node', 'test', 'backup', 'delete']);
 
@@ -285,10 +285,10 @@ describe('backup command', () => {
 
         /**
          * Test: Handles non-Error exception during delete
-         * Validates error handling when executor throws non-Error object
+         * Validates error handling when runner throws non-Error object
          */
         it('should handle non-Error exception during delete', async () => {
-            mockExecutor.deleteBackup.callsFake(() => {
+            mockRunner.deleteBackup.callsFake(() => {
                 throw 'String error';
             });
 
@@ -305,7 +305,7 @@ describe('backup command', () => {
         it('should handle Error with empty message during delete', async () => {
             const errorWithoutMessage = new Error();
             errorWithoutMessage.message = '';
-            mockExecutor.deleteBackup.throws(errorWithoutMessage);
+            mockRunner.deleteBackup.throws(errorWithoutMessage);
 
             await program.parseAsync(['node', 'test', 'backup', 'delete']);
 
@@ -314,49 +314,49 @@ describe('backup command', () => {
         });
     });
 
-    describe('Executor creation', () => {
+    describe('Runner creation', () => {
         /**
-         * Test: Creates executor for create subcommand
+         * Test: Creates runner for create subcommand
          * Validates that factory is called for create action
          */
-        it('should create executor for create subcommand', async () => {
-            mockExecutor.createBackup.resolves('./backup.bkp');
+        it('should create runner for create subcommand', async () => {
+            mockRunner.createBackup.resolves('./backup.bkp');
 
             await program.parseAsync(['node', 'test', 'backup', 'create']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
         });
 
         /**
-         * Test: Creates executor for restore subcommand
+         * Test: Creates runner for restore subcommand
          * Validates that factory is called for restore action
          */
-        it('should create executor for restore subcommand', async () => {
-            mockExecutor.restoreFromBackup.resolves();
+        it('should create runner for restore subcommand', async () => {
+            mockRunner.restoreFromBackup.resolves();
 
             await program.parseAsync(['node', 'test', 'backup', 'restore']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
         });
 
         /**
-         * Test: Creates executor for delete subcommand
+         * Test: Creates runner for delete subcommand
          * Validates that factory is called for delete action
          */
-        it('should create executor for delete subcommand', async () => {
-            mockExecutor.deleteBackup.returns();
+        it('should create runner for delete subcommand', async () => {
+            mockRunner.deleteBackup.returns();
 
             await program.parseAsync(['node', 'test', 'backup', 'delete']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
         });
 
         /**
-         * Test: Does not create executor before action
+         * Test: Does not create runner before action
          * Validates that factory is not called during command setup
          */
-        it('should not create executor before action', () => {
-            expect(createExecutorStub.called).to.be.false;
+        it('should not create runner before action', () => {
+            expect(createRunnerStub.called).to.be.false;
         });
     });
 
@@ -367,11 +367,11 @@ describe('backup command', () => {
          */
         it('should handle backup path with spaces', async () => {
             const backupPath = './backups/my backup file.bkp';
-            mockExecutor.restoreFromBackup.resolves();
+            mockRunner.restoreFromBackup.resolves();
 
             await program.parseAsync(['node', 'test', 'backup', 'restore', backupPath]);
 
-            expect(mockExecutor.restoreFromBackup.calledWith(backupPath)).to.be.true;
+            expect(mockRunner.restoreFromBackup.calledWith(backupPath)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
 
@@ -381,11 +381,11 @@ describe('backup command', () => {
          */
         it('should handle backup path with special characters', async () => {
             const backupPath = './backups/backup-@#$%.bkp';
-            mockExecutor.restoreFromBackup.resolves();
+            mockRunner.restoreFromBackup.resolves();
 
             await program.parseAsync(['node', 'test', 'backup', 'restore', backupPath]);
 
-            expect(mockExecutor.restoreFromBackup.calledWith(backupPath)).to.be.true;
+            expect(mockRunner.restoreFromBackup.calledWith(backupPath)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
 
@@ -395,11 +395,11 @@ describe('backup command', () => {
          */
         it('should handle absolute backup paths', async () => {
             const backupPath = '/absolute/path/to/backup.bkp';
-            mockExecutor.restoreFromBackup.resolves();
+            mockRunner.restoreFromBackup.resolves();
 
             await program.parseAsync(['node', 'test', 'backup', 'restore', backupPath]);
 
-            expect(mockExecutor.restoreFromBackup.calledWith(backupPath)).to.be.true;
+            expect(mockRunner.restoreFromBackup.calledWith(backupPath)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
     });

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import moment from "moment";
 
 import {BackupConfig, Config} from "../model";
-import {IBackupService, IDatabaseMigrationHandler, ILogger, IDB} from "../interface";
+import {IBackupOrchestrator, IDatabaseMigrationHandler, ILogger, IDB} from "../interface";
 import {ConsoleLogger} from "../logger";
 
 /**
@@ -17,7 +17,7 @@ import {ConsoleLogger} from "../logger";
  * @template DB - Database interface type
  * @example
  * ```typescript
- * const service = new BackupService<DB>(handler);
+ * const service = new BackupOrchestrator<DB>(handler);
  *
  * await service.backup();        // Create backup before migration
  * // ... run migrations ...
@@ -25,13 +25,13 @@ import {ConsoleLogger} from "../logger";
  * service.deleteBackup();        // Clean up if migration succeeds
  * ```
  */
-export class BackupService<DB extends IDB> implements IBackupService {
+export class BackupOrchestrator<DB extends IDB> implements IBackupOrchestrator {
 
     /** Path to the currently active backup file */
     private backupFile: string | undefined;
 
     /**
-     * Creates a new BackupService.
+     * Creates a new BackupOrchestrator.
      *
      * @param handler - Database migration handler for backup operations
      * @param config - Configuration including backup settings
@@ -164,7 +164,7 @@ export class BackupService<DB extends IDB> implements IBackupService {
      * @private
      */
     private getFileName():string {
-        const path:string = BackupService.prepareFilePath(this.config.backup);
+        const path:string = BackupOrchestrator.prepareFilePath(this.config.backup);
 
         // Archive existing backup file to prevent overwriting
         if (fs.existsSync(path)) {
@@ -194,7 +194,7 @@ export class BackupService<DB extends IDB> implements IBackupService {
      * config.timestamp = true;
      * config.timestampFormat = 'YYYYMMDD-HHmmss';
      *
-     * const path = BackupService.prepareFilePath(config);
+     * const path = BackupOrchestrator.prepareFilePath(config);
      * // Returns: './backups/db-20250122-013045.bkp'
      * ```
      */

@@ -41,7 +41,7 @@ MSR provides robust transaction management to ensure your database migrations ar
 - **Intelligent Error Detection**: Distinguishes between retriable and non-retriable errors
 
 {: .note }
-> Transaction management requires your database handler to implement either `ITransactionalDB` (for SQL databases) or `ICallbackTransactionalDB` (for NoSQL databases). MSR automatically detects your database type and uses the appropriate transaction manager, or you can provide a custom `ITransactionManager` implementation.
+> Transaction management requires your database handler to implement either `ITransactionalDB` (for SQL databases) or `ICallbackTransactionalDB` (for NoSQL databases). MSR automatically detects your database type and uses the appropriate transaction manager, or you can provide a custom `ITransactionProvider` implementation.
 
 {: .important }
 > **New in v0.5.0:** MSR validates transaction configuration before migrations run. If your database doesn't support transactions but `transaction.mode` is enabled, validation will fail with a clear error message. See [Transaction Validation](#transaction-validation) section below.
@@ -69,8 +69,8 @@ const config = new Config();
 config.transaction.mode = 'PER_MIGRATION';  // Default
 config.transaction.isolation = 'READ COMMITTED';
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 **Behavior:**
@@ -98,8 +98,8 @@ const config = new Config();
 config.transaction.mode = 'PER_BATCH';
 config.transaction.retries = 5;  // Retry entire batch on transient errors
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();  // All migrations in single transaction
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();  // All migrations in single transaction
 ```
 
 **Behavior:**
@@ -129,8 +129,8 @@ No transaction wrapping. Each migration's `up()` method is responsible for its o
 const config = new Config();
 config.transaction.mode = 'NONE';
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 {: .warning }
@@ -296,8 +296,8 @@ config.transaction.retries = 3;
 config.transaction.retryDelay = 200;  // 200ms base delay
 config.transaction.retryBackoff = true;  // Exponential backoff
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ---
@@ -333,8 +333,8 @@ config.transaction.retries = 5;           // Max retry attempts (default: 3)
 config.transaction.retryDelay = 100;      // Base delay in ms (default: 100)
 config.transaction.retryBackoff = true;   // Enable exponential backoff (default: true)
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ### Retry Behavior with Exponential Backoff
@@ -465,7 +465,7 @@ await firestore.runTransaction(async (tx) => {
 });
 ```
 
-MSR's `CallbackTransactionManager` automatically:
+MSR's `CallbackTransactionProvider` automatically:
 1. Buffers operations during migration execution
 2. Executes all operations in a single `runTransaction()` call on commit
 3. Retries transient errors (conflicts, contentions) with exponential backoff
@@ -508,12 +508,12 @@ const handler: IDatabaseMigrationHandler = {
 };
 
 const config = new Config();
-config.transaction.mode = 'PER_MIGRATION';  // Auto-uses CallbackTransactionManager
+config.transaction.mode = 'PER_MIGRATION';  // Auto-uses CallbackTransactionProvider
 config.transaction.retries = 5;
 config.transaction.retryBackoff = true;
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 #### MongoDB Example
@@ -562,8 +562,8 @@ const config = new Config();
 config.transaction.mode = 'PER_BATCH';  // All migrations in one transaction
 config.transaction.retries = 3;
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ### Writing NoSQL Migrations
@@ -695,9 +695,9 @@ MSR automatically detects whether your database uses callback or imperative tran
 ```typescript
 // MSR checks at runtime:
 if (db has beginTransaction/commit/rollback) {
-  // Use DefaultTransactionManager (SQL-style)
+  // Use DefaultTransactionProvider (SQL-style)
 } else if (db has runTransaction) {
-  // Use CallbackTransactionManager (NoSQL-style)
+  // Use CallbackTransactionProvider (NoSQL-style)
 } else {
   // Warn: Transaction mode configured but db doesn't support transactions
 }
@@ -740,8 +740,8 @@ const hooks: ITransactionHooks = {
   }
 };
 
-const executor = new MigrationScriptRunner({ handler, hooks , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler, hooks , config });
+await runner.migrate();
 ```
 
 ---
@@ -1264,8 +1264,8 @@ config.transaction.mode = TransactionMode.PER_MIGRATION;
 config.transaction.timeout = 30000;  // 30 seconds
 
 // Option 3: Run migrations in smaller batches
-await executor.up(202501220500);  // First batch (5 migrations)
-await executor.up(202501220800);  // Second batch (3 migrations)
+await runner.up(202501220500);  // First batch (5 migrations)
+await runner.up(202501220800);  // Second batch (3 migrations)
 ```
 
 ---
@@ -1285,12 +1285,12 @@ config.validateBeforeRun = false;  // ⚠️  Disables ALL validation (dangerous
 
 ## Custom Transaction Manager
 
-For advanced use cases, implement `ITransactionManager`:
+For advanced use cases, implement `ITransactionProvider`:
 
 ```typescript
-import { ITransactionManager, ITransactionalDB } from '@migration-script-runner/core';
+import { ITransactionProvider, ITransactionalDB } from '@migration-script-runner/core';
 
-class CustomTransactionManager implements ITransactionManager {
+class CustomTransactionProvider implements ITransactionProvider {
   constructor(
     private db: ITransactionalDB,
     private logger: ILogger
@@ -1334,8 +1334,8 @@ class CustomTransactionManager implements ITransactionManager {
 }
 
 // Use custom transaction manager
-const txManager = new CustomTransactionManager(db, logger);
-const executor = new MigrationScriptRunner(
+const txManager = new CustomTransactionProvider(db, logger);
+const runner = new MigrationScriptRunner(
   handler,
   config,
   undefined,  // hooks
@@ -1349,7 +1349,7 @@ const executor = new MigrationScriptRunner(
 
 - Read [Configuration: Transaction Settings](../configuration/transaction-settings.md) for detailed API reference
 - Review [API: ITransactionalDB](../api/interfaces/transactional-db#itransactionaldb-interface) interface documentation
-- See [API: ITransactionManager<IDB>](../api/interfaces/index.md#itransactionmanager) for custom implementations
+- See [API: ITransactionProvider<IDB>](../api/interfaces/index.md#itransactionmanager) for custom implementations
 - Check [Recipes: Testing Migrations](recipes/testing-migrations.md) for testing strategies
 
 ---

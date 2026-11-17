@@ -27,13 +27,13 @@ This flowchart shows the complete data flow through MSR from user invocation to 
 
 ```mermaid
 graph TD
-    Start[User calls executor migrate] --> Backup[BackupService backup<br/>Creates database dump]
-    Backup --> Init[SchemaVersionService init<br/>Creates validates schema_version table]
+    Start[User calls runner migrate] --> Backup[BackupOrchestrator backup<br/>Creates database dump]
+    Backup --> Init[SchemaVersionOrchestrator init<br/>Creates validates schema_version table]
     Init --> Scan[MigrationScanner scan]
 
     Scan --> Parallel{Parallel Execution}
     Parallel --> ReadFiles[MigrationService readMigrationScripts<br/>Discovers all migration files]
-    Parallel --> QueryDB[SchemaVersionService getAllMigratedScripts<br/>Queries schema_version table]
+    Parallel --> QueryDB[SchemaVersionOrchestrator getAllMigratedScripts<br/>Queries schema_version table]
 
     ReadFiles --> Filter[Sequential Filtering]
     QueryDB --> Filter
@@ -48,15 +48,15 @@ graph TD
     Execute --> Loop{For each script}
     Loop --> LoadModule[script init - load module]
     LoadModule --> RunUp[script up - db info handler]
-    RunUp --> SaveSchema[SchemaVersionService save]
+    RunUp --> SaveSchema[SchemaVersionOrchestrator save]
     SaveSchema --> NextScript{More scripts?}
     NextScript -->|Yes| Loop
     NextScript -->|No| DeleteBackup
 
-    DeleteBackup[BackupService deleteBackup<br/>Success remove backup] --> Return[Return IMigrationResult<br/>success executed migrated ignored]
+    DeleteBackup[BackupOrchestrator deleteBackup<br/>Success remove backup] --> Return[Return IMigrationResult<br/>success executed migrated ignored]
 
-    Loop -->|Error| Restore[BackupService restore]
-    Restore --> DeleteBackupError[BackupService deleteBackup]
+    Loop -->|Error| Restore[BackupOrchestrator restore]
+    Restore --> DeleteBackupError[BackupOrchestrator deleteBackup]
     DeleteBackupError --> ReturnError[Return IMigrationResult with errors]
 
     style Start fill:#e3f2fd
@@ -77,8 +77,8 @@ graph TD
 classDiagram
     class MigrationScriptRunner {
         -IDatabaseMigrationHandler handler
-        -IBackupService backupService
-        -ISchemaVersionService schemaVersionService
+        -IBackupOrchestrator backupOrchestrator
+        -ISchemaVersionOrchestrator schemaVersionOrchestrator
         -IMigrationService migrationService
         -IMigrationRenderer migrationRenderer
         -IMigrationScanner migrationScanner
@@ -91,7 +91,7 @@ classDiagram
 
     class MigrationScanner {
         -IMigrationService migrationService
-        -ISchemaVersionService schemaVersionService
+        -ISchemaVersionOrchestrator schemaVersionOrchestrator
         -MigrationScriptSelector selector
         -IDatabaseMigrationHandler handler
         +scan() Promise~IScanResult~
@@ -104,19 +104,19 @@ classDiagram
 
     class MigrationRunner {
         -IDatabaseMigrationHandler handler
-        -ISchemaVersionService schemaVersionService
+        -ISchemaVersionOrchestrator schemaVersionOrchestrator
         -ILogger logger
         +execute(scripts) Promise~void~
         +executeOne(script) Promise~void~
     }
 
-    class BackupService {
+    class BackupOrchestrator {
         +backup() Promise~string~
         +restore(path) Promise~void~
         +deleteBackup(path) Promise~void~
     }
 
-    class SchemaVersionService {
+    class SchemaVersionOrchestrator {
         +init() Promise~void~
         +save(script) Promise~void~
         +getAllMigrated() Promise~IMigrationScript[]~
@@ -130,15 +130,15 @@ classDiagram
     MigrationScriptRunner --> MigrationScanner
     MigrationScriptRunner --> MigrationScriptSelector
     MigrationScriptRunner --> MigrationRunner
-    MigrationScriptRunner --> BackupService
-    MigrationScriptRunner --> SchemaVersionService
+    MigrationScriptRunner --> BackupOrchestrator
+    MigrationScriptRunner --> SchemaVersionOrchestrator
     MigrationScriptRunner --> MigrationService
 
     MigrationScanner --> MigrationService
-    MigrationScanner --> SchemaVersionService
+    MigrationScanner --> SchemaVersionOrchestrator
     MigrationScanner --> MigrationScriptSelector
 
-    MigrationRunner --> SchemaVersionService
+    MigrationRunner --> SchemaVersionOrchestrator
 ```
 
 ---

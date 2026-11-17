@@ -5,7 +5,7 @@ import {addLockStatusCommand} from '../../../../src/cli/commands/lock-status';
 import {MigrationScriptRunner} from '../../../../src/service/MigrationScriptRunner';
 import {EXIT_CODES} from '../../../../src/cli/utils/exitCodes';
 import {IDB} from '../../../../src/interface';
-import {ILockStatus} from '../../../../src/interface/service/ILockingService';
+import {ILockStatus} from '../../../../src/interface/service/ILockingProvider';
 
 interface MockDB extends IDB {
     data: string;
@@ -13,8 +13,8 @@ interface MockDB extends IDB {
 
 describe('lock:status command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
-    let createExecutorStub: sinon.SinonStub;
+    let mockRunner: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
+    let createRunnerStub: sinon.SinonStub;
     let consoleLogStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
     let processExitStub: sinon.SinonStub;
@@ -23,13 +23,13 @@ describe('lock:status command', () => {
         program = new Command();
         program.exitOverride(); // Prevent actual process exit in tests
 
-        // Create mock executor
-        mockExecutor = {
+        // Create mock runner
+        mockRunner = {
             getLockStatus: sinon.stub(),
         } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
-        createExecutorStub = sinon.stub().returns(mockExecutor);
+        createRunnerStub = sinon.stub().returns(mockRunner);
 
         // Stub console and process.exit
         consoleLogStub = sinon.stub(console, 'log');
@@ -37,7 +37,7 @@ describe('lock:status command', () => {
         processExitStub = sinon.stub(process, 'exit');
 
         // Add command
-        addLockStatusCommand(program, createExecutorStub);
+        addLockStatusCommand(program, createRunnerStub);
     });
 
     afterEach(() => {
@@ -61,7 +61,7 @@ describe('lock:status command', () => {
 
     describe('Execution', () => {
         it('should show NOT CONFIGURED when locking service is not available', async () => {
-            mockExecutor.getLockStatus.resolves(null);
+            mockRunner.getLockStatus.resolves(null);
 
             await program.parseAsync(['node', 'test', 'lock:status']);
 
@@ -77,7 +77,7 @@ describe('lock:status command', () => {
                 expiresAt: null,
                 processId: undefined
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
 
             await program.parseAsync(['node', 'test', 'lock:status']);
 
@@ -91,17 +91,17 @@ describe('lock:status command', () => {
             const expiresAt = new Date('2025-12-18T10:10:00Z');
             const status: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-123',
+                lockedBy: 'test-runner-123',
                 lockedAt,
                 expiresAt,
                 processId: '12345'
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
 
             await program.parseAsync(['node', 'test', 'lock:status']);
 
             expect(consoleLogStub.calledWith('\nLock Status: LOCKED')).to.be.true;
-            expect(consoleLogStub.calledWith('Locked by: test-executor-123')).to.be.true;
+            expect(consoleLogStub.calledWith('Locked by: test-runner-123')).to.be.true;
             expect(consoleLogStub.calledWith(`Locked at: ${lockedAt.toISOString()}`)).to.be.true;
             expect(consoleLogStub.calledWith(`Expires at: ${expiresAt.toISOString()}`)).to.be.true;
             expect(consoleLogStub.calledWith('Process ID: 12345')).to.be.true;
@@ -111,12 +111,12 @@ describe('lock:status command', () => {
         it('should handle locked status without process ID', async () => {
             const status: ILockStatus = {
                 isLocked: true,
-                lockedBy: 'test-executor-456',
+                lockedBy: 'test-runner-456',
                 lockedAt: new Date('2025-12-18T10:00:00Z'),
                 expiresAt: new Date('2025-12-18T10:10:00Z'),
                 processId: undefined
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
 
             await program.parseAsync(['node', 'test', 'lock:status']);
 
@@ -132,7 +132,7 @@ describe('lock:status command', () => {
                 expiresAt: null,
                 processId: undefined
             };
-            mockExecutor.getLockStatus.resolves(status);
+            mockRunner.getLockStatus.resolves(status);
 
             await program.parseAsync(['node', 'test', 'lock:status']);
 
@@ -143,7 +143,7 @@ describe('lock:status command', () => {
         });
 
         it('should handle errors gracefully', async () => {
-            mockExecutor.getLockStatus.rejects(new Error('Database connection failed'));
+            mockRunner.getLockStatus.rejects(new Error('Database connection failed'));
 
             await program.parseAsync(['node', 'test', 'lock:status']);
 
@@ -152,7 +152,7 @@ describe('lock:status command', () => {
         });
 
         it('should handle non-Error exceptions', async () => {
-            mockExecutor.getLockStatus.callsFake(async () => {
+            mockRunner.getLockStatus.callsFake(async () => {
                 throw 'String error';
             });
 
@@ -167,7 +167,7 @@ describe('lock:status command', () => {
             const errorWithNullMessage = Object.create(Error.prototype);
             errorWithNullMessage.message = null;
             errorWithNullMessage.name = 'Error';
-            mockExecutor.getLockStatus.rejects(errorWithNullMessage);
+            mockRunner.getLockStatus.rejects(errorWithNullMessage);
 
             await program.parseAsync(['node', 'test', 'lock:status']);
 

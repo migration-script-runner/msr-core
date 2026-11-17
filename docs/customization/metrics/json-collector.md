@@ -41,7 +41,7 @@ import {
   JsonMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new JsonMetricsCollector({
@@ -52,7 +52,7 @@ const executor = new MigrationScriptRunner({
   config
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Output file** (`./metrics/migration.json`):

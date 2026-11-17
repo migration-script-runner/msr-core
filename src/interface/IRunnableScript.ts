@@ -39,7 +39,7 @@ export interface IRunnableScript<DB extends IDB> {
      * Execute the migration.
      *
      * This method contains the actual migration logic (creating tables, modifying schemas,
-     * migrating data, etc.). It is called by the migration executor when the migration runs.
+     * migrating data, etc.). It is called by the migration runner when the migration runs.
      *
      * @param db - Database connection/client for executing queries (typed with generic DB parameter)
      * @param info - Metadata about this migration (name, timestamp, username)

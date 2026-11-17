@@ -26,7 +26,7 @@ import {
  * Options for creating a CLI instance.
  *
  * @template DB - Database interface type
- * @template TRunner - Executor type (MigrationScriptRunner or adapter extending it)
+ * @template TRunner - Runner type (MigrationScriptRunner or adapter extending it)
  * @template TConfig - Configuration type (Config or adapter-specific config extending it)
  */
 export interface CLIOptions<
@@ -40,7 +40,7 @@ export interface CLIOptions<
      * Receives the final merged Config (defaults → file → env vars → CLI flags)
      * and should return an instance of MigrationScriptRunner or adapter that extends it.
      *
-     * **NEW in v0.8.2:** Supports both synchronous and asynchronous executor creation.
+     * **NEW in v0.8.2:** Supports both synchronous and asynchronous runner creation.
      * Use async when your database adapter requires async initialization (connections, auth, etc).
      *
      * **NEW in v0.8.4:** Supports custom config types via TConfig generic parameter.
@@ -51,8 +51,8 @@ export interface CLIOptions<
      *
      * @example
      * ```typescript
-     * // Synchronous executor (backward compatible)
-     * createExecutor: (config) => {
+     * // Synchronous runner (backward compatible)
+     * createRunner: (config) => {
      *   const handler = new MongoHandler(config.mongoUri);
      *   return new MongoRunner({ handler, config });
      * }
@@ -60,8 +60,8 @@ export interface CLIOptions<
      *
      * @example
      * ```typescript
-     * // Asynchronous executor (NEW in v0.8.2)
-     * createExecutor: async (config) => {
+     * // Asynchronous runner (NEW in v0.8.2)
+     * createRunner: async (config) => {
      *   const handler = await FirebaseHandler.getInstance(config);
      *   return new FirebaseRunner({ handler, config });
      * }
@@ -75,13 +75,13 @@ export interface CLIOptions<
      *   applicationCredentials: string;
      * }
      *
-     * createExecutor: async (config: FirebaseConfig) => {
+     * createRunner: async (config: FirebaseConfig) => {
      *   // ✅ config.databaseUrl is typed and autocompletes!
      *   return FirebaseRunner.getInstance({ config });
      * }
      * ```
      */
-    createExecutor: (config: TConfig) => TRunner | Promise<TRunner>;
+    createRunner: (config: TConfig) => TRunner | Promise<TRunner>;
 
     /**
      * CLI metadata (optional).
@@ -108,19 +108,19 @@ export interface CLIOptions<
      * Called after base commands are registered but before program is returned.
      * Use this to add adapter-specific commands that call custom methods on your adapter.
      *
-     * **NEW in v0.8.2:** createExecutor returns Promise to support async initialization.
+     * **NEW in v0.8.2:** createRunner returns Promise to support async initialization.
      *
      * @param program - Commander program to extend with custom commands
-     * @param createExecutor - Factory function that creates your adapter with merged config (returns Promise)
+     * @param createRunner - Factory function that creates your adapter with merged config (returns Promise)
      *
      * @example
      * ```typescript
-     * extendCLI: (program, createExecutor) => {
+     * extendCLI: (program, createRunner) => {
      *   program
      *     .command('vacuum')
      *     .description('Run VACUUM ANALYZE on PostgreSQL database')
      *     .action(async () => {
-     *       const adapter = await createExecutor(); // NEW: await required
+     *       const adapter = await createRunner(); // NEW: await required
      *       await adapter.vacuum(); // Custom method on adapter
      *       console.log('✓ Vacuum completed');
      *       process.exit(0);
@@ -128,7 +128,7 @@ export interface CLIOptions<
      * }
      * ```
      */
-    extendCLI?: (program: Command, createExecutor: () => Promise<TRunner>) => void;
+    extendCLI?: (program: Command, createRunner: () => Promise<TRunner>) => void;
 
     /**
      * Optional callback to add adapter-specific CLI options.
@@ -163,7 +163,7 @@ export interface CLIOptions<
      *     }
      *   },
      *
-     *   createExecutor: async (config) => {
+     *   createRunner: async (config) => {
      *     // config.databaseUrl and config.applicationCredentials available here
      *     return FirebaseRunner.getInstance({ config });
      *   }
@@ -178,7 +178,7 @@ export interface CLIOptions<
     /**
      * Optional callback to map custom CLI flags to config properties.
      *
-     * Called after standard config loading but before createExecutor, allowing you to
+     * Called after standard config loading but before createRunner, allowing you to
      * map your custom CLI flags to config properties. Custom flags have highest priority
      * in the config waterfall (override defaults → file → env → options.config → custom flags).
      *
@@ -210,7 +210,7 @@ export interface CLIOptions<
      *     }
      *   },
      *
-     *   createExecutor: (config) => new MongoRunner({ config })
+     *   createRunner: (config) => new MongoRunner({ config })
      * });
      * ```
      *
@@ -229,7 +229,7 @@ export interface CLIOptions<
      *     config.applicationCredentials = flags.credentials as string;
      *   },
      *
-     *   createExecutor: async (config) => {
+     *   createRunner: async (config) => {
      *     // ✅ config.databaseUrl is typed!
      *     return FirebaseRunner.getInstance({ config });
      *   }
@@ -256,11 +256,11 @@ export interface CLIOptions<
  * The common `--backup-mode` flag accepts `full`, `create_only`, `restore_only`,
  * or `manual`. If omitted, the loaded configuration's backup mode is preserved.
  *
- * The final merged config is passed to your `createExecutor` factory function,
+ * The final merged config is passed to your `createRunner` factory function,
  * allowing you to initialize your adapter with the correct configuration.
  *
  * @template DB - Database interface type
- * @template TRunner - Executor type (inferred from createExecutor return type)
+ * @template TRunner - Runner type (inferred from createRunner return type)
  * @template TConfig - Configuration type (Config or adapter-specific config extending it)
  * @param options - CLI creation options
  * @returns Commander program ready for parsing or extension
@@ -276,7 +276,7 @@ export interface CLIOptions<
  *   name: 'msr-mongodb',
  *   description: 'MongoDB Migration Runner',
  *   version: '1.0.0',
- *   createExecutor: (config) => {
+ *   createRunner: (config) => {
  *     const handler = new MongoHandler(config.mongoUri || 'mongodb://localhost');
  *     return new MongoRunner({ handler, config });
  *   }
@@ -296,15 +296,15 @@ export interface CLIOptions<
  *
  * const program = createCLI({
  *   name: 'msr-postgres',
- *   createExecutor: (config) => new PostgresRunner({ handler, config }),
+ *   createRunner: (config) => new PostgresRunner({ handler, config }),
  *
  *   // Add custom commands with full type safety
- *   extendCLI: (program, createExecutor) => {
+ *   extendCLI: (program, createRunner) => {
  *     program
  *       .command('vacuum')
  *       .description('Run VACUUM ANALYZE on database')
  *       .action(async () => {
- *         const adapter = createExecutor(); // Typed as PostgresRunner!
+ *         const adapter = await createRunner(); // Typed as PostgresRunner!
  *         await adapter.vacuum(); // ✓ TypeScript knows about vacuum()
  *         console.log('✓ Vacuum completed');
  *         process.exit(0);
@@ -338,7 +338,7 @@ export interface CLIOptions<
  *     config.applicationCredentials = flags.credentials as string;
  *   },
  *
- *   createExecutor: async (config) => {
+ *   createRunner: async (config) => {
  *     // ✅ config is typed as FirebaseConfig!
  *     return FirebaseRunner.getInstance({ config });
  *   }
@@ -383,8 +383,8 @@ export function createCLI<
         options.addCustomOptions(program);
     }
 
-    // Factory function to create executor based on parsed CLI flags
-    const createExecutorWithFlags = async (): Promise<TRunner> => {
+    // Factory function to create runner based on parsed CLI flags
+    const createRunnerWithFlags = async (): Promise<TRunner> => {
         const opts = program.opts<CLIFlags>();
 
         // 1. Load base config using waterfall (defaults → file → env vars)
@@ -407,34 +407,34 @@ export function createCLI<
         }
 
         // 5. Call adapter's factory function with final merged config (supports both sync and async)
-        const executorOrPromise = options.createExecutor(config);
-        const executor = executorOrPromise instanceof Promise
-            ? await executorOrPromise
-            : executorOrPromise;
+        const runnerOrPromise = options.createRunner(config);
+        const runner = runnerOrPromise instanceof Promise
+            ? await runnerOrPromise
+            : runnerOrPromise;
 
-        // 6. If logger was created from CLI flags, override executor's logger
+        // 6. If logger was created from CLI flags, override runner's logger
         if (logger) {
-            // Note: This assumes executor has a way to set logger
-            // We'll need to verify this works with the executor's implementation
+            // Note: This assumes runner has a way to set logger
+            // We'll need to verify this works with the runner's implementation
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (executor as any).logger = logger;
+            (runner as any).logger = logger;
         }
 
-        return executor;
+        return runner;
     };
 
     // Add base commands - pass factory function
-    addMigrateCommand(program, createExecutorWithFlags);
-    addListCommand(program, createExecutorWithFlags);
-    addDownCommand(program, createExecutorWithFlags);
-    addValidateCommand(program, createExecutorWithFlags);
-    addBackupCommand(program, createExecutorWithFlags);
-    addLockStatusCommand(program, createExecutorWithFlags);
-    addLockReleaseCommand(program, createExecutorWithFlags);
+    addMigrateCommand(program, createRunnerWithFlags);
+    addListCommand(program, createRunnerWithFlags);
+    addDownCommand(program, createRunnerWithFlags);
+    addValidateCommand(program, createRunnerWithFlags);
+    addBackupCommand(program, createRunnerWithFlags);
+    addLockStatusCommand(program, createRunnerWithFlags);
+    addLockReleaseCommand(program, createRunnerWithFlags);
 
     // Call extendCLI callback if provided
     if (options.extendCLI) {
-        options.extendCLI(program, createExecutorWithFlags);
+        options.extendCLI(program, createRunnerWithFlags);
     }
 
     return program;

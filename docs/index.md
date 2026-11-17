@@ -203,10 +203,10 @@ const config = new Config();
 config.folder = './migrations';
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner<IMyDatabase>({ handler , config });
+const runner = new MigrationScriptRunner<IMyDatabase>({ handler , config });
 
 // Library usage - returns result object
-const result = await executor.up();
+const result = await runner.up();
 
 if (result.success) {
   console.log(`✅ Executed ${result.executed.length} migrations`);

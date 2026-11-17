@@ -9,7 +9,7 @@ import {
     IBackup,
     Config,
     LockingConfig,
-    ILockingService,
+    ILockingProvider,
     ILockStatus,
     SilentLogger,
     MigrationScript
@@ -25,7 +25,7 @@ describe('Migration Locking Mechanism', () => {
     let lockStatusCalls: number = 0;
 
     // Mock locking service
-    class MockLockingService implements ILockingService<IDB> {
+    class MockLockingProvider implements ILockingProvider<IDB> {
         private locked = false;
         private owner: string | null = null;
         public shouldFailAcquire = false;
@@ -41,8 +41,8 @@ describe('Migration Locking Mechanism', () => {
             return this.storageInitialized;
         }
 
-        async acquireLock(executorId: string): Promise<boolean> {
-            lockAcquireCalls.push(executorId);
+        async acquireLock(runnerId: string): Promise<boolean> {
+            lockAcquireCalls.push(runnerId);
 
             if (this.shouldFailAcquire) {
                 return false;
@@ -58,23 +58,23 @@ describe('Migration Locking Mechanism', () => {
             }
 
             this.locked = true;
-            this.owner = executorId;
+            this.owner = runnerId;
             return true;
         }
 
-        async verifyLockOwnership(executorId: string): Promise<boolean> {
-            lockVerifyCalls.push(executorId);
+        async verifyLockOwnership(runnerId: string): Promise<boolean> {
+            lockVerifyCalls.push(runnerId);
 
             if (this.shouldFailVerify) {
                 return false;
             }
 
-            return this.locked && this.owner === executorId;
+            return this.locked && this.owner === runnerId;
         }
 
-        async releaseLock(executorId: string): Promise<void> {
-            lockReleaseCalls.push(executorId);
-            if (this.owner === executorId) {
+        async releaseLock(runnerId: string): Promise<void> {
+            lockReleaseCalls.push(runnerId);
+            if (this.owner === runnerId) {
                 this.locked = false;
                 this.owner = null;
             }
@@ -105,7 +105,7 @@ describe('Migration Locking Mechanism', () => {
         }
     }
 
-    function createHandler(lockingService?: ILockingService<IDB>): IDatabaseMigrationHandler<IDB> {
+    function createHandler(lockingProvider?: ILockingProvider<IDB>): IDatabaseMigrationHandler<IDB> {
         return {
             db: {
                 checkConnection: async () => true,
@@ -127,7 +127,7 @@ describe('Migration Locking Mechanism', () => {
                 backup: async () => '',
                 restore: async () => { return; }
             } as IBackup<IDB>,
-            lockingService,
+            lockingProvider,
             getName: () => 'Test Handler',
             getVersion: () => '1.0.0'
         };
@@ -147,19 +147,19 @@ describe('Migration Locking Mechanism', () => {
 
     describe('Locking Enabled - Success Path', () => {
         it('should acquire and release lock during migration', async () => {
-            const lockingService = new MockLockingService();
-            const handler = createHandler(lockingService);
+            const lockingProvider = new MockLockingProvider();
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: true });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
 
             // Should call cleanup, acquire, verify, and release
             expect(lockCleanupCalls).to.equal(1);
@@ -167,29 +167,29 @@ describe('Migration Locking Mechanism', () => {
             expect(lockVerifyCalls).to.have.lengthOf(1);
             expect(lockReleaseCalls).to.have.lengthOf(1);
 
-            // Verify same executor ID used throughout
+            // Verify same runner ID used throughout
             expect(lockAcquireCalls[0]).to.equal(lockVerifyCalls[0]);
             expect(lockAcquireCalls[0]).to.equal(lockReleaseCalls[0]);
 
-            // Verify executor ID format (hostname-pid-uuid)
-            const executorId = lockAcquireCalls[0];
-            const parts = executorId.split('-');
+            // Verify runner ID format (hostname-pid-uuid)
+            const runnerId = lockAcquireCalls[0];
+            const parts = runnerId.split('-');
             expect(parts.length).to.be.greaterThan(3); // hostname-pid-uuid (uuid has dashes)
         });
 
         it('should acquire and release lock during migrateToVersion', async () => {
-            const lockingService = new MockLockingService();
-            const handler = createHandler(lockingService);
+            const lockingProvider = new MockLockingProvider();
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate(999999999999);
+            await runner.migrate(999999999999);
 
             expect(lockAcquireCalls).to.have.lengthOf(1);
             expect(lockVerifyCalls).to.have.lengthOf(1);
@@ -198,18 +198,18 @@ describe('Migration Locking Mechanism', () => {
     });
 
     describe('Locking Disabled', () => {
-        it('should skip locking when lockingService is not provided', async () => {
+        it('should skip locking when lockingProvider is not provided', async () => {
             const handler = createHandler(); // No locking service
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
 
             // No locking calls should be made
             expect(lockAcquireCalls).to.have.lengthOf(0);
@@ -218,19 +218,19 @@ describe('Migration Locking Mechanism', () => {
         });
 
         it('should skip locking when config.locking.enabled is false', async () => {
-            const lockingService = new MockLockingService();
-            const handler = createHandler(lockingService);
+            const lockingProvider = new MockLockingProvider();
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: false });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
 
             // No locking calls should be made
             expect(lockAcquireCalls).to.have.lengthOf(0);
@@ -241,10 +241,10 @@ describe('Migration Locking Mechanism', () => {
 
     describe('Lock Acquisition Failure', () => {
         it('should throw error when lock acquisition fails (fail-fast)', async () => {
-            const lockingService = new MockLockingService();
-            lockingService.shouldFailAcquire = true;
+            const lockingProvider = new MockLockingProvider();
+            lockingProvider.shouldFailAcquire = true;
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({
@@ -252,13 +252,13 @@ describe('Migration Locking Mechanism', () => {
                 retryAttempts: 0 // Fail fast
             });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await expect(executor.migrate()).to.be.rejectedWith(
+            await expect(runner.migrate()).to.be.rejectedWith(
                 /Failed to acquire migration lock after 1 attempt/
             );
 
@@ -269,10 +269,10 @@ describe('Migration Locking Mechanism', () => {
         });
 
         it('should retry lock acquisition based on config', async () => {
-            const lockingService = new MockLockingService();
-            lockingService.failAcquireAttempts = 2; // Fail first 2, succeed on 3rd
+            const lockingProvider = new MockLockingProvider();
+            lockingProvider.failAcquireAttempts = 2; // Fail first 2, succeed on 3rd
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({
@@ -281,13 +281,13 @@ describe('Migration Locking Mechanism', () => {
                 retryDelay: 10 // Fast for testing
             });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
 
             // Should attempt 3 times before succeeding
             expect(lockAcquireCalls).to.have.lengthOf(3);
@@ -296,10 +296,10 @@ describe('Migration Locking Mechanism', () => {
         });
 
         it('should fail after exhausting all retry attempts', async () => {
-            const lockingService = new MockLockingService();
-            lockingService.shouldFailAcquire = true;
+            const lockingProvider = new MockLockingProvider();
+            lockingProvider.shouldFailAcquire = true;
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({
@@ -308,13 +308,13 @@ describe('Migration Locking Mechanism', () => {
                 retryDelay: 10
             });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await expect(executor.migrate()).to.be.rejectedWith(
+            await expect(runner.migrate()).to.be.rejectedWith(
                 /Failed to acquire migration lock after 3 attempt/
             );
 
@@ -326,20 +326,20 @@ describe('Migration Locking Mechanism', () => {
 
     describe('Lock Ownership Verification Failure', () => {
         it('should throw error when lock ownership verification fails', async () => {
-            const lockingService = new MockLockingService();
-            lockingService.shouldFailVerify = true;
+            const lockingProvider = new MockLockingProvider();
+            lockingProvider.shouldFailVerify = true;
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await expect(executor.migrate()).to.be.rejectedWith(
+            await expect(runner.migrate()).to.be.rejectedWith(
                 /Lock ownership verification failed/
             );
 
@@ -350,14 +350,14 @@ describe('Migration Locking Mechanism', () => {
 
     describe('Lock Release on Error', () => {
         it('should release lock even when migration fails', async () => {
-            const lockingService = new MockLockingService();
-            const handler = createHandler(lockingService);
+            const lockingProvider = new MockLockingProvider();
+            const handler = createHandler(lockingProvider);
 
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: true });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -371,7 +371,7 @@ describe('Migration Locking Mechanism', () => {
             };
 
             // Stub the scanner to return the failing migration
-            sinon.stub((executor as any).core.scanner, 'scan').resolves({
+            sinon.stub((runner as any).core.scanner, 'scan').resolves({
                 all: [failingMigration],
                 migrated: [],
                 pending: [failingMigration],
@@ -379,7 +379,7 @@ describe('Migration Locking Mechanism', () => {
                 executed: []
             });
 
-            const result = await executor.migrate();
+            const result = await runner.migrate();
 
             // Migration should fail but lock should be released
             expect(result.success).to.be.false;
@@ -388,48 +388,48 @@ describe('Migration Locking Mechanism', () => {
         });
 
         it('should not throw if lock release fails', async () => {
-            const lockingService = new MockLockingService();
+            const lockingProvider = new MockLockingProvider();
             // Override releaseLock to throw error
-            lockingService.releaseLock = async () => {
+            lockingProvider.releaseLock = async () => {
                 lockReleaseCalls.push('error');
                 throw new Error('Release failed');
             };
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             // Should not throw despite lock release failure
-            await executor.migrate();
+            await runner.migrate();
 
             expect(lockReleaseCalls).to.have.lengthOf(1);
         });
     });
 
-    describe('Executor ID Generation', () => {
-        it('should generate unique executor IDs for each migration', async () => {
-            const lockingService = new MockLockingService();
-            const handler = createHandler(lockingService);
+    describe('Runner ID Generation', () => {
+        it('should generate unique runner IDs for each migration', async () => {
+            const lockingProvider = new MockLockingProvider();
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
-            await executor.migrate();
+            await runner.migrate();
             const firstId = lockAcquireCalls[0];
 
             lockAcquireCalls = [];
-            await executor.migrate();
+            await runner.migrate();
             const secondId = lockAcquireCalls[0];
 
             // IDs should be different due to UUID
@@ -445,22 +445,22 @@ describe('Migration Locking Mechanism', () => {
 
     describe('Error Messages', () => {
         it('should include lock status in error message when lock fails', async () => {
-            const lockingService = new MockLockingService();
-            lockingService.shouldFailAcquire = true;
+            const lockingProvider = new MockLockingProvider();
+            lockingProvider.shouldFailAcquire = true;
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
@@ -471,53 +471,53 @@ describe('Migration Locking Mechanism', () => {
         });
 
         it('should include lock holder information in error when available', async () => {
-            const lockingService = new MockLockingService();
+            const lockingProvider = new MockLockingProvider();
 
-            // Manually set lock to simulate another executor holding it
-            await lockingService.acquireLock('other-executor-123-uuid');
-            lockingService.shouldFailAcquire = true;
+            // Manually set lock to simulate another runner holding it
+            await lockingProvider.acquireLock('other-runner-123-uuid');
+            lockingProvider.shouldFailAcquire = true;
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
-                expect(errorMsg).to.include('currently held by: other-executor-123-uuid');
+                expect(errorMsg).to.include('currently held by: other-runner-123-uuid');
                 expect(errorMsg).to.include('expires:');
             }
         });
 
         it('should show "lock status unknown" when getLockStatus returns null', async () => {
-            const lockingService = new MockLockingService();
-            lockingService.shouldFailAcquire = true;
+            const lockingProvider = new MockLockingProvider();
+            lockingProvider.shouldFailAcquire = true;
 
             // Override getLockStatus to return null
-            lockingService.getLockStatus = async () => null;
+            lockingProvider.getLockStatus = async () => null;
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
@@ -527,11 +527,11 @@ describe('Migration Locking Mechanism', () => {
         });
 
         it('should show "lock status unknown" when getLockStatus returns isLocked=false', async () => {
-            const lockingService = new MockLockingService();
-            lockingService.shouldFailAcquire = true;
+            const lockingProvider = new MockLockingProvider();
+            lockingProvider.shouldFailAcquire = true;
 
             // Override getLockStatus to return status with isLocked=false
-            lockingService.getLockStatus = async () => ({
+            lockingProvider.getLockStatus = async () => ({
                 isLocked: false,
                 lockedBy: null,
                 lockedAt: null,
@@ -539,19 +539,19 @@ describe('Migration Locking Mechanism', () => {
                 processId: undefined
             });
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
@@ -561,38 +561,38 @@ describe('Migration Locking Mechanism', () => {
         });
 
         it('should handle lock status with null expiresAt', async () => {
-            const lockingService = new MockLockingService();
+            const lockingProvider = new MockLockingProvider();
 
-            // Manually set lock to simulate another executor holding it
-            await lockingService.acquireLock('other-executor-456-uuid');
-            lockingService.shouldFailAcquire = true;
+            // Manually set lock to simulate another runner holding it
+            await lockingProvider.acquireLock('other-runner-456-uuid');
+            lockingProvider.shouldFailAcquire = true;
 
             // Override getLockStatus to return status with null expiresAt
-            lockingService.getLockStatus = async () => ({
+            lockingProvider.getLockStatus = async () => ({
                 isLocked: true,
-                lockedBy: 'other-executor-456-uuid',
+                lockedBy: 'other-runner-456-uuid',
                 lockedAt: new Date(),
                 expiresAt: null, // null expiresAt
                 processId: '456'
             });
 
-            const handler = createHandler(lockingService);
+            const handler = createHandler(lockingProvider);
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const executor = new MigrationScriptRunner<IDB>({
+            const runner = new MigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
             });
 
             try {
-                await executor.migrate();
+                await runner.migrate();
                 expect.fail('Should have thrown');
             } catch (error) {
                 const errorMsg = (error as Error).message;
-                expect(errorMsg).to.include('currently held by: other-executor-456-uuid');
+                expect(errorMsg).to.include('currently held by: other-runner-456-uuid');
                 // Should not crash when expiresAt is null
                 expect(errorMsg).to.not.include('undefined');
             }
@@ -605,10 +605,10 @@ describe('Migration Locking Mechanism', () => {
          * Verifies that all locking services implement required methods.
          */
         it('should have initLockStorage and ensureLockStorageAccessible methods', async () => {
-            const lockingService = new MockLockingService();
+            const lockingProvider = new MockLockingProvider();
 
-            expect(lockingService.initLockStorage).to.be.a('function');
-            expect(lockingService.ensureLockStorageAccessible).to.be.a('function');
+            expect(lockingProvider.initLockStorage).to.be.a('function');
+            expect(lockingProvider.ensureLockStorageAccessible).to.be.a('function');
         });
 
         /**
@@ -618,16 +618,16 @@ describe('Migration Locking Mechanism', () => {
         it('should call initLockStorage', async () => {
             let initCalled = false;
 
-            class LockingServiceWithInit extends MockLockingService {
+            class LockingProviderWithInit extends MockLockingProvider {
                 async initLockStorage(): Promise<void> {
                     initCalled = true;
                     await super.initLockStorage();
                 }
             }
 
-            const lockingService = new LockingServiceWithInit();
+            const lockingProvider = new LockingProviderWithInit();
 
-            await lockingService.initLockStorage();
+            await lockingProvider.initLockStorage();
 
             expect(initCalled).to.be.true;
         });
@@ -637,15 +637,15 @@ describe('Migration Locking Mechanism', () => {
          * Verifies the pre-flight check functionality.
          */
         it('should return true from ensureLockStorageAccessible when storage is accessible', async () => {
-            class LockingServiceWithAccessCheck extends MockLockingService {
+            class LockingProviderWithAccessCheck extends MockLockingProvider {
                 async ensureLockStorageAccessible(): Promise<boolean> {
                     return true;
                 }
             }
 
-            const lockingService = new LockingServiceWithAccessCheck();
+            const lockingProvider = new LockingProviderWithAccessCheck();
 
-            const accessible = await lockingService.ensureLockStorageAccessible();
+            const accessible = await lockingProvider.ensureLockStorageAccessible();
             expect(accessible).to.be.true;
         });
 
@@ -654,15 +654,15 @@ describe('Migration Locking Mechanism', () => {
          * Verifies the check can detect inaccessible storage.
          */
         it('should return false from ensureLockStorageAccessible when storage is not accessible', async () => {
-            class LockingServiceWithFailedCheck extends MockLockingService {
+            class LockingProviderWithFailedCheck extends MockLockingProvider {
                 async ensureLockStorageAccessible(): Promise<boolean> {
                     return false;
                 }
             }
 
-            const lockingService = new LockingServiceWithFailedCheck();
+            const lockingProvider = new LockingProviderWithFailedCheck();
 
-            const accessible = await lockingService.ensureLockStorageAccessible();
+            const accessible = await lockingProvider.ensureLockStorageAccessible();
             expect(accessible).to.be.false;
         });
 
@@ -671,16 +671,16 @@ describe('Migration Locking Mechanism', () => {
          * Verifies that initialization errors are propagated correctly.
          */
         it('should throw error from initLockStorage when setup fails', async () => {
-            class LockingServiceWithFailedInit extends MockLockingService {
+            class LockingProviderWithFailedInit extends MockLockingProvider {
                 async initLockStorage(): Promise<void> {
                     throw new Error('Failed to create lock table: permission denied');
                 }
             }
 
-            const lockingService = new LockingServiceWithFailedInit();
+            const lockingProvider = new LockingProviderWithFailedInit();
 
             await expect(
-                lockingService.initLockStorage()
+                lockingProvider.initLockStorage()
             ).to.be.rejectedWith('Failed to create lock table: permission denied');
         });
 
@@ -691,7 +691,7 @@ describe('Migration Locking Mechanism', () => {
         it('should allow initLockStorage to be called multiple times (idempotent)', async () => {
             let callCount = 0;
 
-            class IdempotentLockingService extends MockLockingService {
+            class IdempotentLockingProvider extends MockLockingProvider {
                 async initLockStorage(): Promise<void> {
                     callCount++;
                     await super.initLockStorage();
@@ -699,11 +699,11 @@ describe('Migration Locking Mechanism', () => {
                 }
             }
 
-            const lockingService = new IdempotentLockingService();
+            const lockingProvider = new IdempotentLockingProvider();
 
-            await lockingService.initLockStorage();
-            await lockingService.initLockStorage();
-            await lockingService.initLockStorage();
+            await lockingProvider.initLockStorage();
+            await lockingProvider.initLockStorage();
+            await lockingProvider.initLockStorage();
 
             expect(callCount).to.equal(3);
             // Should not throw error on multiple calls
@@ -717,7 +717,7 @@ describe('Migration Locking Mechanism', () => {
             let initCalled = false;
             let checkCalled = false;
 
-            class FullyInitializableLockingService extends MockLockingService {
+            class FullyInitializableLockingProvider extends MockLockingProvider {
                 private initialized = false;
 
                 async initLockStorage(): Promise<void> {
@@ -733,19 +733,19 @@ describe('Migration Locking Mechanism', () => {
                 }
             }
 
-            const lockingService = new FullyInitializableLockingService();
+            const lockingProvider = new FullyInitializableLockingProvider();
 
             // Check before init - should return false
-            let accessible = await lockingService.ensureLockStorageAccessible();
+            let accessible = await lockingProvider.ensureLockStorageAccessible();
             expect(accessible).to.be.false;
             expect(checkCalled).to.be.true;
 
             // Initialize
-            await lockingService.initLockStorage();
+            await lockingProvider.initLockStorage();
             expect(initCalled).to.be.true;
 
             // Check after init - should return true
-            accessible = await lockingService.ensureLockStorageAccessible();
+            accessible = await lockingProvider.ensureLockStorageAccessible();
             expect(accessible).to.be.true;
         });
     });

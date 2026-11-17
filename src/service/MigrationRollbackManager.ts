@@ -1,7 +1,7 @@
 import {IDB} from "../interface/dao";
 import {IMigrationRollbackManager} from "../interface/service/IMigrationRollbackManager";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
-import {ISchemaVersionService} from "../interface/service/ISchemaVersionService";
+import {ISchemaVersionOrchestrator} from "../interface/service/ISchemaVersionOrchestrator";
 import {MigrationScriptSelector} from "./MigrationScriptSelector";
 import {ILogger} from "../interface/ILogger";
 import {Config, MigrationScript} from "../model";
@@ -27,7 +27,7 @@ export interface MigrationRollbackManagerDependencies<DB extends IDB> {
     /**
      * Service for tracking executed migrations in the database.
      */
-    schemaVersionService: ISchemaVersionService<DB>;
+    schemaVersionOrchestrator: ISchemaVersionOrchestrator<DB>;
 
     /**
      * Service for scanning and gathering complete migration state.
@@ -85,7 +85,7 @@ export interface MigrationRollbackManagerDependencies<DB extends IDB> {
  * ```typescript
  * const rollbackManager = new MigrationRollbackManager({
  *     handler: myDatabaseHandler,
- *     schemaVersionService,
+ *     schemaVersionOrchestrator,
  *     migrationScanner,
  *     selector,
  *     logger: new ConsoleLogger(),
@@ -102,7 +102,7 @@ export interface MigrationRollbackManagerDependencies<DB extends IDB> {
  */
 export class MigrationRollbackManager<DB extends IDB> implements IMigrationRollbackManager<DB> {
     private readonly handler: IDatabaseMigrationHandler<DB>;
-    private readonly schemaVersionService: ISchemaVersionService<DB>;
+    private readonly schemaVersionOrchestrator: ISchemaVersionOrchestrator<DB>;
     private readonly migrationScanner: IMigrationScanner<DB>;
     private readonly selector: MigrationScriptSelector<DB>;
     private readonly logger: ILogger;
@@ -114,7 +114,7 @@ export class MigrationRollbackManager<DB extends IDB> implements IMigrationRollb
 
     constructor(dependencies: MigrationRollbackManagerDependencies<DB>) {
         this.handler = dependencies.handler;
-        this.schemaVersionService = dependencies.schemaVersionService;
+        this.schemaVersionOrchestrator = dependencies.schemaVersionOrchestrator;
         this.migrationScanner = dependencies.migrationScanner;
         this.selector = dependencies.selector;
         this.logger = dependencies.logger;
@@ -177,7 +177,7 @@ export class MigrationRollbackManager<DB extends IDB> implements IMigrationRollb
         await this.checkDatabaseConnection();
         this.logger.info(`Rolling back to version ${targetVersion}...`);
 
-        await this.schemaVersionService.init(this.config.tableName);
+        await this.schemaVersionOrchestrator.init(this.config.tableName);
         const scripts = await this.migrationScanner.scan();
 
         const migratedToRollback = this.selector.getMigratedDownTo(scripts.migrated, targetVersion);
@@ -299,7 +299,7 @@ export class MigrationRollbackManager<DB extends IDB> implements IMigrationRollb
         script.finishedAt = Date.now();
 
         await this.hooks?.onAfterMigrate?.(script, result);
-        await this.schemaVersionService.remove(script.timestamp);
+        await this.schemaVersionOrchestrator.remove(script.timestamp);
 
         this.logger.info(`✓ Rolled back ${script.name}`);
     }

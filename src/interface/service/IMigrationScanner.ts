@@ -21,7 +21,7 @@ import {IDB} from "../dao";
  * ```typescript
  * const scanner = new MigrationScanner<IDB>(
  *     migrationService,
- *     schemaVersionService,
+ *     schemaVersionOrchestrator,
  *     selector,
  *     config
  * );

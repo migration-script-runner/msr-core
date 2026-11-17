@@ -57,18 +57,18 @@ describe('MigrationService', () => {
 import { MigrationScriptRunner, SilentLogger } from 'msr-core';
 
 describe('Migration execution', () => {
-    let executor: MigrationScriptRunner;
+    let runner: MigrationScriptRunner;
 
     beforeEach(() => {
         // Silent logger prevents test output pollution
-        executor = new MigrationScriptRunner({ handler,
+        runner = new MigrationScriptRunner({ handler,
             logger: new SilentLogger()
         });
     });
 
     it('should handle migration errors', async () => {
         await expect(
-            executor.executeMigration(invalidScript, context)
+            runner.executeMigration(invalidScript, context)
         ).to.be.rejected;
     });
 });
@@ -82,12 +82,12 @@ Keep test output focused on test results, not migration logs:
 
 ```typescript
 import { describe, it, expect } from '@jest/globals';
-import { BackupService, SilentLogger } from 'msr-core';
+import { BackupOrchestrator, SilentLogger } from 'msr-core';
 
-describe('BackupService', () => {
+describe('BackupOrchestrator', () => {
     it('should create backup successfully', async () => {
         const logger = new SilentLogger();
-        const service = new BackupService(logger);
+        const service = new BackupOrchestrator(logger);
 
         const backupPath = await service.createBackup(config, version);
 
@@ -153,14 +153,14 @@ When processing many migrations where individual log messages are overwhelming:
 import { MigrationScriptRunner, SilentLogger } from 'msr-core';
 
 async function batchExecute(scripts: MigrationScript[]) {
-    const executor = new MigrationScriptRunner({ handler,
+    const runner = new MigrationScriptRunner({ handler,
         logger: new SilentLogger()
     });
 
     console.log(`Processing ${scripts.length} migrations...`);
 
     for (const script of scripts) {
-        await executor.executeMigration(script, context);
+        await runner.executeMigration(script, context);
         // No log spam for each migration
     }
 
@@ -177,7 +177,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
     MigrationService,
     MigrationScriptRunner,
-    BackupService,
+    BackupOrchestrator,
     SilentLogger,
     MigrationConfig
 } from 'msr-core';
@@ -211,9 +211,9 @@ describe('Migration System', () => {
         });
     });
 
-    describe('BackupService', () => {
+    describe('BackupOrchestrator', () => {
         it('should create backup before migration', async () => {
-            const service = new BackupService(logger);
+            const service = new BackupOrchestrator(logger);
             const backupPath = await service.createBackup(config, 'v1.0.0');
 
             expect(fs.existsSync(backupPath)).toBe(true);

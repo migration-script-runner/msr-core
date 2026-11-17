@@ -16,6 +16,10 @@
 [npm-url]: https://npmjs.org/package/@migration-script-runner/core
 [npm-downloads-image]: https://img.shields.io/npm/dm/@migration-script-runner/core.svg?style=flat
 
+---
+
+[🌐 Official Website](https://migration-script-runner.dev/) · [🔥 MSR Firebase](https://github.com/migration-script-runner/msr-firebase) · [📖 MSR Core Documentation](https://migration-script-runner.github.io/msr-core/) · [📦 npm](https://www.npmjs.com/package/@migration-script-runner/core)
+
 **A database-agnostic migration framework for TypeScript and JavaScript projects.**
 
 MSR provides a lightweight, flexible framework for managing database migrations without locking you into a specific ORM or database system. Bring your own database implementation and let MSR handle the migration workflow, versioning, validation, and execution.
@@ -45,6 +49,8 @@ MSR Core powers the Migration Script Runner family with versioned migrations, ch
 
 - **[MSR Firebase →](https://github.com/migration-script-runner/msr-firebase)** — Bring the MSR workflow to Firebase Realtime Database, with Firebase-specific backup, restore, and locking.
 - **MSR PostgreSQL** — In development. The MSR foundation, adapted for PostgreSQL.
+
+Find shared pages, public documentation, and resources for MSR projects on the **[official website →](https://migration-script-runner.dev/)**.
 
 ---
 
@@ -190,10 +196,10 @@ config.folder = './migrations';
 config.logLevel = 'info';  // v0.6.0: 'error' | 'warn' | 'info' | 'debug'
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner<IMyDatabase>({ handler, config });
+const runner = new MigrationScriptRunner<IMyDatabase>({ handler, config });
 
 // Library usage - returns structured result
-const result = await executor.up();
+const result = await runner.up();
 
 if (result.success) {
   console.log(`✅ Executed ${result.executed.length} migrations`);
@@ -229,7 +235,7 @@ const program = createCLI({
   name: 'my-db-migrate',
   version: '1.0.0',
   description: 'Database migration CLI',
-  createExecutor: (config) => {
+  createRunner: (config) => {
     const handler = new MyDatabaseHandler();
     return new MigrationScriptRunner({ handler, config });
   }
@@ -306,13 +312,10 @@ npx my-db-migrate migrate --config-file .env.production
 
 ## 🌱 Why MSR Exists
 
-MSR was born from a real problem: In 2017, while building a mobile app with Firebase, a small team needed to backup and restore production data multiple times a week. Manual processes meant constant risk of corrupting critical data before the app even launched. The solution? A JavaScript tool that automated migrations with automatic backups and intelligent rollback.
+MSR grew from a practical need to make database migrations safer and more flexible. The official website shares the story behind the project and the principles that guide its design.
 
-Six years and many projects later, that prototype became MSR - completely rewritten in TypeScript with a database-agnostic architecture. The core insight: **migration tools should be as flexible as your stack**. Whether you're migrating Firebase collections or PostgreSQL tables, using SQL files or TypeScript logic, MSR adapts to your needs instead of forcing you into rigid patterns.
-
-Today, MSR powers migrations across multiple database platforms with features traditional tools don't offer: built-in backup/restore, polyglot migrations (SQL + TypeScript + JavaScript), custom validators, transaction control, and deep customization. It's designed for real-world scenarios where you need both the simplicity of SQL migrations and the power of programmatic logic.
-
-**[Read the full origin story →](https://migration-script-runner.github.io/msr-core/about/origin-story)**
+- **[Read the MSR origin story →](https://migration-script-runner.dev/origin-story)**
+- **[Explore the design philosophy →](https://migration-script-runner.dev/design-philosophy)**
 
 ---
 
@@ -373,7 +376,7 @@ See the [LICENSE](LICENSE) file or read the [License Documentation](https://migr
 
 ## 📞 Support
 
-- **📚 Documentation:** https://migration-script-runner.github.io/msr-core/
+- **📚 Documentation:** https://migration-script-runner.dev/
 - **🐛 Issues:** https://github.com/migration-script-runner/msr-core/issues
 - **💬 Discussions:** https://github.com/migration-script-runner/msr-core/discussions
 - **📦 npm:** https://www.npmjs.com/package/@migration-script-runner/core

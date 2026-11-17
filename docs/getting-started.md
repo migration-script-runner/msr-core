@@ -433,10 +433,10 @@ import { IMyDatabase } from './types';
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner<IMyDatabase>({ handler , config });
+const runner = new MigrationScriptRunner<IMyDatabase>({ handler , config });
 
 // Run migrations and get structured results
-const result: IMigrationResult = await executor.up();
+const result: IMigrationResult = await runner.up();
 
 if (result.success) {
   console.log(`✅ Successfully executed ${result.executed.length} migrations`);
@@ -476,14 +476,14 @@ Most database adapters require async initialization (connections, authentication
 // MyRunner.ts - Create your adapter class
 import {
     MigrationScriptRunner,
-    IMigrationRunnerDependencies,
+    IRunnerDependencies,
     IRunnerOptions,
     IDB
 } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './MyDatabaseHandler';
 
 export class MyRunner extends MigrationScriptRunner<IDB, MyDatabaseHandler> {
-    private constructor(deps: IMigrationRunnerDependencies<IDB, MyDatabaseHandler>) {
+    private constructor(deps: IRunnerDependencies<IDB, MyDatabaseHandler>) {
         super(deps);
     }
 
@@ -508,8 +508,8 @@ const program = createCLI({
     description: 'Migration tool for MyApp',
     version: '1.0.0',
 
-    // Async executor creation (v0.8.2+)
-    createExecutor: async (config) => {
+    // Async runner creation (v0.8.2+)
+    createRunner: async (config) => {
         return MyRunner.getInstance({ config });
     }
 });
@@ -539,8 +539,8 @@ const program = createCLI({
     description: 'Migration tool for MyApp',
     version: '1.0.0',
 
-    // Synchronous executor creation
-    createExecutor: (config) => {
+    // Synchronous runner creation
+    createRunner: (config) => {
         const handler = new MyDatabaseHandler();  // Sync initialization
         return new MigrationScriptRunner({ handler, config });
     }
@@ -601,9 +601,9 @@ import { IMyDatabase } from './types';
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner<IMyDatabase>({ handler , config });
+const runner = new MigrationScriptRunner<IMyDatabase>({ handler , config });
 
-const result = await executor.up();
+const result = await runner.up();
 process.exit(result.success ? 0 : 1);
 ```
 
@@ -611,10 +611,10 @@ process.exit(result.success ? 0 : 1);
 
 ```typescript
 // List all migrations with their status
-await executor.list();
+await runner.list();
 
 // List only the last 10 migrations
-await executor.list(10);
+await runner.list(10);
 ```
 
 ---
@@ -630,7 +630,7 @@ MSR supports controlled migration to specific versions, useful for:
 
 ```typescript
 // Migrate up to specific version
-const result = await executor.up(202501220300);
+const result = await runner.up(202501220300);
 
 if (result.success) {
   console.log(`✅ Database at version 202501220300`);
@@ -644,7 +644,7 @@ if (result.success) {
 
 ```typescript
 // Roll back to specific version (requires down() methods)
-const result = await executor.down(202501220100);
+const result = await runner.down(202501220100);
 
 if (result.success) {
   console.log(`✅ Rolled back to version 202501220100`);
@@ -661,14 +661,14 @@ if (result.success) {
 **Example Use Case - Staged Production Deployment:**
 ```typescript
 // Week 1: Deploy first batch of migrations
-await executor.up(202501220300);
+await runner.up(202501220300);
 
 // Week 2: Deploy second batch after monitoring
-await executor.up(202501290500);
+await runner.up(202501290500);
 
 // If issues arise, rollback to previous version
 if (issuesDetected) {
-  await executor.down(202501220300);
+  await runner.down(202501220300);
 }
 ```
 

@@ -1,7 +1,7 @@
 import {IMigrationScanner} from "../interface/service/IMigrationScanner";
 import {IScripts} from "../interface/IScripts";
 import {IMigrationService} from "../interface/service/IMigrationService";
-import {ISchemaVersionService} from "../interface/service/ISchemaVersionService";
+import {ISchemaVersionOrchestrator} from "../interface/service/ISchemaVersionOrchestrator";
 import {MigrationScriptSelector} from "./MigrationScriptSelector";
 import {Utils} from "./Utils";
 import {Config} from "../model";
@@ -27,7 +27,7 @@ import {IDB} from "../interface/dao";
  * ```typescript
  * const scanner = new MigrationScanner<IDB>(
  *     migrationService,
- *     schemaVersionService,
+ *     schemaVersionOrchestrator,
  *     selector,
  *     config
  * );
@@ -42,13 +42,13 @@ export class MigrationScanner<DB extends IDB> implements IMigrationScanner<DB> {
      * Creates a new MigrationScanner instance.
      *
      * @param migrationService - Service for reading migration files from filesystem (typed with generic DB parameter in v0.6.0)
-     * @param schemaVersionService - Service for querying executed migrations from database (typed with generic DB parameter in v0.6.0)
+     * @param schemaVersionOrchestrator - Service for querying executed migrations from database (typed with generic DB parameter in v0.6.0)
      * @param selector - Service for determining which migrations are pending/ignored (typed with generic DB parameter in v0.6.0)
      * @param config - Configuration for migrations (folder, pattern, etc.)
      */
     constructor(
         private readonly migrationService: IMigrationService<DB>,
-        private readonly schemaVersionService: ISchemaVersionService<DB>,
+        private readonly schemaVersionOrchestrator: ISchemaVersionOrchestrator<DB>,
         private readonly selector: MigrationScriptSelector<DB>,
         private readonly config: Config
     ) {}
@@ -82,7 +82,7 @@ export class MigrationScanner<DB extends IDB> implements IMigrationScanner<DB> {
     async scan(): Promise<IScripts<DB>> {
         // Gather information from database and filesystem in parallel
         const {migrated, all} = await Utils.promiseAll({
-            migrated: this.schemaVersionService.getAllMigratedScripts(),
+            migrated: this.schemaVersionOrchestrator.getAllMigratedScripts(),
             all: this.migrationService.findMigrationScripts(this.config)
         }) as IScripts<DB>;
 

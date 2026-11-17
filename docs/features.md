@@ -234,7 +234,7 @@ Ready to use these features? Start here:
 - 🗂️ **.env File Support** - Load configuration from .env, .env.production, .env.local files with priority control
 - 🎨 **Facade Pattern** - Services grouped into logical facades for better organization
 - 🏭 **Factory Pattern** - Dedicated service factory reduces constructor complexity by 83%
-- 🔧 **Protected Facades** - Adapters can extend executor and access internal services
+- 🔧 **Protected Facades** - Adapters can extend runner and access internal services
 - ✨ **Extensible Configuration** - IConfigLoader interface for custom environment variable handling
 - 🔨 **Simplified Constructor** - Single parameter with config moved to dependencies (**BREAKING**)
 

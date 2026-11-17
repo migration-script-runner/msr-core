@@ -510,7 +510,7 @@ To restore from an existing backup:
 export MSR_BACKUP_EXISTING_BACKUP_PATH=./backups/backup-2024-01-15.bkp
 
 # Run restore operation (programmatically)
-# executor.restore()
+# runner.restore()
 ```
 
 **See Also:**

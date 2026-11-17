@@ -25,7 +25,7 @@ describe('MigrationScriptRunner', () => {
     let cfg: Config
 
     let handler: IDatabaseMigrationHandler<IDB>
-    let executor: MigrationScriptRunner<IDB>
+    let runner: MigrationScriptRunner<IDB>
 
     /**
      * Test: Constructor with automatic config loading
@@ -54,12 +54,12 @@ describe('MigrationScriptRunner', () => {
             }
         };
 
-        // Create executor without config - should auto-load via ConfigLoader
-        const testExecutor = new MigrationScriptRunner<IDB>({ handler: mockHandler , config: cfg });
+        // Create runner without config - should auto-load via ConfigLoader
+        const testRunner = new MigrationScriptRunner<IDB>({ handler: mockHandler , config: cfg });
 
         // Verify config was loaded (check a default property)
-        expect(testExecutor['config']).to.not.be.undefined;
-        expect(testExecutor['config'].folder).to.be.a('string');
+        expect(testRunner['config']).to.not.be.undefined;
+        expect(testRunner['config'].folder).to.be.a('string');
     });
 
     before(() => {
@@ -109,16 +109,16 @@ describe('MigrationScriptRunner', () => {
     })
 
     beforeEach(() => {
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
         initialized = true
         created = true
         valid = true
         spy.on(handler.schemaVersion, ['isInitialized', 'createTable', 'validateTable']);
         spy.on(handler.schemaVersion.migrationRecords, ['save', 'getAllExecuted']);
 
-        spy.on(executor, ['migrate', 'execute']);
-        spy.on((executor as any).core.backup, ['restore', 'deleteBackup', 'backup']);
-        spy.on((executor as any).core.migration, ['findMigrationScripts']);
+        spy.on(runner, ['migrate', 'execute']);
+        spy.on((runner as any).core.backup, ['restore', 'deleteBackup', 'backup']);
+        spy.on((runner as any).core.migration, ['findMigrationScripts']);
 });
 
     afterEach(() => {
@@ -139,7 +139,7 @@ describe('MigrationScriptRunner', () => {
          */
         it('should execute migration workflow successfully', async () => {
             // Execute the full migration workflow
-            const result: IMigrationResult<IDB> = await executor.migrate()
+            const result: IMigrationResult<IDB> = await runner.migrate()
 
             // Verify result object
             expect(result.success).to.be.true
@@ -157,15 +157,15 @@ describe('MigrationScriptRunner', () => {
             expect(handler.schemaVersion.migrationRecords.save).have.been.called.once
 
             // Verify migration discovery ran
-            expect((executor as any).core.migration.findMigrationScripts).have.been.called.once
+            expect((runner as any).core.migration.findMigrationScripts).have.been.called.once
 
             // Verify backup lifecycle: created → not restored (success) → deleted
-            expect((executor as any).core.backup.backup).have.been.called.once
-            expect((executor as any).core.backup.restore).have.not.been.called
-            expect((executor as any).core.backup.deleteBackup).have.been.called.once
+            expect((runner as any).core.backup.backup).have.been.called.once
+            expect((runner as any).core.backup.restore).have.not.been.called
+            expect((runner as any).core.backup.deleteBackup).have.been.called.once
 
             // Verify migration workflow method was called
-            expect(executor.migrate).have.been.called.once
+            expect(runner.migrate).have.been.called.once
         })
 
         /**
@@ -180,7 +180,7 @@ describe('MigrationScriptRunner', () => {
             cfg.folder = emptyConfig.folder;
 
             // Execute migration with no scripts to run
-            const result: IMigrationResult<IDB> = await executor.migrate()
+            const result: IMigrationResult<IDB> = await runner.migrate()
 
             // Verify result object
             expect(result.success).to.be.true
@@ -198,16 +198,16 @@ describe('MigrationScriptRunner', () => {
             expect(handler.schemaVersion.migrationRecords.save).have.not.been.called
 
             // Verify script discovery still ran
-            expect((executor as any).core.migration.findMigrationScripts).have.been.called.once
+            expect((runner as any).core.migration.findMigrationScripts).have.been.called.once
 
             // Verify backup lifecycle completed even with no migrations
-            expect((executor as any).core.backup.backup).have.been.called.once
-            expect((executor as any).core.backup.restore).have.not.been.called
-            expect((executor as any).core.backup.deleteBackup).have.been.called.once
+            expect((runner as any).core.backup.backup).have.been.called.once
+            expect((runner as any).core.backup.restore).have.not.been.called
+            expect((runner as any).core.backup.deleteBackup).have.been.called.once
 
             // Verify workflow ran but no individual migration tasks executed
-            expect(executor.migrate).have.been.called.once
-            expect(executor.execute).have.not.been.called.once
+            expect(runner.migrate).have.been.called.once
+            expect(runner.execute).have.not.been.called.once
         })
 
         /**
@@ -225,7 +225,7 @@ describe('MigrationScriptRunner', () => {
             valid = false
 
             // Execute migration which will fail validation
-            const result: IMigrationResult<IDB> = await executor.migrate()
+            const result: IMigrationResult<IDB> = await runner.migrate()
 
             // Verify result object indicates failure
             expect(result.success).to.be.false
@@ -246,17 +246,17 @@ describe('MigrationScriptRunner', () => {
             // Migration discovery does NOT happen when schema validation fails
             // Fixed flow: init() → scan() → validate migrations → backup
             // Schema validation failure happens during init(), so scan() is never called
-            expect((executor as any).core.migration.findMigrationScripts).have.not.been.called
+            expect((runner as any).core.migration.findMigrationScripts).have.not.been.called
 
             // Backup/restore NOT called when validation fails BEFORE backup is created
             // Schema validation failure happens during init(), so backup never created
-            expect((executor as any).core.backup.backup).have.not.been.called
-            expect((executor as any).core.backup.restore).have.not.been.called
-            expect((executor as any).core.backup.deleteBackup).have.not.been.called
+            expect((runner as any).core.backup.backup).have.not.been.called
+            expect((runner as any).core.backup.restore).have.not.been.called
+            expect((runner as any).core.backup.deleteBackup).have.not.been.called
 
             // Verify workflow stopped early due to validation failure
-            expect(executor.migrate).have.been.called.once
-            expect(executor.execute).have.not.been.called.once
+            expect(runner.migrate).have.been.called.once
+            expect(runner.execute).have.not.been.called.once
         })
 
         /**
@@ -275,11 +275,11 @@ describe('MigrationScriptRunner', () => {
                 }
             } as IRunnableScript<IDB>;
 
-            const readStub = sinon.stub((executor as any).core.migration, 'findMigrationScripts');
+            const readStub = sinon.stub((runner as any).core.migration, 'findMigrationScripts');
             readStub.resolves([failingScript]);
 
             // Execute migration (will fail)
-            const result: IMigrationResult<IDB> = await executor.migrate();
+            const result: IMigrationResult<IDB> = await runner.migrate();
 
             // Verify result indicates failure
             expect(result.success).to.be.false
@@ -287,9 +287,9 @@ describe('MigrationScriptRunner', () => {
             expect(result.errors!.length).to.be.greaterThan(0)
 
             // Verify error recovery workflow: backup → restore → cleanup
-            expect((executor as any).core.backup.backup).have.been.called;
-            expect((executor as any).core.backup.restore).have.been.called;
-            expect((executor as any).core.backup.deleteBackup).have.been.called;
+            expect((runner as any).core.backup.backup).have.been.called;
+            expect((runner as any).core.backup.restore).have.been.called;
+            expect((runner as any).core.backup.deleteBackup).have.been.called;
 
             readStub.restore();
         })
@@ -312,7 +312,7 @@ describe('MigrationScriptRunner', () => {
             } as IRunnableScript<IDB>;
 
             // Verify the error is propagated correctly
-            await expect(executor.execute([errorScript])).to.be.rejectedWith('Migration execution failed');
+            await expect(runner.execute([errorScript])).to.be.rejectedWith('Migration execution failed');
         })
 
         /**
@@ -344,7 +344,7 @@ describe('MigrationScriptRunner', () => {
 
             // Attempt to execute both migrations
             try {
-                await executor.execute([script1, script2]);
+                await runner.execute([script1, script2]);
                 expect.fail('Should have thrown');
             } catch (e: any) {
                 // Verify second migration was NOT executed (fail-fast)
@@ -378,10 +378,10 @@ describe('MigrationScriptRunner', () => {
             });
 
             // Test various display limits: default, 0 (all), negative, and large number
-            await executor.list()
-            await executor.list(0)
-            await executor.list(-2)
-            await executor.list(100)
+            await runner.list()
+            await runner.list(0)
+            await runner.list(-2)
+            await runner.list(100)
             spy.restore()
 
             // Spy again to verify display limit of 1 shows only most recent
@@ -393,7 +393,7 @@ describe('MigrationScriptRunner', () => {
             });
 
             // Test display limit of 1 (should show only n3)
-            await executor.list(1)
+            await runner.list(1)
             spy.restore()
         })
     })
@@ -410,7 +410,7 @@ describe('MigrationScriptRunner', () => {
             valid = true;
 
             // when: execute full migration
-            const result: IMigrationResult<IDB> = await executor.migrate();
+            const result: IMigrationResult<IDB> = await runner.migrate();
 
             // then: verify result indicates success
             expect(result.success).to.be.true
@@ -418,11 +418,11 @@ describe('MigrationScriptRunner', () => {
             expect(result.errors).to.be.undefined
 
             // then: verify key methods were called
-            expect((executor as any).core.backup.backup).have.been.called;
-            expect((executor as any).core.migration.findMigrationScripts).have.been.called;
-            expect(executor.execute).have.been.called;
-            expect((executor as any).core.backup.restore).have.not.been.called;
-            expect((executor as any).core.backup.deleteBackup).have.been.called;
+            expect((runner as any).core.backup.backup).have.been.called;
+            expect((runner as any).core.migration.findMigrationScripts).have.been.called;
+            expect(runner.execute).have.been.called;
+            expect((runner as any).core.backup.restore).have.not.been.called;
+            expect((runner as any).core.backup.deleteBackup).have.been.called;
         })
 
         /**
@@ -440,7 +440,7 @@ describe('MigrationScriptRunner', () => {
             valid = false; // cause validation to fail
 
             // when: execute migration that will fail
-            const result: IMigrationResult<IDB> = await executor.migrate();
+            const result: IMigrationResult<IDB> = await runner.migrate();
 
             // then: verify result indicates failure
             expect(result.success).to.be.false
@@ -448,10 +448,10 @@ describe('MigrationScriptRunner', () => {
             expect(result.errors!.length).to.be.greaterThan(0)
 
             // then: verify error handling lifecycle
-            expect((executor as any).core.backup.backup).have.been.called;
-            expect((executor as any).core.backup.restore).have.been.called;
-            expect((executor as any).core.backup.deleteBackup).have.been.called;
-            expect((executor as any).core.migration.findMigrationScripts).have.not.been.called;
+            expect((runner as any).core.backup.backup).have.been.called;
+            expect((runner as any).core.backup.restore).have.been.called;
+            expect((runner as any).core.backup.deleteBackup).have.been.called;
+            expect((runner as any).core.migration.findMigrationScripts).have.not.been.called;
         })
 
         /**
@@ -487,7 +487,7 @@ describe('MigrationScriptRunner', () => {
             } as IRunnableScript<IDB>;
 
             // when: execute multiple migrations
-            const executed = await executor.execute([script1, script2, script3]);
+            const executed = await runner.execute([script1, script2, script3]);
 
             // then: all should be executed in order
             expect(executed.length).eq(3, 'Should execute all 3 migrations');
@@ -533,7 +533,7 @@ describe('MigrationScriptRunner', () => {
 
             // when: execute with failure in middle
             try {
-                await executor.execute([script1, script2, script3]);
+                await runner.execute([script1, script2, script3]);
                 expect.fail('Should have thrown');
             } catch (e: any) {
                 // then: only first migration should be saved
@@ -556,7 +556,7 @@ describe('MigrationScriptRunner', () => {
             valid = true;
 
             // when: execute with no scripts
-            const result: IMigrationResult<IDB> = await executor.migrate();
+            const result: IMigrationResult<IDB> = await runner.migrate();
 
             // then: verify result indicates success with no executions
             expect(result.success).to.be.true
@@ -565,9 +565,9 @@ describe('MigrationScriptRunner', () => {
             expect(result.errors).to.be.undefined
 
             // then: should complete without error
-            expect((executor as any).core.backup.backup).have.been.called;
-            expect(executor.execute).have.been.called;
-            expect((executor as any).core.backup.deleteBackup).have.been.called;
+            expect((runner as any).core.backup.backup).have.been.called;
+            expect(runner.execute).have.been.called;
+            expect((runner as any).core.backup.deleteBackup).have.been.called;
         })
     })
 
@@ -575,7 +575,7 @@ describe('MigrationScriptRunner', () => {
         let db: IDB;
         let handler: IDatabaseMigrationHandler<IDB>;
         let config: Config;
-        let executor: MigrationScriptRunner<IDB>;
+        let runner: MigrationScriptRunner<IDB>;
 
         beforeEach(() => {
             // Create mock database
@@ -611,8 +611,8 @@ describe('MigrationScriptRunner', () => {
         });
 
         it('should throw error when hybrid migrations detected with transactions enabled', async () => {
-            // Create executor with transaction mode enabled
-            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            // Create runner with transaction mode enabled
+            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);
@@ -627,18 +627,18 @@ describe('MigrationScriptRunner', () => {
             };
 
             // Stub the migrationScanner to return our mock scripts
-            sinon.stub((executor as any).core.scanner, 'scan').resolves(mockScripts);
+            sinon.stub((runner as any).core.scanner, 'scan').resolves(mockScripts);
 
             // Stub validation to bypass file and transaction checks
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateTransactionConfiguration').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateTransactionConfiguration').resolves();
 
             // Stub init to prevent actual script loading
             sinon.stub(sql1, 'init').resolves();
             sinon.stub(ts1, 'init').resolves();
 
             // Call up() which will trigger hybrid detection - should return failure
-            const result = await executor.up();
+            const result = await runner.up();
 
             // Verify migration failed with hybrid detection error
             expect(result.success).to.be.false;
@@ -652,7 +652,7 @@ describe('MigrationScriptRunner', () => {
         });
 
         it('should NOT throw error when only SQL migrations', async () => {
-            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -662,15 +662,15 @@ describe('MigrationScriptRunner', () => {
                 ignored: []
             };
 
-            sinon.stub((executor as any).orchestration.workflow, 'migrateAll').resolves(successResult);
+            sinon.stub((runner as any).orchestration.workflow, 'migrateAll').resolves(successResult);
 
             // Should not throw error - test passes if no error thrown
-            const result = await executor.up();
+            const result = await runner.up();
             expect(result.success).to.be.true;
         });
 
         it('should NOT throw error when only TypeScript migrations', async () => {
-            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -680,16 +680,16 @@ describe('MigrationScriptRunner', () => {
                 ignored: []
             };
 
-            sinon.stub((executor as any).orchestration.workflow, 'migrateAll').resolves(successResult);
+            sinon.stub((runner as any).orchestration.workflow, 'migrateAll').resolves(successResult);
 
             // Should not throw error - test passes if no error thrown
-            const result = await executor.up();
+            const result = await runner.up();
             expect(result.success).to.be.true;
         });
 
         it('should NOT throw error when transaction mode is NONE', async () => {
             config.transaction.mode = TransactionMode.NONE;
-            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -699,15 +699,15 @@ describe('MigrationScriptRunner', () => {
                 ignored: []
             };
 
-            sinon.stub((executor as any).orchestration.workflow, 'migrateAll').resolves(successResult);
+            sinon.stub((runner as any).orchestration.workflow, 'migrateAll').resolves(successResult);
 
             // Should not throw error even with hybrid migrations when mode is NONE
-            const result = await executor.up();
+            const result = await runner.up();
             expect(result.success).to.be.true;
         });
 
         it('should NOT check when no pending migrations', async () => {
-            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const mockScripts = {
                 all: [],
@@ -718,19 +718,19 @@ describe('MigrationScriptRunner', () => {
             };
 
             // Stub the migrationScanner to return our mock scripts
-            sinon.stub((executor as any).core.scanner, 'scan').resolves(mockScripts);
+            sinon.stub((runner as any).core.scanner, 'scan').resolves(mockScripts);
 
             // Stub validation to bypass file checks
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
 
             // Should not throw error when there are no pending migrations
-            const result = await executor.up();
+            const result = await runner.up();
             expect(result.success).to.be.true;
             expect(result.executed).to.have.length(0);
         });
 
         it('should throw error for hybrid with .js files', async () => {
-            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const js1 = new MigrationScript<IDB>('V002_InsertData.js', '/path/V002_InsertData.js', 2);
@@ -744,18 +744,18 @@ describe('MigrationScriptRunner', () => {
             };
 
             // Stub the migrationScanner to return our mock scripts
-            sinon.stub((executor as any).core.scanner, 'scan').resolves(mockScripts);
+            sinon.stub((runner as any).core.scanner, 'scan').resolves(mockScripts);
 
             // Stub validation to bypass file and transaction checks
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateTransactionConfiguration').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateTransactionConfiguration').resolves();
 
             // Stub init to prevent actual script loading
             sinon.stub(sql1, 'init').resolves();
             sinon.stub(js1, 'init').resolves();
 
             // Call up() which will trigger hybrid detection - should return failure
-            const result = await executor.up();
+            const result = await runner.up();
 
             // Verify migration failed with hybrid detection error
             expect(result.success).to.be.false;
@@ -767,7 +767,7 @@ describe('MigrationScriptRunner', () => {
 
         it('should include transaction mode in error message', async () => {
             config.transaction.mode = TransactionMode.PER_BATCH;
-            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);
@@ -781,18 +781,18 @@ describe('MigrationScriptRunner', () => {
             };
 
             // Stub the migrationScanner to return our mock scripts
-            sinon.stub((executor as any).core.scanner, 'scan').resolves(mockScripts);
+            sinon.stub((runner as any).core.scanner, 'scan').resolves(mockScripts);
 
             // Stub validation to bypass file and transaction checks
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateTransactionConfiguration').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateTransactionConfiguration').resolves();
 
             // Stub init to prevent actual script loading
             sinon.stub(sql1, 'init').resolves();
             sinon.stub(ts1, 'init').resolves();
 
             // Call up() which will trigger hybrid detection - should return failure
-            const result = await executor.up();
+            const result = await runner.up();
 
             // Verify migration failed with hybrid detection error including transaction mode
             expect(result.success).to.be.false;
@@ -802,7 +802,7 @@ describe('MigrationScriptRunner', () => {
         });
 
         it('should provide helpful solutions in error message', async () => {
-            executor = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);
@@ -816,18 +816,18 @@ describe('MigrationScriptRunner', () => {
             };
 
             // Stub the migrationScanner to return our mock scripts
-            sinon.stub((executor as any).core.scanner, 'scan').resolves(mockScripts);
+            sinon.stub((runner as any).core.scanner, 'scan').resolves(mockScripts);
 
             // Stub validation to bypass file and transaction checks
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
-            sinon.stub((executor as any).orchestration.workflow.validationOrchestrator, 'validateTransactionConfiguration').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateMigrations').resolves();
+            sinon.stub((runner as any).orchestration.workflow.validationOrchestrator, 'validateTransactionConfiguration').resolves();
 
             // Stub init to prevent actual script loading
             sinon.stub(sql1, 'init').resolves();
             sinon.stub(ts1, 'init').resolves();
 
             // Call up() which will trigger hybrid detection - should return failure
-            const result = await executor.up();
+            const result = await runner.up();
 
             // Verify migration failed with hybrid detection error including helpful solutions
             expect(result.success).to.be.false;

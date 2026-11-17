@@ -1,5 +1,5 @@
-import {IBackupService} from "./service/IBackupService";
-import {ISchemaVersionService} from "./service/ISchemaVersionService";
+import {IBackupOrchestrator} from "./service/IBackupOrchestrator";
+import {ISchemaVersionOrchestrator} from "./service/ISchemaVersionOrchestrator";
 import {IMigrationRenderer} from "./service/IMigrationRenderer";
 import {IRenderStrategy} from "./service/IRenderStrategy";
 import {IMigrationService} from "./service/IMigrationService";
@@ -20,12 +20,12 @@ import {Config} from "../model";
  * This interface does NOT include the handler - that must be created by your factory method.
  *
  * **⚠️ Do NOT use this interface in your constructor!**
- * Use `IMigrationRunnerDependencies` instead, which includes the required handler.
+ * Use `IRunnerDependencies` instead, which includes the required handler.
  *
  * **Purpose:**
- * - Public API for adapter users to configure the executor
+ * - Public API for adapter users to configure the runner
  * - Used in factory methods (sync or async)
- * - Spread into `IMigrationRunnerDependencies` after creating handler
+ * - Spread into `IRunnerDependencies` after creating handler
  *
  * **Generic Type Parameters:**
  * - `DB` - Your specific database interface extending IDB (REQUIRED, v0.7.0)
@@ -40,7 +40,7 @@ import {Config} from "../model";
  * ```typescript
  * // ✅ CORRECT: Use in public factory method
  * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
- *     private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+ *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
  *         super(deps);
  *     }
  *
@@ -63,7 +63,7 @@ import {Config} from "../model";
  * }
  * ```
  *
- * @see {@link IMigrationRunnerDependencies} - Internal API for constructors (includes handler)
+ * @see {@link IRunnerDependencies} - Internal API for constructors (includes handler)
  * @see https://github.com/migration-script-runner/msr-core/blob/master/docs/guides/cli-adapter-development.md
  */
 export interface IRunnerOptions<
@@ -104,15 +104,15 @@ export interface IRunnerOptions<
 
     /**
      * Custom backup service implementation.
-     * If not provided, uses BackupService with default configuration.
+     * If not provided, uses BackupOrchestrator with default configuration.
      */
-    backupService?: IBackupService;
+    backupOrchestrator?: IBackupOrchestrator;
 
     /**
      * Custom schema version tracking service implementation.
-     * If not provided, uses SchemaVersionService with handler's schema version.
+     * If not provided, uses SchemaVersionOrchestrator with handler's schema version.
      */
-    schemaVersionService?: ISchemaVersionService<DB>;
+    schemaVersionOrchestrator?: ISchemaVersionOrchestrator<DB>;
 
     /**
      * Custom migration renderer implementation.
@@ -187,7 +187,7 @@ export interface IRunnerOptions<
      * @example
      * ```typescript
      * // Add Slack notifications
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     hooks: new SlackNotificationHooks(webhookUrl)
      * });
@@ -211,13 +211,13 @@ export interface IRunnerOptions<
      * @example
      * ```typescript
      * // Single collector - console output
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     metricsCollectors: [new ConsoleMetricsCollector()]
      * });
      *
      * // Multiple collectors simultaneously
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     metricsCollectors: [
      *         new ConsoleMetricsCollector(),
@@ -246,7 +246,7 @@ export interface IRunnerOptions<
      * @example
      * ```typescript
      * // Use custom rollback service
-     * rollbackService: new CustomRollbackService(handler, config, backupService, logger, hooks)
+     * rollbackService: new CustomRollbackService(handler, config, backupOrchestrator, logger, hooks)
      * ```
      */
     rollbackService?: IRollbackService<DB>;
@@ -264,13 +264,13 @@ export interface IRunnerOptions<
      * @example
      * ```typescript
      * // Use default loaders
-     * const executor = new MigrationScriptRunner<DB>(handler);
+     * const runner = new MigrationScriptRunner<DB>(handler);
      * // Automatically uses TypeScript and SQL loaders
      *
      * // Register custom loader
      * const registry = LoaderRegistry.createDefault();
      * registry.register(new PythonLoader());
-     * const executor = new MigrationScriptRunner<DB>(handler, {
+     * const runner = new MigrationScriptRunner<DB>(handler, {
      *     loaderRegistry: registry
      * });
      *

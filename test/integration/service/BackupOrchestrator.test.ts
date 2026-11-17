@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import fs from "node:fs";
 import sinon from 'sinon';
-import { BackupConfig, BackupService, Config, IDB, IDatabaseMigrationHandler, SilentLogger } from "../../../src";
+import { BackupConfig, BackupOrchestrator, Config, IDB, IDatabaseMigrationHandler, SilentLogger } from "../../../src";
 
-describe('BackupService', () => {
+describe('BackupOrchestrator', () => {
 
     describe('prepareFilePath()', () => {
 
@@ -16,14 +16,14 @@ describe('BackupService', () => {
         it('should use correct folder configuration', () => {
             // Test with default configuration
             const cfg:BackupConfig = new BackupConfig();
-            let res:string = BackupService.prepareFilePath(cfg);
+            let res:string = BackupOrchestrator.prepareFilePath(cfg);
 
             // Verify default folder is used
             expect(res).to.include('/backups/', 'Should have default folder')
 
             // Configure custom folder
             cfg.folder = 'test-folder';
-            res = BackupService.prepareFilePath(cfg);
+            res = BackupOrchestrator.prepareFilePath(cfg);
 
             // Verify custom folder is used
             expect(res.startsWith('test-folder/'), 'Should start with test-folder folder').to.be.true
@@ -41,7 +41,7 @@ describe('BackupService', () => {
             cfg.extension = ext
 
             // Generate file path
-            const res:string = BackupService.prepareFilePath(cfg);
+            const res:string = BackupOrchestrator.prepareFilePath(cfg);
 
             // Verify custom extension is used
             expect(res.endsWith(ext), 'Should have specified extension').to.be.true
@@ -59,7 +59,7 @@ describe('BackupService', () => {
             cfg.timestamp = false
 
             // Generate file path
-            const res:string = BackupService.prepareFilePath(cfg);
+            const res:string = BackupOrchestrator.prepareFilePath(cfg);
 
             // Verify no timestamp in filename
             expect(res).to.include('/backups/backup.bkp', 'Should not have timestamp in the file name')
@@ -80,7 +80,7 @@ describe('BackupService', () => {
             cfg.timestamp = false;
 
             // when
-            const path = BackupService.prepareFilePath(cfg);
+            const path = BackupOrchestrator.prepareFilePath(cfg);
 
             // then: should include all custom parts
             expect(path).to.eq('custom-backups/my-backup-custom-test.bak');
@@ -97,7 +97,7 @@ describe('BackupService', () => {
             cfg.timestampFormat = 'YYYY-MM-DD';
 
             // when
-            const path = BackupService.prepareFilePath(cfg);
+            const path = BackupOrchestrator.prepareFilePath(cfg);
 
             // then: should include formatted timestamp
             expect(path).to.match(/backup-\d{4}-\d{2}-\d{2}\.bkp/);
@@ -118,7 +118,7 @@ describe('BackupService', () => {
             cfg.backup.deleteBackup = false;
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-backup-file-overwrite-${Date.now()}`;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'data'
@@ -159,7 +159,7 @@ describe('BackupService', () => {
             const cfg = new Config();
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-test-${Date.now()}`;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'data'
@@ -188,7 +188,7 @@ describe('BackupService', () => {
             const cfg = new Config();
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-test-${Date.now()}`;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'data'
@@ -215,7 +215,7 @@ describe('BackupService', () => {
         it('should handle backup() method failure from handler', async () => {
             // Configure backup with failing database handler
             const cfg = new Config();
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         throw new Error('Database connection failed')
@@ -239,7 +239,7 @@ describe('BackupService', () => {
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-large-${Date.now()}`;
             const largeData = 'x'.repeat(10 * 1024 * 1024); // 10MB string
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return largeData
@@ -266,7 +266,7 @@ describe('BackupService', () => {
          */
         it('should throw error if backupFile is undefined after _backup()', async () => {
             const cfg = new Config();
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'test data'
@@ -295,7 +295,7 @@ describe('BackupService', () => {
             const cfg = new Config();
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-log-test-${Date.now()}`;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'test data'
@@ -330,7 +330,7 @@ describe('BackupService', () => {
             // Create backup service without creating a backup file
             const cfg = new Config();
             cfg.backup.deleteBackup = false;
-            const bs = new BackupService<IDB>({} as IDatabaseMigrationHandler<IDB>, cfg);
+            const bs = new BackupOrchestrator<IDB>({} as IDatabaseMigrationHandler<IDB>, cfg);
 
             // Attempt to restore (should fail with clear error about no backup interface)
             await expect(bs.restore()).to.be.rejectedWith("No backup interface provided");
@@ -348,7 +348,7 @@ describe('BackupService', () => {
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-corrupted-${Date.now()}`;
             let restoredData: string | undefined;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'valid data'
@@ -385,7 +385,7 @@ describe('BackupService', () => {
             const cfg = new Config();
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-perm-test-${Date.now()}`;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'data'
@@ -418,7 +418,7 @@ describe('BackupService', () => {
             const cfg = new Config();
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-restore-log-${Date.now()}`;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'test data'
@@ -459,7 +459,7 @@ describe('BackupService', () => {
             // Configure to disable backup deletion
             const cfg = new Config();
             cfg.backup.deleteBackup = false;
-            const bs = new BackupService<IDB>({} as IDatabaseMigrationHandler<IDB>, cfg);
+            const bs = new BackupOrchestrator<IDB>({} as IDatabaseMigrationHandler<IDB>, cfg);
 
             // Call deleteBackup (should be no-op, not throw)
             expect(() => bs.deleteBackup()).to.not.throw();
@@ -477,7 +477,7 @@ describe('BackupService', () => {
             cfg.backup.deleteBackup = true;
             cfg.backup.timestamp = false;
             cfg.backup.suffix = `-delete-test-${Date.now()}`;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'data'
@@ -508,7 +508,7 @@ describe('BackupService', () => {
             // Configure backup with deletion enabled
             const cfg = new Config();
             cfg.backup.deleteBackup = true;
-            const bs = new BackupService<IDB>({
+            const bs = new BackupOrchestrator<IDB>({
                 backup: {
                     async backup(): Promise<string> {
                         return 'data'

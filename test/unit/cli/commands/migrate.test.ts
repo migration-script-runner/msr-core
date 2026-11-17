@@ -12,8 +12,8 @@ interface MockDB extends IDB {
 
 describe('migrate command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
-    let createExecutorStub: sinon.SinonStub;
+    let mockRunner: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
+    let createRunnerStub: sinon.SinonStub;
     let consoleLogStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
     let processExitStub: sinon.SinonStub;
@@ -22,13 +22,13 @@ describe('migrate command', () => {
         program = new Command();
         program.exitOverride(); // Prevent actual process exit in tests
 
-        // Create mock executor
-        mockExecutor = {
+        // Create mock runner
+        mockRunner = {
             migrate: sinon.stub(),
         } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
-        createExecutorStub = sinon.stub().returns(mockExecutor);
+        createRunnerStub = sinon.stub().returns(mockRunner);
 
         // Stub console and process.exit
         consoleLogStub = sinon.stub(console, 'log');
@@ -36,7 +36,7 @@ describe('migrate command', () => {
         processExitStub = sinon.stub(process, 'exit');
 
         // Add command
-        addMigrateCommand(program, createExecutorStub);
+        addMigrateCommand(program, createRunnerStub);
     });
 
     afterEach(() => {
@@ -81,7 +81,7 @@ describe('migrate command', () => {
          * Validates that migrate() is called without target parameter
          */
         it('should execute all migrations when no target version specified', async () => {
-            mockExecutor.migrate.resolves({
+            mockRunner.migrate.resolves({
                 success: true,
                 executed: [{timestamp: 1, name: 'migration1'}] as any,
                 migrated: [],
@@ -90,9 +90,9 @@ describe('migrate command', () => {
 
             await program.parseAsync(['node', 'test', 'migrate']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            expect(mockExecutor.migrate.calledOnce).to.be.true;
-            expect(mockExecutor.migrate.calledWith(undefined)).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            expect(mockRunner.migrate.calledOnce).to.be.true;
+            expect(mockRunner.migrate.calledWith(undefined)).to.be.true;
             expect(consoleLogStub.calledWith('✓ Successfully executed 1 migration(s)')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -102,7 +102,7 @@ describe('migrate command', () => {
          * Validates that migrate() is called with parsed target version
          */
         it('should migrate to specific version when target specified', async () => {
-            mockExecutor.migrate.resolves({
+            mockRunner.migrate.resolves({
                 success: true,
                 executed: [{timestamp: 1, name: 'migration1'}, {timestamp: 2, name: 'migration2'}] as any,
                 migrated: [],
@@ -111,9 +111,9 @@ describe('migrate command', () => {
 
             await program.parseAsync(['node', 'test', 'migrate', '202501220100']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            expect(mockExecutor.migrate.calledOnce).to.be.true;
-            expect(mockExecutor.migrate.calledWith(202501220100)).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            expect(mockRunner.migrate.calledOnce).to.be.true;
+            expect(mockRunner.migrate.calledWith(202501220100)).to.be.true;
             expect(consoleLogStub.calledWith('✓ Successfully executed 2 migration(s)')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
@@ -123,7 +123,7 @@ describe('migrate command', () => {
          * Validates correct message when no migrations to run
          */
         it('should report zero migrations when none executed', async () => {
-            mockExecutor.migrate.resolves({
+            mockRunner.migrate.resolves({
                 success: true,
                 executed: [],
                 migrated: [],
@@ -143,7 +143,7 @@ describe('migrate command', () => {
          * Validates error handling when migrations fail
          */
         it('should handle migration failure with errors', async () => {
-            mockExecutor.migrate.resolves({
+            mockRunner.migrate.resolves({
                 success: false,
                 executed: [],
                 migrated: [],
@@ -164,7 +164,7 @@ describe('migrate command', () => {
          * Validates error handling when errors is undefined
          */
         it('should handle migration failure without errors array', async () => {
-            mockExecutor.migrate.resolves({
+            mockRunner.migrate.resolves({
                 success: false,
                 executed: [],
                 migrated: [],
@@ -186,16 +186,16 @@ describe('migrate command', () => {
 
             expect(consoleErrorStub.calledWith('Error: Invalid target version "invalid". Must be a number.')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.GENERAL_ERROR)).to.be.true;
-            expect(mockExecutor.migrate.called).to.be.false;
+            expect(mockRunner.migrate.called).to.be.false;
         });
 
         /**
          * Test: Handles exception during migration
-         * Validates error handling when executor throws
+         * Validates error handling when runner throws
          */
         it('should handle exception during migration', async () => {
             const error = new Error('Unexpected database error');
-            mockExecutor.migrate.rejects(error);
+            mockRunner.migrate.rejects(error);
 
             await program.parseAsync(['node', 'test', 'migrate']);
 
@@ -205,10 +205,10 @@ describe('migrate command', () => {
 
         /**
          * Test: Handles non-Error exception
-         * Validates error handling when executor throws non-Error object
+         * Validates error handling when runner throws non-Error object
          */
         it('should handle non-Error exception', async () => {
-            mockExecutor.migrate.callsFake(async () => {
+            mockRunner.migrate.callsFake(async () => {
                 throw 'String error';
             });
 
@@ -225,7 +225,7 @@ describe('migrate command', () => {
         it('should handle Error with empty message', async () => {
             const errorWithoutMessage = new Error();
             errorWithoutMessage.message = '';
-            mockExecutor.migrate.rejects(errorWithoutMessage);
+            mockRunner.migrate.rejects(errorWithoutMessage);
 
             await program.parseAsync(['node', 'test', 'migrate']);
 
@@ -238,7 +238,7 @@ describe('migrate command', () => {
          * Validates handling of non-Error thrown values
          */
         it('should handle string exception', async () => {
-            mockExecutor.migrate.rejects('plain string error');
+            mockRunner.migrate.rejects('plain string error');
 
             await program.parseAsync(['node', 'test', 'migrate']);
 
@@ -247,25 +247,25 @@ describe('migrate command', () => {
         });
     });
 
-    describe('Executor creation', () => {
+    describe('Runner creation', () => {
         /**
-         * Test: Creates executor when action runs
-         * Validates that factory is called to create executor
+         * Test: Creates runner when action runs
+         * Validates that factory is called to create runner
          */
-        it('should create executor when action runs', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+        it('should create runner when action runs', async () => {
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             await program.parseAsync(['node', 'test', 'migrate']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
         });
 
         /**
-         * Test: Does not create executor before action
+         * Test: Does not create runner before action
          * Validates that factory is not called during command setup
          */
-        it('should not create executor before action', () => {
-            expect(createExecutorStub.called).to.be.false;
+        it('should not create runner before action', () => {
+            expect(createRunnerStub.called).to.be.false;
         });
     });
 
@@ -275,11 +275,11 @@ describe('migrate command', () => {
          * Validates that the command can be invoked using the "up" alias
          */
         it('should work with "up" alias', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             await program.parseAsync(['node', 'test', 'up']);
 
-            expect(mockExecutor.migrate.calledOnce).to.be.true;
+            expect(mockRunner.migrate.calledOnce).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
 
@@ -288,11 +288,11 @@ describe('migrate command', () => {
          * Validates that alias works with parameters
          */
         it('should work with "up" alias and target version', async () => {
-            mockExecutor.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
 
             await program.parseAsync(['node', 'test', 'up', '123456']);
 
-            expect(mockExecutor.migrate.calledWith(123456)).to.be.true;
+            expect(mockRunner.migrate.calledWith(123456)).to.be.true;
         });
     });
 });

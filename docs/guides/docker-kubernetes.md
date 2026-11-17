@@ -543,8 +543,8 @@ export async function checkHealth() {
     await db.query('SELECT 1');
 
     // Optionally: check schema version
-    const executor = new MigrationScriptRunner({handler, config});
-    const status = await executor.list(1);
+    const runner = new MigrationScriptRunner({handler, config});
+    const status = await runner.list(1);
 
     return {
       status: 'healthy',

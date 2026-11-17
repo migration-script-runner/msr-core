@@ -45,14 +45,14 @@ import {
   ConsoleMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector()  // That's it!
   ], config
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Output:**
@@ -247,13 +247,13 @@ This means:
 ```typescript
 import { ConsoleMetricsCollector } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [new ConsoleMetricsCollector()], 
   config 
 });
 
-await executor.up();
+await runner.up();
 ```
 
 ---
@@ -261,7 +261,7 @@ await executor.up();
 ### With Other Collectors
 
 ```typescript
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),  // Real-time feedback
@@ -290,7 +290,7 @@ collectors.push(new JsonMetricsCollector({
   filePath: `./metrics/${process.env.NODE_ENV}.json`
 }));
 
-const executor = new MigrationScriptRunner({
+const runner = new MigrationScriptRunner({
   handler,
   metricsCollectors: collectors, 
   config

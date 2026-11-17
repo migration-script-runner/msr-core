@@ -1,4 +1,4 @@
-import { ITransactionManager } from '../interface/service/ITransactionManager';
+import { ITransactionProvider } from '../interface/service/ITransactionProvider';
 import { ICallbackTransactionalDB } from '../interface/dao/ITransactionalDB';
 import { IsolationLevel } from '../model/IsolationLevel';
 import { TransactionConfig } from '../model/TransactionConfig';
@@ -9,7 +9,7 @@ import {IDB} from '../interface/dao';
  * Transaction manager for callback-style transactional databases (NoSQL).
  *
  * Manages transactions for databases that use callback-based transaction APIs
- * like Firestore, MongoDB with sessions, and DynamoDB. Unlike {@link DefaultTransactionManager}
+ * like Firestore, MongoDB with sessions, and DynamoDB. Unlike {@link DefaultTransactionProvider}
  * which uses imperative begin/commit/rollback, this manager collects operations
  * and executes them within a single `runTransaction()` callback.
  *
@@ -29,7 +29,7 @@ import {IDB} from '../interface/dao';
  *
  * @example
  * ```typescript
- * import { CallbackTransactionManager } from '@migration-script-runner/core';
+ * import { CallbackTransactionProvider } from '@migration-script-runner/core';
  * import { Firestore, Transaction } from '@google-cloud/firestore';
  *
  * const firestore = new Firestore();
@@ -42,7 +42,7 @@ import {IDB} from '../interface/dao';
  * config.retries = 3;
  * config.retryBackoff = true;
  *
- * const txManager = new CallbackTransactionManager<IDB, Transaction>(db, config);
+ * const txManager = new CallbackTransactionProvider<IDB, Transaction>(db, config);
  *
  * // Used by MigrationRunner
  * await txManager.begin();
@@ -50,11 +50,11 @@ import {IDB} from '../interface/dao';
  * await txManager.commit();  // Executes all operations in single transaction
  * ```
  */
-export class CallbackTransactionManager<DB extends IDB, TxContext = unknown> implements ITransactionManager<DB> {
+export class CallbackTransactionProvider<DB extends IDB, TxContext = unknown> implements ITransactionProvider<DB> {
     private operations: Array<(tx: TxContext) => Promise<void>> = [];
 
     /**
-     * Create a new CallbackTransactionManager.
+     * Create a new CallbackTransactionProvider.
      *
      * @param db - Database instance implementing ICallbackTransactionalDB
      * @param config - Transaction configuration with retry settings
@@ -62,7 +62,7 @@ export class CallbackTransactionManager<DB extends IDB, TxContext = unknown> imp
      *
      * @example
      * ```typescript
-     * const txManager = new CallbackTransactionManager<Transaction>(
+     * const txManager = new CallbackTransactionProvider<Transaction>(
      *   firestoreDB,
      *   new TransactionConfig(),
      *   new ConsoleLogger()

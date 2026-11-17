@@ -49,9 +49,9 @@ config.folder = './migrations';
 
 // Initialize and run
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
-await executor.up();
+await runner.up();
 ```
 
 ---
@@ -258,12 +258,12 @@ if (process.env.NODE_ENV === 'production') {
     ];
 }
 
-// Initialize executor
+// Initialize runner
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 // Run migrations
-await executor.migrate();
+await runner.migrate();
 ```
 
 ---
@@ -292,9 +292,9 @@ import { MyDatabaseHandler } from './database-handler';
 
 // Automatically loads config from env vars, files, or defaults
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner({ handler });
+const runner = new MigrationScriptRunner({ handler });
 
-await executor.up();
+await runner.up();
 ```
 
 ### Manual Loading with ConfigLoader
@@ -322,7 +322,7 @@ const config = ConfigLoader.load({}, {
 });
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 ```
 
 ---

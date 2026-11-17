@@ -25,7 +25,7 @@ Main interface for database integration.
 Interface that must be implemented for your specific database.
 
 {: .note }
-> **Design Origin**: The handler pattern emerged from MSR's 2017 Firebase prototype, where an `EntityService` provided clean helper methods like `updateAll(callback)` and `findAllBy(propertyName, value)`. Instead of raw database SDK calls in every migration, this service layer made migrations declarative and maintainable. This pattern proved so valuable it became core to MSR's architecture - allowing you to inject your own services, repositories, and business logic into migrations. Read more in the [origin story](../../about/origin-story).
+> **Design Origin**: The handler pattern emerged from MSR's 2017 Firebase prototype, where an `EntityService` provided clean helper methods like `updateAll(callback)` and `findAllBy(propertyName, value)`. Instead of raw database SDK calls in every migration, this service layer made migrations declarative and maintainable. This pattern proved so valuable it became core to MSR's architecture - allowing you to inject your own services, repositories, and business logic into migrations. Read more in the [origin story](https://migration-script-runner.dev/origin-story).
 
 **Signature (v0.8.0+):**
 ```typescript
@@ -35,8 +35,8 @@ interface IDatabaseMigrationHandler<DB extends IDB> {
   db: DB;  // Your specific database type
   schemaVersion: ISchemaVersion<DB>;
   backup?: IBackup<DB>;  // Optional - only needed for BACKUP or BOTH strategies
-  transactionManager?: ITransactionManager<DB>;  // Optional - auto-created if db supports transactions
-  lockingService?: ILockingService<DB>;  // Optional (v0.8.0) - enables concurrent migration prevention
+  transactionProvider?: ITransactionProvider<DB>;  // Optional - auto-created if db supports transactions
+  lockingProvider?: ILockingProvider<DB>;  // Optional (v0.8.0) - enables concurrent migration prevention
 }
 ```
 
@@ -125,12 +125,12 @@ Handles database backup and restore operations. See [`IBackup` interface](backup
 
 ---
 
-### lockingService
+### lockingProvider
 
 Locking interface for preventing concurrent migrations (optional, v0.8.0).
 
 ```typescript
-lockingService?: ILockingService<DB>
+lockingProvider?: ILockingProvider<DB>
 ```
 
 **Optional (v0.8.0):** Provides database-level locking to prevent multiple processes from running migrations simultaneously. When not provided, locking is disabled.
@@ -142,33 +142,33 @@ lockingService?: ILockingService<DB>
 
 **Example:**
 ```typescript
-import { ILockingService } from '@migration-script-runner/core';
+import { ILockingProvider } from '@migration-script-runner/core';
 
-class PostgresLockingService implements ILockingService<PostgresDB> {
+class PostgresLockingProvider implements ILockingProvider<PostgresDB> {
   constructor(private db: PostgresDB) {}
 
-  async acquireLock(executorId: string, timeout: number): Promise<boolean> {
+  async acquireLock(runnerId: string, timeout: number): Promise<boolean> {
     // Use SELECT FOR UPDATE NOWAIT or INSERT with ON CONFLICT
     const result = await this.db.query(`
-      INSERT INTO migration_locks (executor_id, locked_at, expires_at)
+      INSERT INTO migration_locks (runner_id, locked_at, expires_at)
       VALUES ($1, NOW(), NOW() + INTERVAL '${timeout}ms')
       ON CONFLICT (id) DO NOTHING
       RETURNING id
-    `, [executorId]);
+    `, [runnerId]);
     return result.rows.length > 0;
   }
 
-  async verifyLockOwnership(executorId: string): Promise<boolean> {
+  async verifyLockOwnership(runnerId: string): Promise<boolean> {
     const result = await this.db.query(
-      'SELECT executor_id FROM migration_locks WHERE id = 1'
+      'SELECT runner_id FROM migration_locks WHERE id = 1'
     );
-    return result.rows[0]?.executor_id === executorId;
+    return result.rows[0]?.runner_id === runnerId;
   }
 
-  async releaseLock(executorId: string): Promise<void> {
+  async releaseLock(runnerId: string): Promise<void> {
     await this.db.query(
-      'DELETE FROM migration_locks WHERE executor_id = $1',
-      [executorId]
+      'DELETE FROM migration_locks WHERE runner_id = $1',
+      [runnerId]
     );
   }
 
@@ -184,7 +184,7 @@ class PostgresLockingService implements ILockingService<PostgresDB> {
 
   async getLockStatus(): Promise<ILockStatus> {
     const result = await this.db.query(`
-      SELECT executor_id, locked_at, expires_at
+      SELECT runner_id, locked_at, expires_at
       FROM migration_locks WHERE id = 1
     `);
 
@@ -200,7 +200,7 @@ class PostgresLockingService implements ILockingService<PostgresDB> {
     const row = result.rows[0];
     return {
       isLocked: true,
-      lockedBy: row.executor_id,
+      lockedBy: row.runner_id,
       lockedAt: new Date(row.locked_at),
       expiresAt: new Date(row.expires_at)
     };
@@ -212,7 +212,7 @@ class PostgresHandler implements IDatabaseMigrationHandler<PostgresDB> {
   db: PostgresDB;
   schemaVersion: PostgresSchemaVersion;
   backup?: PostgresBackup;
-  lockingService?: ILockingService<PostgresDB>;
+  lockingProvider?: ILockingProvider<PostgresDB>;
 
   constructor(pool: Pool, options: { useBackup?: boolean; useLocking?: boolean } = {}) {
     this.db = new PostgresDB(pool);
@@ -223,7 +223,7 @@ class PostgresHandler implements IDatabaseMigrationHandler<PostgresDB> {
     }
 
     if (options.useLocking) {
-      this.lockingService = new PostgresLockingService(this.db);
+      this.lockingProvider = new PostgresLockingProvider(this.db);
     }
   }
 
@@ -432,12 +432,12 @@ const pool = new Pool({
 // Create handler
 const handler = new PostgresHandler(pool, true);  // with backup
 
-// Create executor
+// Create runner
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 // Run migrations
-const result = await executor.up();
+const result = await runner.up();
 ```
 
 ---

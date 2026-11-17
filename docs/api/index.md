@@ -43,7 +43,7 @@ Core interfaces for implementing database handlers and custom components:
 Internal service classes (advanced usage):
 - **MigrationService** - Migration file discovery
 - **MigrationValidationService** - Validation logic
-- **BackupService** - Backup/restore operations
+- **BackupOrchestrator** - Backup/restore operations
 - **RollbackService** - Rollback orchestration
 - And more...
 

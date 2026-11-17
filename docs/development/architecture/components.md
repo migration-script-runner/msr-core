@@ -31,7 +31,7 @@ graph TB
     end
 
     subgraph "Orchestration Layer"
-        Executor[MigrationScriptRunner<br/>Main entry point]
+        Runner[MigrationScriptRunner<br/>Main entry point]
         Config[Config<br/>Settings]
     end
 
@@ -49,8 +49,8 @@ graph TB
         Selector[MigrationScriptSelector<br/>Filters migrations]
         Runner[MigrationRunner<br/>Executes scripts]
         ValidationService[MigrationValidationService<br/>Validation logic]
-        Backup[BackupService<br/>Creates backups]
-        Schema[SchemaVersionService<br/>Tracks history]
+        Backup[BackupOrchestrator<br/>Creates backups]
+        Schema[SchemaVersionOrchestrator<br/>Tracks history]
         Rollback[RollbackService<br/>Rollback execution]
         Renderer[MigrationRenderer<br/>Formats output]
         MigrationService[MigrationService<br/>Discovers files]
@@ -61,14 +61,14 @@ graph TB
         DB[(Your Database<br/>PostgreSQL MongoDB etc)]
     end
 
-    App --> Executor
-    Executor --> Config
-    Executor --> WorkflowOrch
-    Executor --> ValidationOrch
-    Executor --> ReportingOrch
-    Executor --> ErrorHandler
-    Executor --> HookExecutor
-    Executor --> RollbackManager
+    App --> Runner
+    Runner --> Config
+    Runner --> WorkflowOrch
+    Runner --> ValidationOrch
+    Runner --> ReportingOrch
+    Runner --> ErrorHandler
+    Runner --> HookExecutor
+    Runner --> RollbackManager
 
     WorkflowOrch --> Scanner
     WorkflowOrch --> ValidationOrch
@@ -113,7 +113,7 @@ graph TB
 
     style App fill:#e1f5ff
     style Scripts fill:#e1f5ff
-    style Executor fill:#fff3cd
+    style Runner fill:#fff3cd
     style Config fill:#fff3cd
     style WorkflowOrch fill:#ffeaa7
     style ValidationOrch fill:#ffeaa7
@@ -172,22 +172,22 @@ graph TB
 - `IMigrationRollbackManager` - Rollback strategy execution
 
 **Additional Service Dependencies:**
-- `IBackupService`, `ISchemaVersionService`, `IRollbackService`
+- `IBackupOrchestrator`, `ISchemaVersionOrchestrator`, `IRollbackService`
 - `IMigrationService`, `IMigrationScanner`, `IMigrationRenderer`
 - `MigrationScriptSelector`, `MigrationRunner`, `IMigrationValidationService`
-- `ILoaderRegistry`, `ITransactionManager`, `ILogger`, `IMigrationHooks`
+- `ILoaderRegistry`, `ITransactionProvider`, `ILogger`, `IMigrationHooks`
 
 **Location:** `src/service/MigrationScriptRunner.ts`
 
 ```typescript
 // Example usage (public API unchanged)
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger: new SilentLogger(),  // Optional DI
-    backupService: customBackup  // Optional DI
+    backupOrchestrator: customBackup  // Optional DI
 });
 
-const result = await executor.up();  // Delegates to workflowOrchestrator
+const result = await runner.up();  // Delegates to workflowOrchestrator
 ```
 
 ---
@@ -231,7 +231,7 @@ const workflowOrchestrator = new MigrationWorkflowOrchestrator({
     migrationScanner,
     validationOrchestrator,
     reportingOrchestrator,
-    backupService,
+    backupOrchestrator,
     hookExecutor,
     errorHandler,
     // ... other dependencies
@@ -288,7 +288,7 @@ const validationOrch = new MigrationValidationOrchestrator({
     config,
     loaderRegistry,
     migrationScanner,
-    schemaVersionService,
+    schemaVersionOrchestrator,
     handler
 });
 
@@ -482,7 +482,7 @@ async down(targetVersion: number): Promise<IMigrationResult>
 ```typescript
 const rollbackManager = new MigrationRollbackManager({
     handler,
-    schemaVersionService,
+    schemaVersionOrchestrator,
     migrationScanner,
     selector,
     logger,
@@ -592,7 +592,7 @@ const toRollback = selector.getMigratedDownTo(migrated, 2);
 ```typescript
 const scanner = new MigrationScanner(
     migrationService,
-    schemaVersionService,
+    schemaVersionOrchestrator,
     selector,
     handler
 );
@@ -652,7 +652,7 @@ For each script (in timestamp order):
 
 **Example:**
 ```typescript
-const runner = new MigrationRunner(handler, schemaVersionService, logger);
+const runner = new MigrationRunner(handler, schemaVersionOrchestrator, logger);
 
 const scripts = [script1, script2, script3];
 const executed = await runner.execute(scripts);
@@ -669,7 +669,7 @@ const executed = await runner.execute(scripts);
 - Determine if backup should be created based on strategy and mode
 - Execute rollback using one of four strategies (BACKUP, DOWN, BOTH, NONE)
 - Handle backup mode logic (FULL, CREATE_ONLY, RESTORE_ONLY, MANUAL)
-- Coordinate with BackupService for backup/restore operations
+- Coordinate with BackupOrchestrator for backup/restore operations
 - Call lifecycle hooks during rollback (onBeforeRestore, onAfterRestore)
 
 **Location:** `src/service/RollbackService.ts`
@@ -699,7 +699,7 @@ async rollback(
 const rollbackService = new RollbackService(
     handler,
     config,
-    backupService,
+    backupOrchestrator,
     logger,
     hooks
 );
@@ -714,7 +714,7 @@ try {
 
 ---
 
-### BackupService
+### BackupOrchestrator
 
 **Purpose:** Create and manage database backup files
 
@@ -725,7 +725,7 @@ try {
 - Delete backup after success or cleanup
 - Handle backup file lifecycle
 
-**Location:** `src/service/BackupService.ts`
+**Location:** `src/service/BackupOrchestrator.ts`
 
 **Note:** Used by RollbackService when rollbackStrategy is BACKUP or BOTH.
 
@@ -733,14 +733,14 @@ try {
 ```
 migrate() {
   if (rollbackService.shouldCreateBackup()) {
-    backup()         // ← BackupService
+    backup()         // ← BackupOrchestrator
   }
   try {
     run migrations
     deleteBackup()   // ← Success: remove backup
   } catch (err) {
     rollbackService.rollback(executedScripts, backupPath)
-    // → RollbackService calls restore() via BackupService
+    // → RollbackService calls restore() via BackupOrchestrator
   }
 }
 ```
@@ -762,7 +762,7 @@ migrate() {
 ```
 migrate() {
   if (rollbackService.shouldCreateBackup()) {
-    backup()         // ← BackupService
+    backup()         // ← BackupOrchestrator
   }
   try {
     run migrations
@@ -777,7 +777,7 @@ migrate() {
 
 ---
 
-### SchemaVersionService
+### SchemaVersionOrchestrator
 
 **Purpose:** Track migration history in database
 
@@ -799,7 +799,7 @@ CREATE TABLE schema_version (
 );
 ```
 
-**Location:** `src/service/SchemaVersionService.ts`
+**Location:** `src/service/SchemaVersionOrchestrator.ts`
 
 ---
 

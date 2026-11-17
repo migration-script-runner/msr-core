@@ -14,7 +14,7 @@ import { ConsoleLogger } from '../../logger/ConsoleLogger';
  *
  * @example
  * ```typescript
- * const executor = new MigrationScriptRunner<IDB>({
+ * const runner = new MigrationScriptRunner<IDB>({
  *   handler,
  *   metricsCollectors: [new ConsoleMetricsCollector()]
  * }, config);

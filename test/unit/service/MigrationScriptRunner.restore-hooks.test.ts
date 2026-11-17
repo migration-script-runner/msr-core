@@ -10,7 +10,7 @@ import {
     IDB,
     IMigrationHooks,
     RollbackStrategy,
-    IBackupService
+    IBackupOrchestrator
 } from '../../../src';
 
 /**
@@ -68,25 +68,25 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
             onAfterRestore: sinon.stub().resolves()
         };
 
-        const mockBackupService: IBackupService = {
+        const mockBackupOrchestrator: IBackupOrchestrator = {
             backup: sinon.stub().resolves('/path/to/backup.bkp'),
             restore: sinon.stub().resolves(),
             deleteBackup: sinon.stub()
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: restoreHooks,
-            backupService: mockBackupService
+            backupOrchestrator: mockBackupOrchestrator
 , config: config });
 
         // Test rollbackService.rollback with BACKUP strategy
-        await (executor as any).core.rollback.rollback([], '/path/to/backup.bkp');
+        await (runner as any).core.rollback.rollback([], '/path/to/backup.bkp');
 
         // Verify restore hooks were called
         expect((restoreHooks.onBeforeRestore as sinon.SinonStub).calledOnce).to.be.true;
         expect((restoreHooks.onAfterRestore as sinon.SinonStub).calledOnce).to.be.true;
-        expect((mockBackupService.restore as sinon.SinonStub).calledOnce).to.be.true;
-        expect((mockBackupService.deleteBackup as sinon.SinonStub).calledOnce).to.be.true;
+        expect((mockBackupOrchestrator.restore as sinon.SinonStub).calledOnce).to.be.true;
+        expect((mockBackupOrchestrator.deleteBackup as sinon.SinonStub).calledOnce).to.be.true;
     });
 
     /**
@@ -106,7 +106,7 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
             })
         };
 
-        const mockBackupService: IBackupService = {
+        const mockBackupOrchestrator: IBackupOrchestrator = {
             backup: sinon.stub().resolves('/path/to/backup.bkp'),
             restore: sinon.stub().callsFake(async () => {
                 callOrder.push('restore');
@@ -116,13 +116,13 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
             })
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: orderTrackingHooks,
-            backupService: mockBackupService
+            backupOrchestrator: mockBackupOrchestrator
 , config: config });
 
         // Test rollbackService.rollback with BACKUP strategy
-        await (executor as any).core.rollback.rollback([], '/path/to/backup.bkp');
+        await (runner as any).core.rollback.rollback([], '/path/to/backup.bkp');
 
         // Verify order: onBeforeRestore -> restore -> onAfterRestore -> deleteBackup
         expect(callOrder).to.deep.equal(['onBeforeRestore', 'restore', 'onAfterRestore', 'deleteBackup']);
@@ -138,24 +138,24 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
             onAfterRestore: sinon.stub().resolves()
         };
 
-        const mockBackupService: IBackupService = {
+        const mockBackupOrchestrator: IBackupOrchestrator = {
             backup: sinon.stub().resolves(),
             restore: sinon.stub().resolves(),
             deleteBackup: sinon.stub()
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: restoreHooks,
-            backupService: mockBackupService
+            backupOrchestrator: mockBackupOrchestrator
 , config: config });
 
         // Test rollbackService.rollback with BACKUP strategy but no backup path
-        await (executor as any).core.rollback.rollback([], undefined);
+        await (runner as any).core.rollback.rollback([], undefined);
 
         // Verify restore hooks were NOT called
         expect((restoreHooks.onBeforeRestore as sinon.SinonStub).called).to.be.false;
         expect((restoreHooks.onAfterRestore as sinon.SinonStub).called).to.be.false;
-        expect((mockBackupService.restore as sinon.SinonStub).called).to.be.false;
+        expect((mockBackupOrchestrator.restore as sinon.SinonStub).called).to.be.false;
     });
 
     /**
@@ -163,22 +163,22 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
      * Validates that the method handles missing hooks gracefully.
      */
     it('should handle missing hooks gracefully', async () => {
-        const mockBackupService: IBackupService = {
+        const mockBackupOrchestrator: IBackupOrchestrator = {
             backup: sinon.stub().resolves('/path/to/backup.bkp'),
             restore: sinon.stub().resolves(),
             deleteBackup: sinon.stub()
         };
 
-        const executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
-            backupService: mockBackupService
+        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            backupOrchestrator: mockBackupOrchestrator
             // No hooks provided
 , config: config });
 
         // Should not throw error - test rollbackService.rollback with BACKUP strategy
-        await (executor as any).core.rollback.rollback([], '/path/to/backup.bkp');
+        await (runner as any).core.rollback.rollback([], '/path/to/backup.bkp');
 
         // Verify restore was still called
-        expect((mockBackupService.restore as sinon.SinonStub).calledOnce).to.be.true;
-        expect((mockBackupService.deleteBackup as sinon.SinonStub).calledOnce).to.be.true;
+        expect((mockBackupOrchestrator.restore as sinon.SinonStub).calledOnce).to.be.true;
+        expect((mockBackupOrchestrator.deleteBackup as sinon.SinonStub).calledOnce).to.be.true;
     });
 });

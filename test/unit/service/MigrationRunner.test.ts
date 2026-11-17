@@ -10,7 +10,7 @@ const { ExecutionSummaryLogger } = require('../../../src/service/ExecutionSummar
 describe('MigrationRunner', () => {
     let runner: MigrationRunner<IDB>;
     let handler: any;
-    let schemaVersionService: any;
+    let schemaVersionOrchestrator: any;
     let logger: any;
     let tempDir: string;
 
@@ -24,7 +24,7 @@ describe('MigrationRunner', () => {
             getVersion: () => '1.0.0-test',
         };
 
-        schemaVersionService = {
+        schemaVersionOrchestrator = {
             save: sinon.stub().resolves()
         };
 
@@ -48,12 +48,12 @@ describe('MigrationRunner', () => {
         /**
          * Test: Constructor creates instance with all parameters
          * Validates that MigrationRunner can be instantiated with handler,
-         * schemaVersionService, config, and logger. This tests the full constructor
+         * schemaVersionOrchestrator, config, and logger. This tests the full constructor
          * signature with optional logger included.
          */
         it('should create instance with all parameters', () => {
             const cfg = new Config();
-            const runner = new MigrationRunner<IDB>(handler, schemaVersionService, cfg, logger);
+            const runner = new MigrationRunner<IDB>(handler, schemaVersionOrchestrator, cfg, logger);
             expect(runner).to.be.instanceOf(MigrationRunner);
         });
 
@@ -65,7 +65,7 @@ describe('MigrationRunner', () => {
          */
         it('should create instance without logger', () => {
             const cfg = new Config();
-            const runner = new MigrationRunner<IDB>(handler, schemaVersionService, cfg);
+            const runner = new MigrationRunner<IDB>(handler, schemaVersionOrchestrator, cfg);
             expect(runner).to.be.instanceOf(MigrationRunner);
         });
     });
@@ -73,7 +73,7 @@ describe('MigrationRunner', () => {
     describe('execute()', () => {
         beforeEach(() => {
             const cfg = new Config();
-            runner = new MigrationRunner<IDB>(handler, schemaVersionService, cfg, logger);
+            runner = new MigrationRunner<IDB>(handler, schemaVersionOrchestrator, cfg, logger);
         });
 
         /**
@@ -146,9 +146,9 @@ describe('MigrationRunner', () => {
 
             await runner.execute(scripts);
 
-            expect(schemaVersionService.save.callCount).to.equal(2);
-            expect(schemaVersionService.save.firstCall.args[0].timestamp).to.equal(1);
-            expect(schemaVersionService.save.secondCall.args[0].timestamp).to.equal(2);
+            expect(schemaVersionOrchestrator.save.callCount).to.equal(2);
+            expect(schemaVersionOrchestrator.save.firstCall.args[0].timestamp).to.equal(1);
+            expect(schemaVersionOrchestrator.save.secondCall.args[0].timestamp).to.equal(2);
         });
 
         /**
@@ -181,7 +181,7 @@ describe('MigrationRunner', () => {
             const result = await runner.execute([]);
 
             expect(result).to.be.an('array').that.is.empty;
-            expect(schemaVersionService.save.called).to.be.false;
+            expect(schemaVersionOrchestrator.save.called).to.be.false;
         });
 
         /**
@@ -230,7 +230,7 @@ describe('MigrationRunner', () => {
          */
         it('should propagate schema version save errors', async () => {
             const script = createScript(1, 'migration1');
-            schemaVersionService.save.rejects(new Error('Failed to save'));
+            schemaVersionOrchestrator.save.rejects(new Error('Failed to save'));
 
             await expect(runner.execute([script]))
                 .to.be.rejectedWith('Failed to save');
@@ -240,7 +240,7 @@ describe('MigrationRunner', () => {
     describe('executeOne()', () => {
         beforeEach(() => {
             const cfg = new Config();
-            runner = new MigrationRunner<IDB>(handler, schemaVersionService, cfg, logger);
+            runner = new MigrationRunner<IDB>(handler, schemaVersionOrchestrator, cfg, logger);
         });
 
         /**
@@ -290,8 +290,8 @@ describe('MigrationRunner', () => {
 
             await runner.executeOne(script);
 
-            expect(schemaVersionService.save.calledOnce).to.be.true;
-            expect(schemaVersionService.save.firstCall.args[0]).to.equal(script);
+            expect(schemaVersionOrchestrator.save.calledOnce).to.be.true;
+            expect(schemaVersionOrchestrator.save.firstCall.args[0]).to.equal(script);
         });
 
         /**
@@ -304,7 +304,7 @@ describe('MigrationRunner', () => {
             const loggerWithSpy = new ConsoleLogger();
             const logSpy = sinon.spy(loggerWithSpy, 'log');
             const cfg = new Config();
-            const runnerWithLogger = new MigrationRunner<IDB>(handler, schemaVersionService, cfg, loggerWithSpy);
+            const runnerWithLogger = new MigrationRunner<IDB>(handler, schemaVersionOrchestrator, cfg, loggerWithSpy);
 
             const script = createScript(1, 'migration1');
 
@@ -325,7 +325,7 @@ describe('MigrationRunner', () => {
          */
         it('should not throw when logger is undefined', async () => {
             const cfg = new Config();
-            const runnerNoLogger = new MigrationRunner<IDB>(handler, schemaVersionService, cfg);
+            const runnerNoLogger = new MigrationRunner<IDB>(handler, schemaVersionOrchestrator, cfg);
             const script = createScript(1, 'migration1');
 
             await expect(runnerNoLogger.executeOne(script)).to.not.be.rejected;
@@ -377,7 +377,7 @@ describe('MigrationRunner', () => {
         it('should use configured checksum algorithm', async () => {
             const cfg = new Config();
             cfg.checksumAlgorithm = 'md5';
-            const md5Runner = new MigrationRunner<IDB>(handler, schemaVersionService, cfg, logger);
+            const md5Runner = new MigrationRunner<IDB>(handler, schemaVersionOrchestrator, cfg, logger);
 
             // Create actual migration file
             const filename = 'V2_migration2.ts';
@@ -422,7 +422,7 @@ describe('MigrationRunner', () => {
             const loggerWithSpy = new ConsoleLogger();
             const warnSpy = sinon.spy(loggerWithSpy, 'warn');
             const cfg = new Config();
-            const runnerWithLogger = new MigrationRunner<IDB>(handler, schemaVersionService, cfg, loggerWithSpy);
+            const runnerWithLogger = new MigrationRunner<IDB>(handler, schemaVersionOrchestrator, cfg, loggerWithSpy);
 
             const script = new MigrationScript<IDB>('V1_nonexistent.ts', '/nonexistent/path.ts', 1);
             script.script = {
@@ -489,8 +489,8 @@ describe('MigrationRunner', () => {
 
             await runner.executeOne(script);
 
-            expect(schemaVersionService.save.calledOnce).to.be.true;
-            const savedScript = schemaVersionService.save.firstCall.args[0];
+            expect(schemaVersionOrchestrator.save.calledOnce).to.be.true;
+            const savedScript = schemaVersionOrchestrator.save.firstCall.args[0];
             expect(savedScript.checksum).to.be.a('string');
             expect(savedScript.checksum).to.equal(script.checksum);
         });
@@ -530,7 +530,7 @@ function createScript(timestamp: number, name: string): MigrationScript<IDB> {
 describe('Transaction Management (v0.5.0)', () => {
     let runner: MigrationRunner<IDB>;
     let handler: any;
-    let schemaVersionService: any;
+    let schemaVersionOrchestrator: any;
     let logger: any;
 
     beforeEach(() => {
@@ -543,7 +543,7 @@ describe('Transaction Management (v0.5.0)', () => {
             getVersion: () => '1.0.0-test',
         };
 
-        schemaVersionService = {
+        schemaVersionOrchestrator = {
             save: sinon.stub().resolves()
         };
 
@@ -560,7 +560,7 @@ describe('Transaction Management (v0.5.0)', () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_MIGRATION' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -568,10 +568,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any
+                transactionProvider as any
             );
 
             const scripts = [
@@ -583,16 +583,16 @@ describe('Transaction Management (v0.5.0)', () => {
             await runner.execute(scripts);
 
             // Should call begin/commit for each migration (3 times)
-            expect(transactionManager.begin.callCount).to.equal(3);
-            expect(transactionManager.commit.callCount).to.equal(3);
-            expect(transactionManager.rollback.callCount).to.equal(0);
+            expect(transactionProvider.begin.callCount).to.equal(3);
+            expect(transactionProvider.commit.callCount).to.equal(3);
+            expect(transactionProvider.rollback.callCount).to.equal(0);
         });
 
         it('should rollback failed migration transaction', async () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_MIGRATION' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -600,10 +600,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any
+                transactionProvider as any
             );
 
             const script1 = createScript(1, 'first');
@@ -624,16 +624,16 @@ describe('Transaction Management (v0.5.0)', () => {
             expect(error).to.exist;
             // First migration: begin + commit
             // Second migration: begin + rollback (on failure)
-            expect(transactionManager.begin.callCount).to.equal(2);
-            expect(transactionManager.commit.callCount).to.equal(1);
-            expect(transactionManager.rollback.callCount).to.equal(1);
+            expect(transactionProvider.begin.callCount).to.equal(2);
+            expect(transactionProvider.commit.callCount).to.equal(1);
+            expect(transactionProvider.rollback.callCount).to.equal(1);
         });
 
         it('should call transaction hooks for each migration', async () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_MIGRATION' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -648,10 +648,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -676,7 +676,7 @@ describe('Transaction Management (v0.5.0)', () => {
                 maxFiles: 0
             };
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -694,10 +694,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 executionSummaryHook as any
             );
 
@@ -705,8 +705,8 @@ describe('Transaction Management (v0.5.0)', () => {
             await runner.execute(scripts);
 
             // Verify transactions were called
-            expect(transactionManager.begin.callCount).to.equal(2);
-            expect(transactionManager.commit.callCount).to.equal(2);
+            expect(transactionProvider.begin.callCount).to.equal(2);
+            expect(transactionProvider.commit.callCount).to.equal(2);
 
             // Verify ExecutionSummaryHook recorded transaction metrics (covers lines 144, 152)
             const summaryLogger = (executionSummaryHook as any).summaryLogger;
@@ -726,7 +726,7 @@ describe('Transaction Management (v0.5.0)', () => {
                 maxFiles: 0
             };
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -744,10 +744,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 executionSummaryHook as any
             );
 
@@ -789,7 +789,7 @@ describe('Transaction Management (v0.5.0)', () => {
             };
 
             let commitAttempts = 0;
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().callsFake(async () => {
                     commitAttempts++;
@@ -814,10 +814,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 executionSummaryHook as any
             );
 
@@ -840,7 +840,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.mode = 'PER_MIGRATION' as any;
             cfg.dryRun = true; // Enable dry run mode
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -861,10 +861,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 loggerStub as any,
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -876,13 +876,13 @@ describe('Transaction Management (v0.5.0)', () => {
             await runner.execute(scripts);
 
             // Should begin transaction for each migration
-            expect(transactionManager.begin.callCount).to.equal(2);
+            expect(transactionProvider.begin.callCount).to.equal(2);
 
             // Should NOT commit in dry run mode
-            expect(transactionManager.commit.callCount).to.equal(0);
+            expect(transactionProvider.commit.callCount).to.equal(0);
 
             // Should rollback each transaction in dry run mode (covers line 323)
-            expect(transactionManager.rollback.callCount).to.equal(2);
+            expect(transactionProvider.rollback.callCount).to.equal(2);
 
             // Should call afterRollback hook for each migration (covers line 324)
             expect(hooks.afterRollback.callCount).to.equal(2);
@@ -896,7 +896,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.mode = 'PER_MIGRATION' as any;
             cfg.dryRun = true; // Enable dry run mode
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -910,10 +910,10 @@ describe('Transaction Management (v0.5.0)', () => {
             // No logger provided - covers optional chaining branch at line 322
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 undefined, // No logger
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -922,7 +922,7 @@ describe('Transaction Management (v0.5.0)', () => {
             await runner.execute(scripts);
 
             // Should rollback in dry run mode even without logger
-            expect(transactionManager.rollback.callCount).to.equal(1);
+            expect(transactionProvider.rollback.callCount).to.equal(1);
             expect(hooks.afterRollback.callCount).to.equal(1);
         });
     });
@@ -933,7 +933,7 @@ describe('Transaction Management (v0.5.0)', () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_BATCH' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -941,10 +941,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any
+                transactionProvider as any
             );
 
             const scripts = [
@@ -956,16 +956,16 @@ describe('Transaction Management (v0.5.0)', () => {
             await runner.execute(scripts);
 
             // Should call begin/commit once for entire batch
-            expect(transactionManager.begin.callCount).to.equal(1);
-            expect(transactionManager.commit.callCount).to.equal(1);
-            expect(transactionManager.rollback.callCount).to.equal(0);
+            expect(transactionProvider.begin.callCount).to.equal(1);
+            expect(transactionProvider.commit.callCount).to.equal(1);
+            expect(transactionProvider.rollback.callCount).to.equal(0);
         });
 
         it('should rollback entire batch if any migration fails', async () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_BATCH' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -973,10 +973,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any
+                transactionProvider as any
             );
 
             const script1 = createScript(1, 'first');
@@ -999,16 +999,16 @@ describe('Transaction Management (v0.5.0)', () => {
 
             expect(error).to.exist;
             // One transaction for entire batch
-            expect(transactionManager.begin.callCount).to.equal(1);
-            expect(transactionManager.commit.callCount).to.equal(0);
-            expect(transactionManager.rollback.callCount).to.equal(1);
+            expect(transactionProvider.begin.callCount).to.equal(1);
+            expect(transactionProvider.commit.callCount).to.equal(0);
+            expect(transactionProvider.rollback.callCount).to.equal(1);
         });
 
         it('should call transaction hooks once for entire batch', async () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_BATCH' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1023,10 +1023,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -1044,7 +1044,7 @@ describe('Transaction Management (v0.5.0)', () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_BATCH' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1059,10 +1059,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -1086,7 +1086,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.mode = 'PER_BATCH' as any;
 
             const rollbackError = new Error('Rollback failed');
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().rejects(rollbackError)
@@ -1102,10 +1102,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 loggerStub as any,
-                transactionManager as any
+                transactionProvider as any
             );
 
             const script = createScript(1, 'test');
@@ -1134,7 +1134,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.mode = 'PER_BATCH' as any;
 
             const rollbackError = new Error('Rollback failed');
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().rejects(rollbackError)
@@ -1143,10 +1143,10 @@ describe('Transaction Management (v0.5.0)', () => {
             // Create runner WITHOUT logger
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 undefined,  // No logger
-                transactionManager as any
+                transactionProvider as any
             );
 
             const script = createScript(1, 'test');
@@ -1171,7 +1171,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.mode = 'PER_BATCH' as any;
             cfg.dryRun = true; // Enable dry run mode
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1192,10 +1192,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 loggerStub as any,
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -1207,13 +1207,13 @@ describe('Transaction Management (v0.5.0)', () => {
             await runner.execute(scripts);
 
             // Should begin transaction
-            expect(transactionManager.begin.callCount).to.equal(1);
+            expect(transactionProvider.begin.callCount).to.equal(1);
 
             // Should NOT commit in dry run mode
-            expect(transactionManager.commit.callCount).to.equal(0);
+            expect(transactionProvider.commit.callCount).to.equal(0);
 
             // Should rollback in dry run mode (covers line 185)
-            expect(transactionManager.rollback.callCount).to.equal(1);
+            expect(transactionProvider.rollback.callCount).to.equal(1);
 
             // Should call afterRollback hook (covers line 186)
             expect(hooks.afterRollback.callCount).to.equal(1);
@@ -1227,7 +1227,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.mode = 'PER_BATCH' as any;
             cfg.dryRun = true; // Enable dry run mode
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1241,10 +1241,10 @@ describe('Transaction Management (v0.5.0)', () => {
             // No logger provided - covers optional chaining branch at line 184
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 undefined, // No logger
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -1256,7 +1256,7 @@ describe('Transaction Management (v0.5.0)', () => {
             await runner.execute(scripts);
 
             // Should rollback in dry run mode even without logger
-            expect(transactionManager.rollback.callCount).to.equal(1);
+            expect(transactionProvider.rollback.callCount).to.equal(1);
             expect(hooks.afterRollback.callCount).to.equal(1);
         });
 
@@ -1265,7 +1265,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.mode = 'PER_BATCH' as any;
             cfg.dryRun = true; // Enable dry run mode
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1274,10 +1274,10 @@ describe('Transaction Management (v0.5.0)', () => {
             // No hooks provided - covers optional chaining branch at line 186
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 undefined // No hooks
             );
 
@@ -1289,7 +1289,7 @@ describe('Transaction Management (v0.5.0)', () => {
             await runner.execute(scripts);
 
             // Should rollback in dry run mode even without hooks
-            expect(transactionManager.rollback.callCount).to.equal(1);
+            expect(transactionProvider.rollback.callCount).to.equal(1);
         });
     });
 
@@ -1299,7 +1299,7 @@ describe('Transaction Management (v0.5.0)', () => {
             const cfg = new Config();
             cfg.transaction.mode = 'NONE' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1307,19 +1307,19 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any
+                transactionProvider as any
             );
 
             const scripts = [createScript(1, 'test'), createScript(2, 'test2')];
             await runner.execute(scripts);
 
             // No transaction methods should be called
-            expect(transactionManager.begin.callCount).to.equal(0);
-            expect(transactionManager.commit.callCount).to.equal(0);
-            expect(transactionManager.rollback.callCount).to.equal(0);
+            expect(transactionProvider.begin.callCount).to.equal(0);
+            expect(transactionProvider.commit.callCount).to.equal(0);
+            expect(transactionProvider.rollback.callCount).to.equal(0);
         });
 
         it('should execute without transaction manager', async () => {
@@ -1329,7 +1329,7 @@ describe('Transaction Management (v0.5.0)', () => {
             // No transaction manager provided
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger
             );
@@ -1349,7 +1349,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.retries = 3;
 
             let commitAttempts = 0;
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: async () => {
                     commitAttempts++;
@@ -1367,10 +1367,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -1386,7 +1386,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.mode = 'PER_MIGRATION' as any;
             cfg.transaction.retries = 3;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: async () => {
                     throw new Error('deadlock detected');
@@ -1396,10 +1396,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any
+                transactionProvider as any
             );
 
             const scripts = [createScript(1, 'test')];
@@ -1412,7 +1412,7 @@ describe('Transaction Management (v0.5.0)', () => {
             }
 
             expect(error).to.exist;
-            expect(transactionManager.rollback.callCount).to.equal(1);
+            expect(transactionProvider.rollback.callCount).to.equal(1);
         });
 
         it('should use default retries (3) when config.transaction.retries is undefined', async () => {
@@ -1421,7 +1421,7 @@ describe('Transaction Management (v0.5.0)', () => {
             cfg.transaction.retries = undefined;  // Test the ?? 3 fallback
 
             let commitAttempts = 0;
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: async () => {
                     commitAttempts++;
@@ -1434,10 +1434,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any
+                transactionProvider as any
             );
 
             const scripts = [createScript(1, 'test')];
@@ -1454,7 +1454,7 @@ describe('Transaction Management (v0.5.0)', () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_MIGRATION' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1466,10 +1466,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -1491,7 +1491,7 @@ describe('Transaction Management (v0.5.0)', () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_BATCH' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1503,10 +1503,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any,
+                transactionProvider as any,
                 hooks as any
             );
 
@@ -1527,7 +1527,7 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger
             );
@@ -1542,7 +1542,7 @@ describe('Transaction Management (v0.5.0)', () => {
             const cfg = new Config();
             cfg.transaction.mode = 'PER_MIGRATION' as any;
 
-            const transactionManager = {
+            const transactionProvider = {
                 begin: sinon.stub().resolves(),
                 commit: sinon.stub().resolves(),
                 rollback: sinon.stub().resolves()
@@ -1550,10 +1550,10 @@ describe('Transaction Management (v0.5.0)', () => {
 
             runner = new MigrationRunner<IDB>(
                 handler,
-                schemaVersionService,
+                schemaVersionOrchestrator,
                 cfg,
                 logger,
-                transactionManager as any
+                transactionProvider as any
                 // No hooks
             );
 

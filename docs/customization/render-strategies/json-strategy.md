@@ -41,11 +41,11 @@ Pretty-printed JSON with indentation for readability:
 ```typescript
 import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)  // pretty: true
 });
 
-await executor.migrate();
+await runner.migrate();
 ```
 
 ### Compact Mode
@@ -55,11 +55,11 @@ Compact JSON for log aggregation and minimal file size:
 ```typescript
 import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)  // pretty: false
 });
 
-await executor.migrate();
+await runner.migrate();
 ```
 
 ### With Custom Logger
@@ -74,7 +74,7 @@ import {
 const logger = new FileLogger({ logPath: './migrations.json' });
 const strategy = new JsonRenderStrategy(true);
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: strategy
 });
@@ -238,11 +238,11 @@ Parse migration results in your CI/CD pipeline:
 ```typescript
 import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)  // Compact for CI logs
 });
 
-const result = await executor.migrate();
+const result = await runner.migrate();
 
 // Parse JSON output from logs
 const migrations = JSON.parse(output);
@@ -262,7 +262,7 @@ const logger = new FileLogger({
     logPath: '/var/l../version-migration/migrations.jsonl'  // JSON Lines format
 });
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(false)  // Compact format
 });
@@ -281,12 +281,12 @@ Monitor migration status programmatically:
 ```typescript
 import { JsonRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Capture output
-const output = captureStdout(() => executor.migrate());
+const output = captureStdout(() => runner.migrate());
 const migrations = JSON.parse(output);
 
 // Check for failures or warnings
@@ -317,12 +317,12 @@ import { JsonRenderStrategy } from '@migration-script-runner/core';
 
 // Capture migration history
 const logger = new FileLogger({ logPath: './migration-report.json' });
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
-await executor.list();
+await runner.list();
 
 // Parse and analyze
 const report = JSON.parse(fs.readFileSync('./migration-report.json', 'utf-8'));
@@ -346,7 +346,7 @@ const app = express();
 
 app.get('/a../version-migration/status', async (req, res) => {
     // Capture JSON output
-    const output = await captureOutput(() => executor.list());
+    const output = await captureOutput(() => runner.list());
     const migrations = JSON.parse(output);
 
     res.json({
@@ -363,12 +363,12 @@ app.get('/a../version-migration/status', async (req, res) => {
 
 ```typescript
 // Good: Minimal log file size
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)
 });
 
 // Avoid: Large indented logs in production
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 ```

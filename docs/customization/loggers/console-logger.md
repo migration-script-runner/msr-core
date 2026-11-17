@@ -49,11 +49,11 @@ await service.readMigrationScripts(config);
 ```typescript
 import { MigrationScriptRunner, ConsoleLogger } from 'msr-core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger: new ConsoleLogger()
 });
 
-await executor.executeMigration(script, context);
+await runner.executeMigration(script, context);
 // Output: [INFO] Executing migration V202311020036_add_users_table.ts
 ```
 
@@ -204,13 +204,13 @@ class MyHandler implements IMigrationScriptHandler {
 ### With Backup Service
 
 ```typescript
-import { BackupService, ConsoleLogger } from 'msr-core';
+import { BackupOrchestrator, ConsoleLogger } from 'msr-core';
 
 const logger = new ConsoleLogger();
-const backupService = new BackupService(logger);
+const backupOrchestrator = new BackupOrchestrator(logger);
 
 logger.info('Creating backup...');
-await backupService.createBackup(config, version);
+await backupOrchestrator.createBackup(config, version);
 logger.info('✓ Backup created successfully');
 ```
 

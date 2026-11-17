@@ -42,8 +42,8 @@ import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 // Automatically uses AsciiTableRenderStrategy
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 ```
 
 ### Explicit Configuration
@@ -60,12 +60,12 @@ import {
 const logger = new ConsoleLogger();
 const strategy = new AsciiTableRenderStrategy(logger);
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: strategy
 });
 
-await executor.migrate();
+await runner.migrate();
 ```
 
 ### With Custom Logger
@@ -81,7 +81,7 @@ import {
 const logger = new FileLogger({ logPath: './migrations.log' });
 const strategy = new AsciiTableRenderStrategy(logger);
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: strategy
 });
@@ -201,13 +201,13 @@ Perfect for interactive development with immediate visual feedback:
 import { MigrationScriptRunner } from '@migration-script-runner/core';
 
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 // Beautiful table output for quick review
-await executor.list();
+await runner.list();
 
 // Clear visual indication of what will run
-await executor.migrate();
+await runner.migrate();
 ```
 
 ### Manual Migration Runs
@@ -216,7 +216,7 @@ Ideal for manual execution where human readability is important:
 
 ```typescript
 // DBA reviewing migrations before production deployment
-await executor.list(20);  // Last 20 migrations in readable format
+await runner.list(20);  // Last 20 migrations in readable format
 ```
 
 ### CLI Tools
@@ -243,14 +243,14 @@ Great for scripts that require user review:
 import { AsciiTableRenderStrategy } from '@migration-script-runner/core';
 
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 console.log('Current migration status:');
-await executor.list();
+await runner.list();
 
 const answer = await prompt('Proceed with migration? (y/n): ');
 if (answer === 'y') {
-    await executor.migrate();
+    await runner.migrate();
 }
 ```
 
@@ -261,8 +261,8 @@ if (answer === 'y') {
 ```typescript
 // Good: Local development
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.migrate();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.migrate();
 
 // Avoid for CI/CD: Use JsonRenderStrategy instead
 // CI/CD systems can't parse ASCII tables effectively
@@ -272,10 +272,10 @@ await executor.migrate();
 
 ```typescript
 // Good: Show recent migrations
-await executor.list(20);  // Last 20 migrations
+await runner.list(20);  // Last 20 migrations
 
 // Avoid: Showing all migrations in production
-await executor.list();  // Could be thousands of lines
+await runner.list();  // Could be thousands of lines
 ```
 
 ### 3. Combine with Appropriate Logger

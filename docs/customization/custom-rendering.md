@@ -27,7 +27,7 @@ By default, MSR uses `AsciiTableRenderStrategy` which outputs formatted ASCII ta
 - Using `SilentRenderStrategy` to suppress all rendering output (testing, library usage)
 - Creating custom render strategy implementations for specialized formats (XML, CSV, HTML, etc.)
 
-All rendering is handled by the `MigrationRenderer` class which accepts a render strategy in its constructor or through `IMigrationRunnerDependencies`.
+All rendering is handled by the `MigrationRenderer` class which accepts a render strategy in its constructor or through `IRunnerDependencies`.
 
 ---
 
@@ -70,7 +70,7 @@ MSR provides three built-in render strategy implementations. For detailed docume
 ```typescript
 import { MigrationScriptRunner, AsciiTableRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new AsciiTableRenderStrategy()
 });
 ```
@@ -83,12 +83,12 @@ const executor = new MigrationScriptRunner({ handler,
 import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
 
 // Pretty-printed JSON
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Compact JSON
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)
 });
 ```
@@ -100,7 +100,7 @@ const executor = new MigrationScriptRunner({ handler,
 ```typescript
 import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 ```
@@ -214,12 +214,12 @@ import { MigrationScriptRunner, ConsoleLogger } from '@migration-script-runner/c
 import { XmlRenderStrategy } from './XmlRenderStrategy';
 
 const logger = new ConsoleLogger();
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new XmlRenderStrategy(logger)
 });
 
-await executor.migrate();
+await runner.migrate();
 ```
 
 ---
@@ -412,12 +412,12 @@ Render strategies work seamlessly with any logger implementation:
 import { MigrationScriptRunner, JsonRenderStrategy, FileLogger } from '@migration-script-runner/core';
 
 const logger = new FileLogger({ logPath: './migrations.json' });
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(false)  // Compact JSON
 });
 
-await executor.migrate();
+await runner.migrate();
 // Output written to ./migrations.json
 ```
 
@@ -433,12 +433,12 @@ const logger = new CloudWatchLogger({
     logStreamName: 'production'
 });
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(false)
 });
 
-await executor.migrate();
+await runner.migrate();
 // Structured JSON sent to CloudWatch Logs
 ```
 
@@ -483,7 +483,7 @@ function getRenderStrategy() {
     }
 }
 
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: getRenderStrategy()
 });
 ```

@@ -1,6 +1,7 @@
 import {MigrationScript} from "../model";
-import {IMigrationInfo, ISchemaVersion, ISchemaVersionService} from "../interface";
+import {IMigrationInfo, ISchemaVersionOrchestrator} from "../interface";
 import {IDB} from "../interface/dao";
+import {ISchemaVersion} from "../interface/dao/ISchemaVersion";
 
 /**
  * Service for managing the schema version tracking table.
@@ -8,20 +9,15 @@ import {IDB} from "../interface/dao";
  * Handles initialization, validation, and CRUD operations for the database table
  * that tracks which migrations have been executed.
  *
- * **Generic Type Parameters (v0.6.0 - BREAKING CHANGE):**
- * - `DB` - Your specific database interface extending IDB (REQUIRED)
- * - `T` - Type of schema version implementation
- *
- * @template DB - Database interface type
- * @template T - Type of schema version implementation
+ * @template DB - Database interface type extending IDB
  */
-export class SchemaVersionService<DB extends IDB, T extends ISchemaVersion<DB>> implements ISchemaVersionService<DB>{
+export class SchemaVersionOrchestrator<DB extends IDB> implements ISchemaVersionOrchestrator<DB> {
     /**
-     * Creates a new SchemaVersionService.
+     * Creates a new SchemaVersionOrchestrator.
      *
      * @param service - Database-specific implementation of {@link ISchemaVersion}
      */
-    constructor(private readonly service: T) {}
+    constructor(private readonly service: ISchemaVersion<DB>) {}
 
     /**
      * Initialize the schema version tracking table.
@@ -36,7 +32,7 @@ export class SchemaVersionService<DB extends IDB, T extends ISchemaVersion<DB>> 
      *
      * @example
      * ```typescript
-     * const service = new SchemaVersionService<DB>(schemaVersionImpl);
+     * const service = new SchemaVersionOrchestrator<DB>(schemaVersionImpl);
      * await service.init('schema_version');
      * ```
      */

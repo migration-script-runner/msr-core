@@ -29,15 +29,15 @@ graph TB
     end
 
     subgraph "MSR Core - Orchestration"
-        Executor[MigrationScriptRunner<br/>Main orchestrator]
+        Runner[MigrationScriptRunner<br/>Main orchestrator]
         Config[Config<br/>Settings and Options]
     end
 
     subgraph "MSR Core - Services"
         Scanner[MigrationScanner<br/>Finds migrations]
         Validator[MigrationValidator<br/>Validates scripts]
-        Backup[BackupService<br/>Creates backups]
-        SchemaVersion[SchemaVersionService<br/>Tracks versions]
+        Backup[BackupOrchestrator<br/>Creates backups]
+        SchemaVersion[SchemaVersionOrchestrator<br/>Tracks versions]
         Execution[MigrationExecutionService<br/>Runs migrations]
         Rollback[RollbackService<br/>Handles failures]
     end
@@ -48,15 +48,15 @@ graph TB
         Logger[ILogger<br/>Console File Silent]
     end
 
-    Executor --> Config
-    Executor --> Handler
-    Executor --> Scanner
-    Executor --> Validator
-    Executor --> Backup
-    Executor --> SchemaVersion
-    Executor --> Execution
-    Executor --> Rollback
-    Executor --> Renderer
+    Runner --> Config
+    Runner --> Handler
+    Runner --> Scanner
+    Runner --> Validator
+    Runner --> Backup
+    Runner --> SchemaVersion
+    Runner --> Execution
+    Runner --> Rollback
+    Runner --> Renderer
 
     Handler --> UserDB
     Execution --> Migrations
@@ -71,7 +71,7 @@ graph TB
     style Handler fill:#e1f5ff
     style Migrations fill:#e1f5ff
     style UserDB fill:#e1f5ff
-    style Executor fill:#fff3cd
+    style Runner fill:#fff3cd
     style Config fill:#fff3cd
     style Scanner fill:#d4edda
     style Validator fill:#d4edda
@@ -86,7 +86,7 @@ graph TB
 
 **Architecture Layers:**
 - **Blue**: User-implemented components (database handler, migrations, your database)
-- **Yellow**: Orchestration layer (executor and configuration)
+- **Yellow**: Orchestration layer (runner and configuration)
 - **Green**: Service layer (specialized operations)
 - **Red**: Output layer (rendering and logging)
 
@@ -105,8 +105,12 @@ graph TB
 ### [Core Components](components)
 Detailed documentation of the main classes and services:
 - MigrationScriptRunner - Orchestration layer
-- Service layer components (Backup, Schema Version, Rollback, etc.)
+- Provider and orchestrator components (locking, transactions, backup, schema version)
+- Internal services (migration, rollback, validation, etc.)
 - Database handler interface
+
+### [Naming conventions](naming-conventions)
+Provider, orchestrator, and service names used across the adapter and core layers.
 
 ### [Data Flow](data-flow)
 How data moves through the system:

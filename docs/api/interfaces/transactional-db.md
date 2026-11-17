@@ -505,17 +505,17 @@ config.transaction.mode = TransactionMode.PER_MIGRATION;
 
 // Migration Script Runner automatically:
 // 1. Detects ITransactionalDB implementation
-// 2. Creates DefaultTransactionManager
+// 2. Creates DefaultTransactionProvider
 // 3. Wraps migrations in transactions
 // 4. Handles retries on deadlocks
 
-const executor = new MigrationScriptRunner({ handler , config });
-await executor.up();
+const runner = new MigrationScriptRunner({ handler , config });
+await runner.up();
 ```
 
 **What Happens Automatically:**
 1. ✅ Type guard checks if database implements `ITransactionalDB`
-2. ✅ Creates `DefaultTransactionManager` for retry logic
+2. ✅ Creates `DefaultTransactionProvider` for retry logic
 3. ✅ Wraps migrations in `beginTransaction()` / `commit()` / `rollback()`
 4. ✅ Sets isolation level if `setIsolationLevel()` is implemented
 5. ✅ Automatically retries on deadlocks and serialization failures

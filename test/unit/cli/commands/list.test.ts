@@ -12,8 +12,8 @@ interface MockDB extends IDB {
 
 describe('list command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
-    let createExecutorStub: sinon.SinonStub;
+    let mockRunner: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
+    let createRunnerStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
     let processExitStub: sinon.SinonStub;
 
@@ -21,20 +21,20 @@ describe('list command', () => {
         program = new Command();
         program.exitOverride(); // Prevent actual process exit in tests
 
-        // Create mock executor
-        mockExecutor = {
+        // Create mock runner
+        mockRunner = {
             list: sinon.stub(),
         } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
-        createExecutorStub = sinon.stub().returns(mockExecutor);
+        createRunnerStub = sinon.stub().returns(mockRunner);
 
         // Stub console and process.exit
         consoleErrorStub = sinon.stub(console, 'error');
         processExitStub = sinon.stub(process, 'exit');
 
         // Add command
-        addListCommand(program, createExecutorStub);
+        addListCommand(program, createRunnerStub);
     });
 
     afterEach(() => {
@@ -89,13 +89,13 @@ describe('list command', () => {
          * Validates that list() is called with count=0 when no --number specified
          */
         it('should list all migrations with default count', async () => {
-            mockExecutor.list.resolves();
+            mockRunner.list.resolves();
 
             await program.parseAsync(['node', 'test', 'list']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            expect(mockExecutor.list.calledOnce).to.be.true;
-            expect(mockExecutor.list.calledWith(0)).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            expect(mockRunner.list.calledOnce).to.be.true;
+            expect(mockRunner.list.calledWith(0)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
 
@@ -104,11 +104,11 @@ describe('list command', () => {
          * Validates that list() is called with specified count
          */
         it('should list specific number of migrations with --number option', async () => {
-            mockExecutor.list.resolves();
+            mockRunner.list.resolves();
 
             await program.parseAsync(['node', 'test', 'list', '--number', '10']);
 
-            expect(mockExecutor.list.calledWith(10)).to.be.true;
+            expect(mockRunner.list.calledWith(10)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
 
@@ -117,11 +117,11 @@ describe('list command', () => {
          * Validates that list() is called with specified count using short option
          */
         it('should list specific number of migrations with -n short option', async () => {
-            mockExecutor.list.resolves();
+            mockRunner.list.resolves();
 
             await program.parseAsync(['node', 'test', 'list', '-n', '5']);
 
-            expect(mockExecutor.list.calledWith(5)).to.be.true;
+            expect(mockRunner.list.calledWith(5)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
 
@@ -130,11 +130,11 @@ describe('list command', () => {
          * Validates that 0 is accepted as valid count
          */
         it('should handle count of 0 (all migrations)', async () => {
-            mockExecutor.list.resolves();
+            mockRunner.list.resolves();
 
             await program.parseAsync(['node', 'test', 'list', '--number', '0']);
 
-            expect(mockExecutor.list.calledWith(0)).to.be.true;
+            expect(mockRunner.list.calledWith(0)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
     });
@@ -149,7 +149,7 @@ describe('list command', () => {
 
             expect(consoleErrorStub.calledWith('Error: Invalid number "invalid". Must be a non-negative integer.')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.GENERAL_ERROR)).to.be.true;
-            expect(mockExecutor.list.called).to.be.false;
+            expect(mockRunner.list.called).to.be.false;
         });
 
         /**
@@ -161,16 +161,16 @@ describe('list command', () => {
 
             expect(consoleErrorStub.calledWith('Error: Invalid number "-5". Must be a non-negative integer.')).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.GENERAL_ERROR)).to.be.true;
-            expect(mockExecutor.list.called).to.be.false;
+            expect(mockRunner.list.called).to.be.false;
         });
 
         /**
          * Test: Handles exception during list
-         * Validates error handling when executor throws
+         * Validates error handling when runner throws
          */
         it('should handle exception during list', async () => {
             const error = new Error('Database connection failed');
-            mockExecutor.list.rejects(error);
+            mockRunner.list.rejects(error);
 
             await program.parseAsync(['node', 'test', 'list']);
 
@@ -180,10 +180,10 @@ describe('list command', () => {
 
         /**
          * Test: Handles non-Error exception
-         * Validates error handling when executor throws non-Error object
+         * Validates error handling when runner throws non-Error object
          */
         it('should handle non-Error exception', async () => {
-            mockExecutor.list.callsFake(async () => {
+            mockRunner.list.callsFake(async () => {
                 throw 'String error';
             });
 
@@ -200,7 +200,7 @@ describe('list command', () => {
         it('should handle Error with empty message', async () => {
             const errorWithoutMessage = new Error();
             errorWithoutMessage.message = '';
-            mockExecutor.list.rejects(errorWithoutMessage);
+            mockRunner.list.rejects(errorWithoutMessage);
 
             await program.parseAsync(['node', 'test', 'list']);
 
@@ -209,25 +209,25 @@ describe('list command', () => {
         });
     });
 
-    describe('Executor creation', () => {
+    describe('Runner creation', () => {
         /**
-         * Test: Creates executor when action runs
-         * Validates that factory is called to create executor
+         * Test: Creates runner when action runs
+         * Validates that factory is called to create runner
          */
-        it('should create executor when action runs', async () => {
-            mockExecutor.list.resolves();
+        it('should create runner when action runs', async () => {
+            mockRunner.list.resolves();
 
             await program.parseAsync(['node', 'test', 'list']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
         });
 
         /**
-         * Test: Does not create executor before action
+         * Test: Does not create runner before action
          * Validates that factory is not called during command setup
          */
-        it('should not create executor before action', () => {
-            expect(createExecutorStub.called).to.be.false;
+        it('should not create runner before action', () => {
+            expect(createRunnerStub.called).to.be.false;
         });
     });
 
@@ -237,11 +237,11 @@ describe('list command', () => {
          * Validates that decimal numbers are converted to integers
          */
         it('should handle decimal number by parsing to integer', async () => {
-            mockExecutor.list.resolves();
+            mockRunner.list.resolves();
 
             await program.parseAsync(['node', 'test', 'list', '--number', '10.7']);
 
-            expect(mockExecutor.list.calledWith(10)).to.be.true;
+            expect(mockRunner.list.calledWith(10)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
 
@@ -250,11 +250,11 @@ describe('list command', () => {
          * Validates that large count values are accepted
          */
         it('should handle very large numbers', async () => {
-            mockExecutor.list.resolves();
+            mockRunner.list.resolves();
 
             await program.parseAsync(['node', 'test', 'list', '--number', '999999']);
 
-            expect(mockExecutor.list.calledWith(999999)).to.be.true;
+            expect(mockRunner.list.calledWith(999999)).to.be.true;
             expect(processExitStub.calledWith(EXIT_CODES.SUCCESS)).to.be.true;
         });
     });

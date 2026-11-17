@@ -9,17 +9,18 @@ import {IMigrationHooks} from "../interface/IMigrationHooks";
 import {IMigrationScanner} from "../interface/service/IMigrationScanner";
 import {IMigrationValidationOrchestrator} from "../interface/service/IMigrationValidationOrchestrator";
 import {IMigrationReportingOrchestrator} from "../interface/service/IMigrationReportingOrchestrator";
-import {IBackupService} from "../interface/service/IBackupService";
+import {IBackupOrchestrator} from "../interface/service/IBackupOrchestrator";
 import {IMigrationHookExecutor} from "../interface/service/IMigrationHookExecutor";
 import {IMigrationErrorHandler} from "../interface/service/IMigrationErrorHandler";
 import {IRollbackService} from "../interface/service/IRollbackService";
-import {ISchemaVersionService} from "../interface/service/ISchemaVersionService";
+import {ISchemaVersionOrchestrator} from "../interface/service/ISchemaVersionOrchestrator";
 import {ILoaderRegistry} from "../interface/loader/ILoaderRegistry";
 import {MigrationScriptSelector} from "./MigrationScriptSelector";
-import {ITransactionManager} from "../interface/service/ITransactionManager";
+import {ITransactionProvider} from "../interface/service/ITransactionProvider";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
 import {IMigrationService} from "../interface/service/IMigrationService";
 import {LockingOrchestrator} from "./LockingOrchestrator";
+import {ILockingOrchestrator} from "../interface/service/ILockingOrchestrator";
 import {randomUUID} from "node:crypto";
 import {hostname} from "node:os";
 
@@ -47,7 +48,7 @@ export interface MigrationWorkflowOrchestratorDependencies<DB extends IDB> {
     /**
      * Service for creating and managing backups.
      */
-    backupService: IBackupService;
+    backupOrchestrator: IBackupOrchestrator;
 
     /**
      * Service for executing migrations with hooks.
@@ -67,7 +68,7 @@ export interface MigrationWorkflowOrchestratorDependencies<DB extends IDB> {
     /**
      * Service for tracking executed migrations in database.
      */
-    schemaVersionService: ISchemaVersionService<DB>;
+    schemaVersionOrchestrator: ISchemaVersionOrchestrator<DB>;
 
     /**
      * Registry for loading migration scripts of different types.
@@ -82,7 +83,7 @@ export interface MigrationWorkflowOrchestratorDependencies<DB extends IDB> {
     /**
      * Transaction manager for database transactions (optional).
      */
-    transactionManager?: ITransactionManager<DB>;
+    transactionProvider?: ITransactionProvider<DB>;
 
     /**
      * Configuration settings.
@@ -130,14 +131,14 @@ export interface MigrationWorkflowOrchestratorDependencies<DB extends IDB> {
  *     migrationScanner,
  *     validationOrchestrator,
  *     reportingOrchestrator,
- *     backupService,
+ *     backupOrchestrator,
  *     hookExecutor,
  *     errorHandler,
  *     rollbackService,
- *     schemaVersionService,
+ *     schemaVersionOrchestrator,
  *     loaderRegistry,
  *     selector,
- *     transactionManager,
+ *     transactionProvider,
  *     config,
  *     logger,
  *     hooks
@@ -150,33 +151,33 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
     private readonly migrationScanner: IMigrationScanner<DB>;
     private readonly validationOrchestrator: IMigrationValidationOrchestrator<DB>;
     private readonly reportingOrchestrator: IMigrationReportingOrchestrator<DB>;
-    private readonly backupService: IBackupService;
+    private readonly backupOrchestrator: IBackupOrchestrator;
     private readonly hookExecutor: IMigrationHookExecutor<DB>;
     private readonly errorHandler: IMigrationErrorHandler<DB>;
     private readonly rollbackService: IRollbackService<DB>;
-    private readonly schemaVersionService: ISchemaVersionService<DB>;
+    private readonly schemaVersionOrchestrator: ISchemaVersionOrchestrator<DB>;
     private readonly loaderRegistry: ILoaderRegistry<DB>;
     private readonly selector: MigrationScriptSelector<DB>;
-    private readonly transactionManager?: ITransactionManager<DB>;
+    private readonly transactionProvider?: ITransactionProvider<DB>;
     private readonly config: Config;
     private readonly logger: ILogger;
     private readonly hooks?: IMigrationHooks<DB>;
     private readonly handler: IDatabaseMigrationHandler<DB>;
     private readonly migrationService: IMigrationService<DB>;
-    private readonly lockingOrchestrator?: LockingOrchestrator<DB>;
+    private readonly lockingOrchestrator?: ILockingOrchestrator;
 
     constructor(dependencies: MigrationWorkflowOrchestratorDependencies<DB>) {
         this.migrationScanner = dependencies.migrationScanner;
         this.validationOrchestrator = dependencies.validationOrchestrator;
         this.reportingOrchestrator = dependencies.reportingOrchestrator;
-        this.backupService = dependencies.backupService;
+        this.backupOrchestrator = dependencies.backupOrchestrator;
         this.hookExecutor = dependencies.hookExecutor;
         this.errorHandler = dependencies.errorHandler;
         this.rollbackService = dependencies.rollbackService;
-        this.schemaVersionService = dependencies.schemaVersionService;
+        this.schemaVersionOrchestrator = dependencies.schemaVersionOrchestrator;
         this.loaderRegistry = dependencies.loaderRegistry;
         this.selector = dependencies.selector;
-        this.transactionManager = dependencies.transactionManager;
+        this.transactionProvider = dependencies.transactionProvider;
         this.config = dependencies.config;
         this.logger = dependencies.logger;
         this.hooks = dependencies.hooks;
@@ -184,9 +185,9 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
         this.migrationService = dependencies.migrationService;
 
         // Create locking orchestrator if handler provides locking service
-        if (dependencies.handler.lockingService) {
+        if (dependencies.handler.lockingProvider) {
             this.lockingOrchestrator = new LockingOrchestrator(
-                dependencies.handler.lockingService,
+                dependencies.handler.lockingProvider,
                 dependencies.config.locking,
                 dependencies.logger
                 // TODO: Add ILockingHooks support - currently IMigrationHooks doesn't include locking hooks
@@ -250,15 +251,15 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
     }
 
     /**
-     * Generate unique executor ID for lock tracking.
+     * Generate unique runner ID for lock tracking.
      *
      * Format: hostname-pid-uuid
      * Example: macbook-pro-12345-a1b2c3d4-e5f6-7890-abcd-ef1234567890
      *
      * @private
-     * @returns Unique executor identifier
+     * @returns Unique runner identifier
      */
-    private generateExecutorId(): string {
+    private generateRunnerId(): string {
         return `${hostname()}-${process.pid}-${randomUUID()}`;
     }
 
@@ -272,11 +273,11 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * 4. Invoke hooks for observability
      *
      * @private
-     * @param executorId - Unique identifier for this executor
+     * @param runnerId - Unique identifier for this runner
      * @returns Promise that resolves when lock is acquired and verified
      * @throws Error if lock acquisition fails or ownership verification fails
      */
-    private async acquireLockWithRetries(executorId: string): Promise<void> {
+    private async acquireLockWithRetries(runnerId: string): Promise<void> {
         if (!this.lockingOrchestrator) {
             return; // Locking not configured
         }
@@ -290,7 +291,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
         await this.lockingOrchestrator.checkAndReleaseExpiredLock();
 
         // Attempt to acquire lock (orchestrator handles retry logic and hooks)
-        const acquired = await this.lockingOrchestrator.acquireLock(executorId);
+        const acquired = await this.lockingOrchestrator.acquireLock(runnerId);
 
         if (!acquired) {
             // Get current lock status for error message
@@ -315,9 +316,9 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * Logs errors but doesn't throw to ensure cleanup can continue.
      *
      * @private
-     * @param executorId - Unique identifier for this executor
+     * @param runnerId - Unique identifier for this runner
      */
-    private async releaseLock(executorId: string): Promise<void> {
+    private async releaseLock(runnerId: string): Promise<void> {
         if (!this.lockingOrchestrator) {
             return; // Locking not configured
         }
@@ -327,7 +328,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
         }
 
         try {
-            await this.lockingOrchestrator.releaseLock(executorId);
+            await this.lockingOrchestrator.releaseLock(runnerId);
         } catch (error) {
             // Log but don't throw - we don't want lock release failure to mask original error
             this.logger.warn(`Failed to release migration lock: ${error}`);
@@ -338,9 +339,9 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * Execute all pending database migrations.
      */
     public async migrateAll(): Promise<IMigrationResult<DB>> {
-        // Generate unique executor ID and acquire lock before starting
-        const executorId = this.generateExecutorId();
-        await this.acquireLockWithRetries(executorId);
+        // Generate unique runner ID and acquire lock before starting
+        const runnerId = this.generateRunnerId();
+        await this.acquireLockWithRetries(runnerId);
 
         let scripts: IScripts<DB> = {
             all: [],
@@ -397,7 +398,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
             };
         } finally {
             // Always release lock, even on error
-            await this.releaseLock(executorId);
+            await this.releaseLock(runnerId);
         }
     }
 
@@ -405,9 +406,9 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * Execute migrations up to a specific target version.
      */
     public async migrateToVersion(targetVersion: number): Promise<IMigrationResult<DB>> {
-        // Generate unique executor ID and acquire lock before starting
-        const executorId = this.generateExecutorId();
-        await this.acquireLockWithRetries(executorId);
+        // Generate unique runner ID and acquire lock before starting
+        const runnerId = this.generateRunnerId();
+        await this.acquireLockWithRetries(runnerId);
 
         let scripts: IScripts<DB> = {
             all: [],
@@ -452,7 +453,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
             throw await this.errorHandler.handleMigrationError(error, targetVersion, scripts.executed, backupPath, errors);
         } finally {
             // Always release lock, even on error
-            await this.releaseLock(executorId);
+            await this.releaseLock(runnerId);
         }
     }
 
@@ -468,7 +469,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
         if (this.config.beforeMigrateName && !this.config.dryRun) {
             await this.executeBeforeMigrate();
         }
-        await this.schemaVersionService.init(this.config.tableName);
+        await this.schemaVersionOrchestrator.init(this.config.tableName);
     }
 
     /**
@@ -509,7 +510,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
         }
 
         await this.hooks?.onBeforeBackup?.();
-        const backupPath = await this.backupService.backup();
+        const backupPath = await this.backupOrchestrator.backup();
 
         if (backupPath) {
             await this.hooks?.onAfterBackup?.(backupPath);
@@ -527,7 +528,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      */
     private async handleNoPendingMigrations(scripts: IScripts<DB>): Promise<IMigrationResult<DB>> {
         this.reportingOrchestrator.logNoPendingMigrations(scripts.ignored.length);
-        this.backupService.deleteBackup();
+        this.backupOrchestrator.deleteBackup();
 
         const result: IMigrationResult<DB> = {
             success: true,
@@ -554,7 +555,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
             await this.hookExecutor.executeWithHooks(scripts.pending, scripts.executed);
             this.reportingOrchestrator.renderExecutedMigrations(scripts.executed);
             this.reportingOrchestrator.logMigrationSuccess();
-            this.backupService.deleteBackup();
+            this.backupOrchestrator.deleteBackup();
         } else {
             await this.executeDryRun(scripts);
         }
@@ -580,7 +581,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      */
     private async executeDryRun(scripts: IScripts<DB>): Promise<void> {
         // If transactions are enabled, execute in transaction and rollback
-        if (this.transactionManager) {
+        if (this.transactionProvider) {
             this.reportingOrchestrator.logDryRunTransactionTesting(this.config.transaction.mode);
 
             try {
@@ -691,7 +692,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      */
     private async handleNoMigrationsToTarget(scripts: IScripts<DB>, targetVersion: number): Promise<IMigrationResult<DB>> {
         this.reportingOrchestrator.logNoMigrationsToTarget(targetVersion, scripts.ignored.length);
-        this.backupService.deleteBackup();
+        this.backupOrchestrator.deleteBackup();
 
         const result: IMigrationResult<DB> = {
             success: true,
@@ -724,7 +725,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
             await this.hookExecutor.executeWithHooks(pending, scripts.executed);
             this.reportingOrchestrator.renderExecutedMigrations(scripts.executed);
             this.reportingOrchestrator.logMigrationSuccessForVersion(targetVersion);
-            this.backupService.deleteBackup();
+            this.backupOrchestrator.deleteBackup();
         } else {
             this.reportingOrchestrator.logDryRunResultsForVersion(pending.length, scripts.ignored.length, targetVersion);
         }

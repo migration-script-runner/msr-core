@@ -34,7 +34,7 @@ import {Config} from "../model";
  * ```typescript
  * // ✅ CORRECT: Use in private constructor
  * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
- *     private constructor(deps: IMigrationRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+ *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
  *         super(deps);  // ✅ Has handler
  *     }
  *
@@ -63,7 +63,7 @@ import {Config} from "../model";
  * @see {@link IRunnerOptions} - Public API for factory methods (no handler)
  * @see https://github.com/migration-script-runner/msr-core/blob/master/docs/guides/cli-adapter-development.md
  */
-export interface IMigrationRunnerDependencies<
+export interface IRunnerDependencies<
     DB extends IDB,
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config
@@ -86,7 +86,7 @@ export interface IMigrationRunnerDependencies<
      *     getVersion: () => '1.0.0'
      * };
      *
-     * const executor = new MigrationScriptRunner<IDB>({ handler });
+     * const runner = new MigrationScriptRunner<IDB>({ handler });
      *
      * // v0.8.0: Specify handler type for better type safety in adapters
      * class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
@@ -106,7 +106,7 @@ export interface IMigrationRunnerDependencies<
      * @example
      * ```typescript
      * // Use default ConfigLoader
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler
      * });
      * // ConfigLoader automatically used
@@ -122,7 +122,7 @@ export interface IMigrationRunnerDependencies<
      *     }
      * }
      *
-     * const executor = new MigrationScriptRunner<IDB>({
+     * const runner = new MigrationScriptRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     configLoader: new MyConfigLoader()
      * });

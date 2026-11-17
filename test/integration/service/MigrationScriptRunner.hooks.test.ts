@@ -22,7 +22,7 @@ import {TestUtils} from "../../helpers/TestUtils";
 describe('MigrationScriptRunner - Hooks Integration', () => {
 
     let handler: IDatabaseMigrationHandler<IDB>;
-    let executor: MigrationScriptRunner<IDB>;
+    let runner: MigrationScriptRunner<IDB>;
     let mockHooks: IMigrationHooks<IDB>;
     let cfg: Config;
 
@@ -61,7 +61,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             getName(): string { return "Test Implementation" }
             getVersion(): string { return "1.0.0-test" }
         }
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
 });
 
     beforeEach(() => {
@@ -85,11 +85,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
      * Verifies that all lifecycle hooks are called during successful migration
      */
     it('should call all success path hooks during migration', async () => {
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // Verify success path hooks were called
         expect((mockHooks.onBeforeBackup as sinon.SinonStub).calledOnce).to.be.true;
@@ -113,11 +113,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
      * Verifies that hooks receive expected parameters
      */
     it('should call hooks with correct parameters', async () => {
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // Check onStart parameters
         const [totalScripts, pendingScripts] = (mockHooks.onStart as sinon.SinonStub).firstCall.args;
@@ -148,11 +148,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
      * Verifies backward compatibility when no hooks are provided
      */
     it('should work without hooks provided', async () => {
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
             // No hooks provided
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         expect(result.success).to.be.true;
     });
@@ -168,11 +168,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // Only two hooks implemented
         };
 
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: partialHooks
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         expect((partialHooks.onStart as sinon.SinonStub).calledOnce).to.be.true;
         expect((partialHooks.onComplete as sinon.SinonStub).calledOnce).to.be.true;
@@ -204,12 +204,12 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             }
         };
 
-        executor = new MigrationScriptRunner<IDB>({ handler: failingHandler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: failingHandler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
         try {
-            await executor.migrate();
+            await runner.migrate();
             expect.fail('Should have thrown error');
         } catch (error) {
             // Expected error
@@ -251,11 +251,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             })
         };
 
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: orderTrackingHooks
 , config: cfg });
 
-        await executor.migrate();
+        await runner.migrate();
 
         // Verify order: backup hooks → onStart → migration hooks → onComplete
         expect(callOrder[0]).to.equal('onBeforeBackup');
@@ -279,11 +279,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
      * Verifies backup path is passed to the hook
      */
     it('should pass backup path to onAfterBackup hook', async () => {
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
-        await executor.migrate();
+        await runner.migrate();
 
         expect((mockHooks.onAfterBackup as sinon.SinonStub).calledOnce).to.be.true;
         const [backupPath] = (mockHooks.onAfterBackup as sinon.SinonStub).firstCall.args;
@@ -324,11 +324,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             }
         };
 
-        executor = new MigrationScriptRunner<IDB>({ handler: allMigratedHandler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: allMigratedHandler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // Start and completion hooks should still be called
         expect((mockHooks.onBeforeBackup as sinon.SinonStub).calledOnce).to.be.true;
@@ -356,11 +356,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // No onBeforeMigrate, onAfterMigrate, or onMigrationError
         };
 
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: nonMigrationHooks
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // Non-migration hooks should be called
         expect((nonMigrationHooks.onStart as sinon.SinonStub).calledOnce).to.be.true;
@@ -381,11 +381,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // No onAfterMigrate or onMigrationError
         };
 
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: partialMigrationHooks
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         expect((partialMigrationHooks.onBeforeMigrate as sinon.SinonStub).called).to.be.true;
         expect(result.success).to.be.true;
@@ -401,11 +401,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // No onBeforeMigrate or onMigrationError
         };
 
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: partialMigrationHooks
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         expect((partialMigrationHooks.onAfterMigrate as sinon.SinonStub).called).to.be.true;
         expect(result.success).to.be.true;
@@ -421,11 +421,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // No onBeforeMigrate or onAfterMigrate
         };
 
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: errorOnlyHook
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // onMigrationError should NOT be called in success case
         expect((errorOnlyHook.onMigrationError as sinon.SinonStub).called).to.be.false;
@@ -449,11 +449,11 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
 
         const compositeHooks = new CompositeHooks<IDB>([hook1, hook2]);
 
-        executor = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: compositeHooks
 , config: cfg });
 
-        const result = await executor.migrate();
+        const result = await runner.migrate();
 
         // Verify both hook implementations were called
         expect((hook1.onStart as sinon.SinonStub).calledOnce).to.be.true;

@@ -76,20 +76,20 @@ import {
 
 // Default ASCII tables (no configuration needed)
 const config = new Config();
-const executor = new MigrationScriptRunner({ handler , config });
+const runner = new MigrationScriptRunner({ handler , config });
 
 // Pretty JSON for readability
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Compact JSON for log aggregation
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)
 });
 
 // Silent for testing
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 ```
@@ -102,7 +102,7 @@ Render strategies work seamlessly with custom loggers:
 import { FileLogger, JsonRenderStrategy } from '@migration-script-runner/core';
 
 const logger = new FileLogger({ logPath: './migrations.log' });
-const executor = new MigrationScriptRunner({ handler,
+const runner = new MigrationScriptRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(true)
 });

@@ -105,6 +105,27 @@ If linking manually in the GitHub UI, open the issue, use the **Development** se
 
 GitHub documents [manual linking in the Development sidebar](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue). Do not close the issue as a side effect; close it only when explicitly requested.
 
+### Automated SonarCloud remediation
+
+The `SonarCloud finding remediation` workflow listens for a newly created or edited PR comment from `sonarqubecloud[bot]` (GitHub user ID `39514782`). It accepts only the standard report comment containing `<!-- sqra-placement-anchor -->` and an issue-report link for this repository's configured SonarCloud project and the same PR number. It then retrieves all open and confirmed new-code findings through the paginated SonarCloud Web API.
+
+For manual triage, use the shared [MSR SonarCloud report skill](../../.agents/skills/msr-sonar-report/SKILL.md) and its script from the repository root: `node .agents/skills/msr-sonar-report/scripts/get-sonar-report.mjs --pr <number>`. It prints a complete Markdown report; pass `--format json --output <path>` for the standardized full payload. The workflow invokes this same script and passes its JSON report to Codex.
+
+The workflow rejects closed, fork-originated, and untrusted-author PRs. It skips any PR marked by the reserved `automation/sonar-fix/` head prefix, the `[Sonar Fix]` title, or the `🤖 Automation: Sonar Fix` label before it calls SonarCloud or Codex. Each source PR has one deterministic remediation branch (`automation/sonar-fix/pr-<source-pr-number>`); later reports update its existing open PR.
+
+The remediation PR targets the **head branch of the source PR that produced the SonarCloud report**. For example, a report on `master <- release/1.0.0` produces a remediation PR targeting `release/1.0.0`. Remediation PRs are drafts and require human review; the workflow never merges them automatically. The title `[Sonar Fix] Fix findings for #<source-pr-number>` is allowed by the title validator only on its matching reserved branch.
+
+#### Configuration and manual dry run
+
+Configure these repository Actions secrets before enabling the workflow:
+
+- `OMNIROUTE_API_KEY`: OmniRoute bearer key used by `openai/codex-action` with the Responses endpoint `https://omniroute.lavrynovych.net/v1/responses` and model `combo/github`.
+- `SONAR_FIX_APP_ID` and `SONAR_FIX_APP_PRIVATE_KEY`: a GitHub App installed on this repository with `contents: write`, `pull-requests: write`, and `issues: write`. Its token pushes/updates the remediation branch, opens the draft PR, and creates the dedicated label if it does not exist. The App token is used so the new PR can trigger normal PR checks and SonarCloud analysis; GitHub suppresses many workflow events created with `GITHUB_TOKEN` ([GitHub documentation](https://docs.github.com/en/actions/concepts/security/github_token)).
+
+The SonarCloud issue-search request is public and does not use a Sonar token. The OmniRoute secret is used only by the agent job. The PR-writing job receives the narrowly scoped GitHub App token. The workflow does not run code or package scripts from the source PR, rejects PR changes to agent instructions, restricts proposed diffs to `src/`, `test/`, and `docs/`, and leaves all changes for review.
+
+To test manually, run the workflow with `workflow_dispatch`, provide an open same-repository PR number, and keep `dry_run` enabled. This runs report retrieval and Codex preparation but does not create or update a PR. Comment-triggered runs require the workflow file to be present on the repository's default branch.
+
 ## Releases
 
 ### Release branch and pull request flow

@@ -12,16 +12,15 @@ jobs:
   title:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out trusted base-branch validator
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
       - name: Check PR title
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          node - <<'NODE'
-          const title = process.env.PR_TITLE || '';
-          const taskTitle = /^#[1-9][0-9]*: [A-Z].+$/;
-          const releaseTitle = /^Release v[0-9]+\.[0-9]+\.[0-9]+$/;
-          if (!taskTitle.test(title) && !releaseTitle.test(title)) {
-            console.error('Use "#<issue>: <imperative title>" or "Release vX.Y.Z".');
-            process.exit(1);
-          }
-          NODE
+          node .github/scripts/validate-pr-title.mjs

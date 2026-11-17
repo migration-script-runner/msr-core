@@ -356,7 +356,7 @@ new ConsoleMetricsCollector()
 
 // Production - upgrade to LoggerMetricsCollector
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 ```
 

@@ -153,7 +153,7 @@ class FileLogger implements ILogger {
 
 // Use the file logger
 const runner = new ExampleRunner({ handler,
-  logger: new FileLogger('/var/log/migrations.log')
+  logger: new FileLogger({ logPath: '/var/log/migrations.log' })
 });
 await runner.migrate();
 ```
@@ -269,7 +269,7 @@ class CombinedLogger implements ILogger {
 const runner = new ExampleRunner({ handler,
   logger: new CombinedLogger([
     new ConsoleLogger(),
-    new FileLogger('/var/log/migrations.log')
+    new FileLogger({ logPath: '/var/log/migrations.log' })
   ])
 });
 ```
@@ -334,7 +334,7 @@ const runner = new ExampleRunner({ handler,
 // Or use combined logging
 const runner = new ExampleRunner({ handler,
   logger: new CombinedLogger([
-    new FileLogger('/var/log/migrations.log'),
+    new FileLogger({ logPath: '/var/log/migrations.log' }),
     new CloudWatchLogger('/prod/migrations', process.env.HOSTNAME)
   ])
 });

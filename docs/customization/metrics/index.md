@@ -103,7 +103,7 @@ Send metrics through any `ILogger` implementation - FileLogger, CloudLogger, Com
 
 ```typescript
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 ```
 
@@ -241,7 +241,7 @@ metricsCollectors: [
 // Option 2: Production-ready
 metricsCollectors: [
   new LoggerMetricsCollector({
-    logger: new FileLogger('./logs/metrics.log')  // ✅ File, not console
+    logger: new FileLogger({ logPath: './logs/metrics.log' })  // ✅ File, not console
   })
 ]
 
@@ -277,7 +277,7 @@ metricsCollectors: [
 // Phase 2: Production
 const logger = process.env.NODE_ENV === 'production'
   ? new CompositeLogger([
-      new FileLogger('./logs/app.log'),
+      new FileLogger({ logPath: './logs/app.log' }),
       new CloudLogger({ service: 'datadog' })
     ])
   : new ConsoleLogger();
@@ -299,7 +299,7 @@ new ConsoleMetricsCollector()
 
 // Production code - same API, different logger
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 ```
 
@@ -405,7 +405,7 @@ metricsCollectors: [
 
 ```typescript
 const logger = new CompositeLogger([
-  new FileLogger('./logs/app.log'),
+  new FileLogger({ logPath: './logs/app.log' }),
   new CloudLogger({ service: 'datadog' })
 ]);
 

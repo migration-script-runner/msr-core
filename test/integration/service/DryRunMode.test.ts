@@ -97,11 +97,11 @@ describe('Dry Run Mode', () => {
 
             // Verify success but nothing executed
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(0);
+            expect(result.executed).to.have.lengthOf(0);
 
             // Verify no database operations were performed
             const saveOperations = executed.filter(op => op.startsWith('save:'));
-            expect(saveOperations.length).to.equal(0, 'No migrations should be saved');
+            expect(saveOperations).to.have.lengthOf(0, 'No migrations should be saved');
 });
 
         /**
@@ -114,7 +114,7 @@ describe('Dry Run Mode', () => {
             await runner.migrate();
 
             // Verify no backups were created
-            expect(backupsCreated.length).to.equal(0, 'No backups should be created in dry run mode');
+            expect(backupsCreated).to.have.lengthOf(0, 'No backups should be created in dry run mode');
 });
 
         /**
@@ -142,7 +142,7 @@ describe('Dry Run Mode', () => {
 
             // Result should show what would be executed
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(0, 'Nothing executed');
+            expect(result.executed).to.have.lengthOf(0, 'Nothing executed');
             // Pending migrations are shown in renderer, not in result.executed
 });
 
@@ -258,11 +258,11 @@ describe('Dry Run Mode', () => {
 
             // Verify success but nothing executed
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(0);
+            expect(result.executed).to.have.lengthOf(0);
 
             // Verify no save operations
             const saveOperations = executed.filter(op => op.startsWith('save:'));
-            expect(saveOperations.length).to.equal(0);
+            expect(saveOperations).to.have.lengthOf(0);
 });
 
         /**
@@ -275,7 +275,7 @@ describe('Dry Run Mode', () => {
             const result = await runner.migrate(202311020036);
 
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(0);
+            expect(result.executed).to.have.lengthOf(0);
 });
 
         /**
@@ -405,7 +405,7 @@ describe('Dry Run Mode', () => {
             const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
             await runner.migrate();
 
-            expect(backupsCreated.length).to.equal(0);
+            expect(backupsCreated).to.have.lengthOf(0);
 });
 
         /**
@@ -419,7 +419,7 @@ describe('Dry Run Mode', () => {
             await runner.migrate();
 
             const saveOperations = executed.filter(op => op.startsWith('save:'));
-            expect(saveOperations.length).to.equal(0);
+            expect(saveOperations).to.have.lengthOf(0);
 });
 
         /**
@@ -432,9 +432,9 @@ describe('Dry Run Mode', () => {
             const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
             await runner.migrate();
 
-            expect(backupsCreated.length).to.equal(0);
+            expect(backupsCreated).to.have.lengthOf(0);
             const saveOperations = executed.filter(op => op.startsWith('save:'));
-            expect(saveOperations.length).to.equal(0);
+            expect(saveOperations).to.have.lengthOf(0);
 });
     });
 
@@ -471,7 +471,7 @@ describe('Dry Run Mode', () => {
 
             // beforeMigrate should not have executed
             // (it would show up in executed array if it did)
-            expect(executed.length).to.equal(0);
+            expect(executed).to.have.lengthOf(0);
 });
     });
 
@@ -637,8 +637,8 @@ describe('Dry Run Mode', () => {
             const result = await runner.migrate();
 
             // Verify no transactions were started
-            expect(transactionLog.length).to.equal(0, 'No transaction operations in NONE mode');
-            expect(result.executed.length).to.equal(0, 'Migrations not executed in dry run');
+            expect(transactionLog).to.have.lengthOf(0, 'No transaction operations in NONE mode');
+            expect(result.executed).to.have.lengthOf(0, 'Migrations not executed in dry run');
 });
 
         /**

@@ -117,7 +117,7 @@ describe('ExecutionSummaryHook', () => {
             await runner.up();
 
             const files = fs.readdirSync(testLogDir);
-            expect(files.length).to.equal(1);
+            expect(files).to.have.lengthOf(1);
             expect(files[0]).to.include('migration-success');
 });
     });

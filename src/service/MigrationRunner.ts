@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import orderBy from 'lodash/orderBy';
 import * as os from 'os';
 import {MigrationScript} from "../model/MigrationScript";
 import {ISchemaVersionOrchestrator} from "../interface/service/ISchemaVersionOrchestrator";
@@ -118,7 +118,7 @@ export class MigrationRunner<DB extends IDB> {
      * ```
      */
     async execute(scripts: MigrationScript<DB>[]): Promise<MigrationScript<DB>[]> {
-        scripts = _.orderBy(scripts, ['timestamp'], ['asc']);
+        scripts = orderBy(scripts, ['timestamp'], ['asc']);
         const executed: MigrationScript<DB>[] = [];
         const username: string = os.userInfo().username;
 
@@ -132,7 +132,7 @@ export class MigrationRunner<DB extends IDB> {
 
         // PER_MIGRATION or NONE: Execute migrations one by one
         // (PER_MIGRATION wrapping happens in executeOne)
-        const tasks = _.orderBy(scripts, ['timestamp'], ['asc'])
+        const tasks = orderBy(scripts, ['timestamp'], ['asc'])
             .map((s: MigrationScript<DB>) => {
                 s.username = username;
                 return async () => {
@@ -173,7 +173,7 @@ export class MigrationRunner<DB extends IDB> {
             await this.hooks?.afterTransactionBegin?.(context);
 
             // Execute all migrations
-            const tasks = _.orderBy(scripts, ['timestamp'], ['asc'])
+            const tasks = orderBy(scripts, ['timestamp'], ['asc'])
                 .map((s: MigrationScript<DB>) => {
                     s.username = username;
                     return async () => {

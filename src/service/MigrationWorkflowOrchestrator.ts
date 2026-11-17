@@ -361,7 +361,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
             backupPath = await this.createBackupIfNeeded();
 
             // Check for hybrid migrations and disable transactions if needed
-            await this.checkHybridMigrationsAndDisableTransactions(scripts);
+            this.checkHybridMigrationsAndDisableTransactions(scripts);
 
             this.reportingOrchestrator.renderMigrationStatus(scripts);
             await this.hooks?.onStart?.(scripts.all.length, scripts.pending.length);
@@ -621,7 +621,7 @@ export class MigrationWorkflowOrchestrator<DB extends IDB> implements IMigration
      * @throws Error if hybrid migrations detected with transaction mode enabled
      * @private
      */
-    private async checkHybridMigrationsAndDisableTransactions(scripts: IScripts<DB>): Promise<void> {
+    private checkHybridMigrationsAndDisableTransactions(scripts: IScripts<DB>): void {
         // Only check if we have pending migrations and transaction mode is not NONE
         if (scripts.pending.length === 0 || this.config.transaction.mode === TransactionMode.NONE) {
             return;

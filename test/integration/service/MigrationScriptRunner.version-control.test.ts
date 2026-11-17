@@ -151,7 +151,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             const result = await runner.up(3);
 
             // Verify only migrations 1, 2, 3 were executed
-            expect(result.executed.length).to.equal(3);
+            expect(result.executed).to.have.lengthOf(3);
             expect(result.executed[0].timestamp).to.equal(1);
             expect(result.executed[1].timestamp).to.equal(2);
             expect(result.executed[2].timestamp).to.equal(3);
@@ -197,7 +197,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             const result = await runner.up(2);
 
             // Verify no migrations were executed
-            expect(result.executed.length).to.equal(0);
+            expect(result.executed).to.have.lengthOf(0);
             expect(result.success).to.be.true;
             expect(handler.schemaVersion.migrationRecords.save).to.have.not.been.called;
 
@@ -241,7 +241,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             const result = await runner.up(4);
 
             // Verify only migrations 3, 4 were executed
-            expect(result.executed.length).to.equal(2);
+            expect(result.executed).to.have.lengthOf(2);
             expect(result.executed[0].timestamp).to.equal(3);
             expect(result.executed[1].timestamp).to.equal(4);
             expect(result.success).to.be.true;
@@ -414,7 +414,7 @@ describe('MigrationScriptRunner - Version Control', () => {
 
             // Verify execution succeeded despite undefined hook methods
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(1);
+            expect(result.executed).to.have.lengthOf(1);
 
             scanStub.restore();
         });
@@ -448,8 +448,8 @@ describe('MigrationScriptRunner - Version Control', () => {
 
             // Verify early return
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(0);
-            expect(result.migrated.length).to.equal(2);
+            expect(result.executed).to.have.lengthOf(0);
+            expect(result.migrated).to.have.lengthOf(2);
 
             scanStub.restore();
         });
@@ -528,7 +528,7 @@ describe('MigrationScriptRunner - Version Control', () => {
 
             // Verify result
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(1);
+            expect(result.executed).to.have.lengthOf(1);
 
             scanStub.restore();
             backupStub.restore();
@@ -573,7 +573,7 @@ describe('MigrationScriptRunner - Version Control', () => {
 
             // Verify early return
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(0);
+            expect(result.executed).to.have.lengthOf(0);
 
             scanStub.restore();
         });
@@ -621,7 +621,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             const result = await runner.down(2);
 
             // Verify migrations 5, 4, 3 were rolled back (in reverse order)
-            expect(result.executed.length).to.equal(3);
+            expect(result.executed).to.have.lengthOf(3);
             expect(result.executed[0].timestamp).to.equal(5); // Rolled back first
             expect(result.executed[1].timestamp).to.equal(4);
             expect(result.executed[2].timestamp).to.equal(3);
@@ -668,7 +668,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             const result = await runner.down(2);
 
             // Verify no rollback was performed
-            expect(result.executed.length).to.equal(0);
+            expect(result.executed).to.have.lengthOf(0);
             expect(result.success).to.be.true;
             expect(handler.schemaVersion.migrationRecords.remove).to.have.not.been.called;
 
@@ -710,7 +710,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             const result = await runner.down(0);
 
             // Verify all 3 migrations were rolled back
-            expect(result.executed.length).to.equal(3);
+            expect(result.executed).to.have.lengthOf(3);
             expect(result.executed[0].timestamp).to.equal(3);
             expect(result.executed[1].timestamp).to.equal(2);
             expect(result.executed[2].timestamp).to.equal(1);
@@ -841,7 +841,7 @@ describe('MigrationScriptRunner - Version Control', () => {
 
             // Step 1: Migrate to version 3
             const upResult = await runner.up(3);
-            expect(upResult.executed.length).to.equal(3);
+            expect(upResult.executed).to.have.lengthOf(3);
             expect(upResult.success).to.be.true;
 
             // Restore the first stub
@@ -876,7 +876,7 @@ describe('MigrationScriptRunner - Version Control', () => {
 
             // Step 2: Roll back to version 1
             const downResult = await runner.down(1);
-            expect(downResult.executed.length).to.equal(2); // Rolled back 3, 2
+            expect(downResult.executed).to.have.lengthOf(2); // Rolled back 3, 2
             expect(downResult.success).to.be.true;
 
             // Verify removed versions 3, 2
@@ -926,7 +926,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             // Verify validation was called
             expect(validateStub.calledOnce).to.be.true;
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(2);
+            expect(result.executed).to.have.lengthOf(2);
 
             scanStub.restore();
             validateStub.restore();
@@ -971,7 +971,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             // Verify validation was called
             expect(integrityStub.calledOnce).to.be.true;
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(2);
+            expect(result.executed).to.have.lengthOf(2);
 
             scanStub.restore();
             integrityStub.restore();
@@ -1105,7 +1105,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             expect(onCompleteSpy.calledOnce).to.be.true;
             const result = onCompleteSpy.firstCall.args[0];
             expect(result.success).to.be.true;
-            expect(result.executed.length).to.equal(2);
+            expect(result.executed).to.have.lengthOf(2);
 
             scanStub.restore();
         });

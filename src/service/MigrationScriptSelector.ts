@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import differenceBy from 'lodash/differenceBy';
 import {MigrationScript} from "../model/MigrationScript";
 import {IDB} from "../interface/dao";
 
@@ -52,7 +52,7 @@ export class MigrationScriptSelector<DB extends IDB> {
         if (!migrated.length) return all;
 
         const lastMigrated: number = Math.max(...migrated.map(s => s.timestamp));
-        const newScripts: MigrationScript<DB>[] = _.differenceBy(all, migrated, 'timestamp');
+        const newScripts: MigrationScript<DB>[] = differenceBy(all, migrated, 'timestamp');
         const pending: MigrationScript<DB>[] = newScripts.filter(s => s.timestamp > lastMigrated);
 
         return pending;
@@ -84,10 +84,10 @@ export class MigrationScriptSelector<DB extends IDB> {
         if (!migrated.length) return [];
 
         const lastMigrated: number = Math.max(...migrated.map(s => s.timestamp));
-        const newScripts: MigrationScript<DB>[] = _.differenceBy(all, migrated, 'timestamp');
+        const newScripts: MigrationScript<DB>[] = differenceBy(all, migrated, 'timestamp');
         const pending: MigrationScript<DB>[] = newScripts.filter(s => s.timestamp > lastMigrated);
 
-        return _.differenceBy(newScripts, pending, 'timestamp');
+        return differenceBy(newScripts, pending, 'timestamp');
     }
 
     /**

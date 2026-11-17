@@ -181,20 +181,28 @@ export class CallbackTransactionProvider<DB extends IDB, TxContext = unknown> im
             return true;
         }
 
-        this.logFinalError(error, isRetriable, maxRetries);
+        if (isRetriable) {
+            this.logFinalRetriableError(error, maxRetries);
+        } else {
+            this.logFinalNonRetriableError(error);
+        }
         return false;
     }
 
     /**
-     * Log final error message based on error type.
+     * Log a retriable error after exhausting the retry attempts.
      * @private
      */
-    private logFinalError(error: Error, isRetriable: boolean, maxRetries: number): void {
-        if (isRetriable) {
-            this.logger?.error(`Transaction failed after ${maxRetries} attempts: ${error.message}`);
-        } else {
-            this.logger?.error(`Transaction failed with non-retriable error: ${error.message}`);
-        }
+    private logFinalRetriableError(error: Error, maxRetries: number): void {
+        this.logger?.error(`Transaction failed after ${maxRetries} attempts: ${error.message}`);
+    }
+
+    /**
+     * Log an error that cannot be retried.
+     * @private
+     */
+    private logFinalNonRetriableError(error: Error): void {
+        this.logger?.error(`Transaction failed with non-retriable error: ${error.message}`);
     }
 
     /**

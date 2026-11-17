@@ -290,6 +290,18 @@ These additions reflect the current repository configuration. Keep them aligned 
 
 Before any GitHub issue, milestone, label, GitHub Release, tag, or npm publication operation, read [`docs/development/github-project-workflow.md`](docs/development/github-project-workflow.md) and follow it. Its procedures are mandatory. Search and inspect existing remote state before writing, then verify every authorized change. Do not perform a remote mutation unless the user explicitly requests it.
 
+### SonarCloud issue retrieval
+
+- For findings tied to a pull request, retrieve the issue payload from SonarCloud's `/api/issues/search` endpoint. Include `pullRequest`, `componentKeys`, `organization`, and `issueStatuses=OPEN,CONFIRMED`; use `s=IMPACT_RANK`, `sinceLeakPeriod=true`, `facets=impactSoftwareQualities,impactSeverities`, and `additionalFields=_all` when reproducing the release-review report.
+- Page through the results. Read `total` and `paging` from the response, request `p=1..N` with `ps=50` (or another suitable page size), and confirm the collected issue count matches `total`. A request with `ps=1` returns one issue plus the total/facets; it does not return the complete list.
+- Inspect each issue's `key`, `rule`, `severity`, `impacts`, `component`, `line`, and `message`; facets summarize counts and are not a substitute for the issue rows. Add severity/quality filters only when intentionally narrowing the report, and also retrieve the unfiltered list for complete triage.
+
+Example URL pattern:
+
+```text
+https://sonarcloud.io/api/issues/search?pullRequest=<PR>&componentKeys=<project>&organization=<organization>&ps=50&p=<page>&facets=impactSoftwareQualities%2CimpactSeverities&s=IMPACT_RANK&sinceLeakPeriod=true&issueStatuses=OPEN%2CCONFIRMED&additionalFields=_all
+```
+
 ### Current validation setup
 
 - The package requires Node.js `>=20.0.0`. GitHub Actions currently tests Node.js 20.x and 22.x; CircleCI currently uses Node.js 20.18.

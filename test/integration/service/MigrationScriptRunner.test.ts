@@ -28,41 +28,6 @@ describe('MigrationScriptRunner', () => {
     let handler: IDatabaseMigrationHandler<IDB>
     let runner: MigrationScriptRunner<IDB>
 
-    /**
-     * Test: Constructor with automatic config loading
-     * Validates that config is automatically loaded when not provided.
-     */
-    it('should automatically load config when not provided', () => {
-        const mockHandler: IDatabaseMigrationHandler<IDB> = {
-            getName(): string { return 'TestHandler'; },
-            getVersion(): string { return '1.0.0'; },
-            backup: {
-                backup(): Promise<string> { return Promise.resolve('content'); },
-                restore(_data: string): Promise<void> { return Promise.resolve(); }
-            },
-            schemaVersion: {
-                isInitialized(_tableName: string): Promise<boolean> { return Promise.resolve(true); },
-                createTable(_tableName: string): Promise<boolean> { return Promise.resolve(true); },
-                validateTable(_tableName: string): Promise<boolean> { return Promise.resolve(true); },
-                migrationRecords: {
-                    getAllExecuted(): Promise<MigrationScript<IDB>[]> { return Promise.resolve([]); },
-                    save(_details: IMigrationInfo): Promise<void> { return Promise.resolve(); },
-                    remove(_timestamp: number): Promise<void> { return Promise.resolve(); }
-                }
-            },
-            db: {
-                checkConnection(): Promise<boolean> { return Promise.resolve(true); }
-            }
-        };
-
-        // Create runner without config - should auto-load via ConfigLoader
-        const testRunner = new TestMigrationScriptRunner<IDB>({ handler: mockHandler , config: cfg });
-
-        // Verify config was loaded (check a default property)
-        expect(testRunner['config']).to.not.be.undefined;
-        expect(testRunner['config'].folder).to.be.a('string');
-    });
-
     before(() => {
         cfg = TestUtils.getConfig()
         cfg.transaction.mode = TransactionMode.NONE; // Tests don't use transactions
@@ -127,6 +92,39 @@ describe('MigrationScriptRunner', () => {
         scripts = []  // Reset shared state between tests
     })
 
+    /**
+     * Test: Constructor with automatic config loading
+     * Validates that config is automatically loaded when not provided.
+     */
+    it('should automatically load config when not provided', () => {
+        const mockHandler: IDatabaseMigrationHandler<IDB> = {
+            getName(): string { return 'TestHandler'; },
+            getVersion(): string { return '1.0.0'; },
+            backup: {
+                backup(): Promise<string> { return Promise.resolve('content'); },
+                restore(_data: string): Promise<void> { return Promise.resolve(); }
+            },
+            schemaVersion: {
+                isInitialized(_tableName: string): Promise<boolean> { return Promise.resolve(true); },
+                createTable(_tableName: string): Promise<boolean> { return Promise.resolve(true); },
+                validateTable(_tableName: string): Promise<boolean> { return Promise.resolve(true); },
+                migrationRecords: {
+                    getAllExecuted(): Promise<MigrationScript<IDB>[]> { return Promise.resolve([]); },
+                    save(_details: IMigrationInfo): Promise<void> { return Promise.resolve(); },
+                    remove(_timestamp: number): Promise<void> { return Promise.resolve(); }
+                }
+            },
+            db: {
+                checkConnection(): Promise<boolean> { return Promise.resolve(true); }
+            }
+        };
+
+        const testRunner = new TestMigrationScriptRunner<IDB>({ handler: mockHandler, config: cfg });
+
+        expect(testRunner['config']).to.not.be.undefined;
+        expect(testRunner['config'].folder).to.be.a('string');
+    });
+
     describe('migrate()', () => {
         /**
          * Test: Successful migration execution (happy path)
@@ -145,7 +143,7 @@ describe('MigrationScriptRunner', () => {
             // Verify result object
             expect(result.success).to.be.true
             expect(result.executed).to.be.an('array')
-            expect(result.executed.length).to.equal(1)
+            expect(result.executed).to.have.lengthOf(1)
             expect(result.migrated).to.be.an('array')
             expect(result.ignored).to.be.an('array')
             expect(result.errors).to.be.undefined
@@ -186,7 +184,7 @@ describe('MigrationScriptRunner', () => {
             // Verify result object
             expect(result.success).to.be.true
             expect(result.executed).to.be.an('array')
-            expect(result.executed.length).to.equal(0)
+            expect(result.executed).to.have.lengthOf(0)
             expect(result.migrated).to.be.an('array')
             expect(result.ignored).to.be.an('array')
             expect(result.errors).to.be.undefined
@@ -231,7 +229,7 @@ describe('MigrationScriptRunner', () => {
             // Verify result object indicates failure
             expect(result.success).to.be.false
             expect(result.executed).to.be.an('array')
-            expect(result.executed.length).to.equal(0)
+            expect(result.executed).to.have.lengthOf(0)
             expect(result.migrated).to.be.an('array')
             expect(result.ignored).to.be.an('array')
             expect(result.errors).to.be.an('array')
@@ -562,7 +560,7 @@ describe('MigrationScriptRunner', () => {
             // then: verify result indicates success with no executions
             expect(result.success).to.be.true
             expect(result.executed).to.be.an('array')
-            expect(result.executed.length).to.equal(0)
+            expect(result.executed).to.have.lengthOf(0)
             expect(result.errors).to.be.undefined
 
             // then: should complete without error

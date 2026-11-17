@@ -704,7 +704,7 @@ export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseH
 {: .important }
 > **Best Practice**: Always use `createInstance` for async adapters to ensure consistency across the MSR ecosystem and reduce boilerplate code.
 
-**Learn More:** [Async Adapter Initialization](../../guides/cli-adapter-development#async-adapter-initialization-v082)
+**Learn More:** [Async Adapter Initialization](../../guides/cli-async-initialization#async-adapter-initialization-v082)
 
 ### Pattern Interaction
 

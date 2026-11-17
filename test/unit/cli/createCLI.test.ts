@@ -372,6 +372,36 @@ describe('createCLI', () => {
             expect(passedConfig.backupMode).to.equal(BackupMode.MANUAL);
         });
 
+        it('should map dot-notation custom CLI flags into nested config', async () => {
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            const config = Object.assign(new Config(), {db: {credentials: {path: 'key.json'}}});
+            const program = createCLI({
+                createRunner: createRunnerStub,
+                config,
+                addCustomOptions: (command) => {
+                    command
+                        .option('--db.url <url>', 'Database URL')
+                        .option('--db.timeout <milliseconds>', 'Database timeout');
+                }
+            });
+            program.exitOverride();
+
+            await program.parseAsync([
+                'node', 'test', 'migrate',
+                '--db.url', 'https://localhost',
+                '--db.timeout', '5000'
+            ]);
+
+            const passedConfig = createRunnerStub.firstCall.args[0] as Config & {
+                db: {url: string; timeout: number; credentials: {path: string}};
+            };
+            expect(passedConfig.db).to.deep.equal({
+                url: 'https://localhost',
+                timeout: 5000,
+                credentials: {path: 'key.json'}
+            });
+        });
+
         for (const backupMode of Object.values(BackupMode)) {
             it(`maps --backup-mode ${backupMode} to config.backupMode`, async () => {
                 mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});

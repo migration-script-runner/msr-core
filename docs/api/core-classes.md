@@ -325,7 +325,7 @@ export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
 ```
 
 **Learn More:**
-- [Async Adapter Initialization Guide](../guides/cli-adapter-development#async-adapter-initialization-v082)
+- [Async Adapter Initialization Guide](../guides/cli-async-initialization#async-adapter-initialization-v082)
 - [Design Patterns: Async Adapter Factory](../development/architecture/design-patterns#async-adapter-initialization-factory-v082)
 
 ---

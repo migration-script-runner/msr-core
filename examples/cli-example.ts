@@ -76,9 +76,9 @@ const program: Command = createCLI<MockDB>({
     name: 'msr-example',
     description: 'Example Migration Script Runner CLI',
     version: '1.0.0',
-    createExecutor: (config) => {
+    createRunner: (config) => {
         // Adapter developers receive the final merged config
-        // They can use it to initialize their handler and executor
+        // They can use it to initialize their handler and runner
         const handler = new MockDatabaseHandler();
         return new MigrationScriptRunner<MockDB>({
             handler,
@@ -137,7 +137,7 @@ program.parse(process.argv);
  *   name: 'msr-mongodb',
  *   description: 'MongoDB Migration Script Runner',
  *   version: require('../package.json').version,
- *   createExecutor: (config) => {
+ *   createRunner: (config) => {
  *     // Initialize handler with config
  *     const handler = new MongoHandler(config.mongoUri || 'mongodb://localhost:27017');
  *     // Return adapter instance with merged config

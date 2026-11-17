@@ -46,7 +46,7 @@ import {YourRunner} from './YourRunner';
 const program = createCLI({
   name: 'your-cli',
   version: '1.0.0',
-  createExecutor: (config) => new YourRunner({config}),
+  createRunner: (config) => new YourRunner({config}),
 });
 
 program.parse(process.argv);

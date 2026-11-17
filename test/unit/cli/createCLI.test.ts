@@ -1,4 +1,7 @@
 import {expect} from 'chai';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import sinon from 'sinon';
 import {createCLI} from '../../../src/cli/createCLI';
 import {IDB} from '../../../src/interface';
@@ -581,6 +584,33 @@ describe('createCLI', () => {
 
             expect(runnerConfig).to.exist;
             expect(runnerConfig!.folder).to.equal('./override-folder');
+        });
+
+        it('should load the file passed to --config-file', async () => {
+            const configDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'msr-cli-config-'));
+            const configPath = path.join(configDirectory, 'custom.json');
+            fs.writeFileSync(configPath, JSON.stringify({folder: './explicit-config'}));
+            mockRunner.migrate.resolves({success: true, executed: [], migrated: [], ignored: []});
+            const processExitStub = sinon.stub(process, 'exit');
+
+            let runnerConfig: Config | undefined;
+            const createRunner = sinon.stub().callsFake((config: Config) => {
+                runnerConfig = config;
+                return mockRunner;
+            });
+
+            try {
+                const program = createCLI({createRunner});
+                program.exitOverride();
+
+                await program.parseAsync(['node', 'test', 'migrate', '--config-file', configPath]);
+
+                expect(runnerConfig).to.exist;
+                expect(runnerConfig!.folder).to.equal('./explicit-config');
+            } finally {
+                processExitStub.restore();
+                fs.rmSync(configDirectory, {recursive: true, force: true});
+            }
         });
     });
 

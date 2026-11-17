@@ -269,6 +269,8 @@ class PostgresDB implements IPostgresDB {
 
 ## Configuration
 
+For all configuration properties and defaults, see the [Config Reference](configuration/config-reference). For the complete command and flag list, see the [CLI Reference](api/cli-reference).
+
 Create a configuration object to customize MSR behavior:
 
 ```typescript
@@ -597,7 +599,7 @@ Available on all commands:
 --format <format>        # Output format (table|json)
 ```
 
-**Learn More:** [CLI Adapter Development Guide](guides/cli-adapter-development)
+**Learn More:** [CLI Adapter Development Guide](guides/cli-adapter-development) and [CLI Reference](api/cli-reference).
 
 #### Standalone Script Usage
 
@@ -911,8 +913,11 @@ config.beforeMigrateName = null;
 ### Development & Configuration
 - [Configuration Guide](configuration) - Learn about all configuration options
 - [API Reference](api/) - Explore the full API
+- [MigrationScriptRunner API](api/migration-script-runner) - Public migration methods
+- [CLI Reference](api/cli-reference) - Built-in CLI commands and options
+- [Config Reference](configuration/config-reference) - All config properties and defaults
 - [Writing Migrations](guides/writing-migrations) - Best practices for migration scripts
-- [Testing](testing/) - How to test your migrations
+- [Testing](development/testing/) - How to test your migrations
 - [CLI Adapter Development](guides/cli-adapter-development) - Create CLIs for your adapters
 
 ---

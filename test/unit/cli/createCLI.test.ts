@@ -432,6 +432,21 @@ describe('createCLI', () => {
             expect(createRunnerStub.called).to.be.false;
         });
 
+        for (const [option, invalidValue, allowedValues] of [
+            ['--logger', 'unsupported', 'console|file|silent'],
+            ['--log-level', 'trace', 'error|warn|info|debug'],
+            ['--format', 'yaml', 'table|json']
+        ]) {
+            it(`rejects unsupported ${option} values before creating a runner`, () => {
+                const program = createCLI({createRunner: createRunnerStub});
+                program.exitOverride();
+
+                expect(() => program.parse(['node', 'test', 'migrate', option, invalidValue]))
+                    .to.throw(CommanderError, new RegExp(`${option}.*${invalidValue}.*${allowedValues}`));
+                expect(createRunnerStub.called).to.be.false;
+            });
+        }
+
         /**
          * Test: Handles CLI flags with logger override
          * Validates that logger CLI flag overrides runner logger

@@ -381,10 +381,10 @@ export function createCLI<
         .option('--display-limit <number>', 'Maximum migrations to display', parseInt)
         .option('--dry-run', 'Simulate without executing')
         .option('--no-lock', 'Disable migration locking for this run')
-        .option('--logger <type>', `Logger type (${loggerTypes})`)
-        .option('--log-level <level>', `Log level (${logLevels})`)
+        .option('--logger <type>', `Logger type (${loggerTypes})`, parseLoggerType)
+        .option('--log-level <level>', `Log level (${logLevels})`, parseLogLevel)
         .option('--log-file <path>', 'Log file path (required with --logger file)')
-        .option('--format <format>', `Output format (${outputFormats})`)
+        .option('--format <format>', `Output format (${outputFormats})`, parseOutputFormat)
         .option('--backup-mode <mode>', `Backup behavior (${backupModes})`, parseBackupMode);
 
     // Call adapter's custom options callback if provided
@@ -452,6 +452,27 @@ function parseBackupMode(value: string): BackupMode {
     }
 
     throw new InvalidArgumentError(`Invalid backup mode '${value}'. Allowed values: ${backupModes.join('|')}`);
+}
+
+function parseLoggerType(value: string): typeof LOGGER_TYPES[number] {
+    return parseAllowedOptionValue(value, '--logger', LOGGER_TYPES);
+}
+
+function parseLogLevel(value: string): typeof LOG_LEVELS[number] {
+    return parseAllowedOptionValue(value, '--log-level', LOG_LEVELS);
+}
+
+function parseOutputFormat(value: string): typeof OUTPUT_FORMATS[number] {
+    return parseAllowedOptionValue(value, '--format', OUTPUT_FORMATS);
+}
+
+function parseAllowedOptionValue<T extends string>(value: string, option: string, allowedValues: readonly T[]): T {
+    const match = allowedValues.find((allowedValue) => allowedValue === value);
+    if (match !== undefined) {
+        return match;
+    }
+
+    throw new InvalidArgumentError(`Invalid value '${value}' for ${option}. Allowed values: ${allowedValues.join('|')}`);
 }
 
 function isBackupMode(value: string): value is BackupMode {

@@ -29,7 +29,7 @@ import { IMigrationResult } from "../interface/IMigrationResult";
  *     new CustomLoggingHooks()
  * ]);
  *
- * const runner = new ExampleRunner<DB>(handler, { hooks });
+ * const runner = new ExampleRunner<IDB>({ handler, hooks });
  * await runner.migrate();
  * ```
  *

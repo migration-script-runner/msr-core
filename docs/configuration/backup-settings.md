@@ -531,9 +531,9 @@ Choose a backup mode for a migration run without changing the config file:
 npx msr migrate --backup-mode manual
 ```
 
-The supported values shown in CLI help are `full`, `create_only`, `restore_only`,
-and `manual`. The CLI flag overrides the mode loaded from a config file, environment variables,
-or `createCLI` options. If the flag is omitted, the loaded mode is preserved;
+The accepted values are `full`, `create_only`, `restore_only`, and `manual`; any other
+value is rejected before the command runs. The CLI flag overrides the mode loaded from a config
+file, environment variables, or `createCLI` options. If the flag is omitted, the loaded mode is preserved;
 when no mode is configured, the default is `full` (`BackupMode.FULL`).
 
 `restore_only` still requires `backup.existingBackupPath` to point to an existing

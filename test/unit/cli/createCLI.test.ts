@@ -1,4 +1,5 @@
 import {expect} from 'chai';
+import {CommanderError} from 'commander';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -418,6 +419,16 @@ describe('createCLI', () => {
                 expect(passedConfig.backupMode).to.equal(backupMode);
             });
         }
+
+        it('rejects unsupported --backup-mode values before creating a runner', () => {
+            const program = createCLI({createRunner: createRunnerStub});
+            program.exitOverride();
+
+            expect(() => program.parse([
+                'node', 'test', 'migrate', '--backup-mode', 'unsupported'
+            ])).to.throw(CommanderError, /backup-mode.*unsupported.*Allowed values/s);
+            expect(createRunnerStub.called).to.be.false;
+        });
 
         /**
          * Test: Handles CLI flags with logger override

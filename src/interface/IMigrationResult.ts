@@ -19,7 +19,7 @@ import {IDB} from "./dao";
  *
  * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
  *
- * const runner = new ExampleRunner<IDB>(handler);
+ * const runner = new ExampleRunner<IDB>({ handler });
  * const result = await runner.migrate();
  *
  * if (result.success) {

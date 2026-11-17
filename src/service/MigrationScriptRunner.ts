@@ -349,12 +349,18 @@ export abstract class MigrationScriptRunner<
      *
      * @example
      * ```typescript
-     * import { MigrationScriptRunner } from '@migration-script-runner/core';
-     * import { IDB } from '@migration-script-runner/core';
+     * import {
+     *   Config,
+     *   IDB,
+     *   IDatabaseMigrationHandler,
+     *   MigrationScriptRunner
+     * } from '@migration-script-runner/core';
      *
-     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     * class ExampleRunner extends MigrationScriptRunner<IDB> {}
      *
-     * const runner = new ExampleRunner<DB>(handler, config);
+     * declare const handler: IDatabaseMigrationHandler<IDB>;
+     * const config = new Config();
+     * const runner = new ExampleRunner({ handler, config });
      *
      * // Run all pending migrations
      * const result = await runner.up();
@@ -522,7 +528,7 @@ export abstract class MigrationScriptRunner<
      *
      * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
      *
-     * const runner = new ExampleRunner<DB>(handler);
+     * const runner = new ExampleRunner<IDB>({ handler });
      *
      * // List all migrations
      * await runner.list();

@@ -34,7 +34,7 @@ import { ConsoleLogger } from '../../logger/ConsoleLogger';
  * @example For production, use LoggerMetricsCollector instead
  * ```typescript
  * // Production-ready with file logging
- * const logger = new FileLogger('./logs/metrics.log');
+ * const logger = new FileLogger({ logPath: './logs/metrics.log' });
  * new LoggerMetricsCollector({ logger })
  *
  * // Or with cloud logging

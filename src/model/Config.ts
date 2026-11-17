@@ -618,16 +618,21 @@ export class Config {
      *
      * @example
      * ```typescript
-     * import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
-     * import { IDB } from '@migration-script-runner/core';
+     * import {
+     *   Config,
+     *   IDB,
+     *   IDatabaseMigrationHandler,
+     *   MigrationScriptRunner
+     * } from '@migration-script-runner/core';
      *
-     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     * class ExampleRunner extends MigrationScriptRunner<IDB> {}
      *
+     * declare const handler: IDatabaseMigrationHandler<IDB>;
      *
      * const config = new Config();
      * config.dryRun = true;
      *
-     * const runner = new ExampleRunner<DB>(handler, config);
+     * const runner = new ExampleRunner({ handler, config });
      * await runner.migrate(); // No changes made, only preview
      * ```
      *

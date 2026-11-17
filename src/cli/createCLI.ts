@@ -1,4 +1,4 @@
-import {Command} from 'commander';
+import {Command, InvalidArgumentError} from 'commander';
 import {MigrationScriptRunner} from '../service/MigrationScriptRunner';
 import {IConfigLoader} from '../interface/IConfigLoader';
 import {Config} from '../model/Config';
@@ -210,7 +210,10 @@ export interface CLIOptions<
      *     }
      *   },
      *
-     *   createRunner: (config) => new MongoRunner({ config })
+     *   createRunner: (config) => {
+     *     const handler = new MongoHandler(config.mongoUri);
+     *     return new MongoRunner({ handler, config });
+     *   }
      * });
      * ```
      *
@@ -376,7 +379,7 @@ export function createCLI<
         .option('--log-level <level>', `Log level (${logLevels})`)
         .option('--log-file <path>', 'Log file path (required with --logger file)')
         .option('--format <format>', `Output format (${outputFormats})`)
-        .option('--backup-mode <mode>', `Backup behavior (${backupModes})`);
+        .option('--backup-mode <mode>', `Backup behavior (${backupModes})`, parseBackupMode);
 
     // Call adapter's custom options callback if provided
     if (options.addCustomOptions) {
@@ -438,4 +441,17 @@ export function createCLI<
     }
 
     return program;
+}
+
+function parseBackupMode(value: string): BackupMode {
+    const backupModes = Object.values(BackupMode);
+    if (isBackupMode(value)) {
+        return value;
+    }
+
+    throw new InvalidArgumentError(`Invalid backup mode '${value}'. Allowed values: ${backupModes.join('|')}`);
+}
+
+function isBackupMode(value: string): value is BackupMode {
+    return Object.values(BackupMode).some((backupMode) => backupMode === value);
 }

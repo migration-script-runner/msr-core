@@ -51,7 +51,7 @@ The following options are registered on the root command and apply to built-in c
 | `--log-level <level>` | Set output verbosity. | `error`, `warn`, `info`, `debug`. |
 | `--log-file <path>` | Set the log file path. | Required when `--logger file` is selected. |
 | `--format <format>` | Select the output format. | `table`, `json`. |
-| `--backup-mode <mode>` | Override backup behavior. | `full`, `create_only`, `restore_only`, `manual`. |
+| `--backup-mode <mode>` | Override backup behavior; other values are rejected. | `full`, `create_only`, `restore_only`, `manual`. |
 
 Adapter-defined options are registered with `addCustomOptions`; see [Adapter options and flags](../guides/cli-options-and-flags).
 

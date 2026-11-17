@@ -41,7 +41,7 @@ export interface LoggerMetricsCollectorConfig {
  *
  * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
  *
- * const logger = new FileLogger('./logs/metrics.log');
+ * const logger = new FileLogger({ logPath: './logs/metrics.log' });
  *
  * const runner = new ExampleRunner<IDB>({
  *   handler,
@@ -57,7 +57,7 @@ export interface LoggerMetricsCollectorConfig {
  * @example Multiple destinations with CompositeLogger
  * ```typescript
  * const logger = new CompositeLogger([
- *   new FileLogger('./logs/app.log'),
+ *   new FileLogger({ logPath: './logs/app.log' }),
  *   new CloudLogger({ service: 'datadog' })
  * ]);
  *

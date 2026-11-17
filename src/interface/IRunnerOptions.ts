@@ -279,15 +279,13 @@ export interface IRunnerOptions<
      * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
      *
      * // Use default loaders
-     * const runner = new ExampleRunner<DB>(handler);
+     * const runner = new ExampleRunner<IDB>({ handler });
      * // Automatically uses TypeScript and SQL loaders
      *
      * // Register custom loader
      * const registry = LoaderRegistry.createDefault();
      * registry.register(new PythonLoader());
-     * const runner = new ExampleRunner<DB>(handler, {
-     *     loaderRegistry: registry
-     * });
+     * const runner = new ExampleRunner<IDB>({ handler, loaderRegistry: registry });
      *
      * // Use only specific loaders
      * const registry = new LoaderRegistry<DB>();

@@ -1,0 +1,269 @@
+name: SonarCloud finding remediation
+
+on:
+  issue_comment:
+    types: [created, edited]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to analyze
+        required: true
+        type: string
+      dry_run:
+        description: Run Codex but do not create or update a pull request
+        required: true
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: sonar-fix-${{ github.event.issue.number || inputs.pr_number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request && github.event.comment.user.login == 'sonarqubecloud[bot]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    outputs:
+      has_findings: ${{ steps.sonar-report.outputs.has_findings }}
+      source_pr_number: ${{ steps.prepare.outputs.source_pr_number }}
+      source_head_ref: ${{ steps.prepare.outputs.source_head_ref }}
+      source_head_sha: ${{ steps.prepare.outputs.source_head_sha }}
+      dry_run: ${{ steps.prepare.outputs.dry_run }}
+    steps:
+      - name: Check out trusted default-branch workflow code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate report and pull request
+        id: prepare
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          SONAR_PROJECT_KEY: vlavrynovych_msr
+          SONAR_ORGANIZATION: vlavrynovych
+          RUNNER_TEMP: ${{ runner.temp }}
+        run: node .github/scripts/sonar-fix.mjs prepare
+
+      - name: Retrieve standardized SonarCloud report
+        id: sonar-report
+        if: steps.prepare.outputs.should_run == 'true'
+        env:
+          SONAR_PULL_REQUEST_NUMBER: ${{ steps.prepare.outputs.source_pr_number }}
+          SONAR_PROJECT_KEY: vlavrynovych_msr
+          SONAR_ORGANIZATION: vlavrynovych
+        run: >-
+          node .agents/skills/msr-sonar-report/scripts/get-sonar-report.mjs
+          --pr "$SONAR_PULL_REQUEST_NUMBER"
+          --format json
+          --output "$RUNNER_TEMP/sonar-report.json"
+
+      - name: Combine verified PR metadata with the Sonar report
+        if: steps.sonar-report.outputs.has_findings == 'true'
+        env:
+          SOURCE_CONTEXT_PATH: ${{ runner.temp }}/sonar-fix-source-context.json
+          SONAR_REPORT_PATH: ${{ runner.temp }}/sonar-report.json
+          SONAR_CONTEXT_OUTPUT: ${{ runner.temp }}/sonar-fix-context.json
+        run: node .github/scripts/sonar-fix.mjs combine-context
+
+      - name: Save verified Sonar context
+        if: steps.sonar-report.outputs.has_findings == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonar-fix-context
+          path: ${{ runner.temp }}/sonar-fix-context.json
+          retention-days: 1
+
+  codex:
+    needs: prepare
+    if: needs.prepare.outputs.has_findings == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    outputs:
+      has_changes: ${{ steps.finalize.outputs.has_changes }}
+    steps:
+      - name: Check out trusted default-branch workflow code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Check out the analyzed source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_head_sha }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download verified Sonar context
+        uses: actions/download-artifact@v4
+        with:
+          name: sonar-fix-context
+          path: ${{ runner.temp }}/sonar-fix-context
+
+      - name: Refuse pull requests that change agent instructions
+        env:
+          SOURCE_DIRECTORY: source
+          SONAR_CONTEXT_PATH: ${{ runner.temp }}/sonar-fix-context/sonar-fix-context.json
+        run: node .github/scripts/sonar-fix.mjs validate-source
+
+      - name: Provide trusted remediation instructions
+        env:
+          SONAR_CONTEXT_PATH: ${{ runner.temp }}/sonar-fix-context/sonar-fix-context.json
+        run: |
+          if [ -e source/.sonar-fix.md ] || [ -e source/.sonar-context.json ]; then
+            echo "A reserved temporary Sonar path already exists in the source branch."
+            exit 1
+          fi
+          cp .github/prompts/sonar-fix.md source/.sonar-fix.md
+          cp "$SONAR_CONTEXT_PATH" source/.sonar-context.json
+
+      - name: Ask Codex to prepare focused fixes
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OMNIROUTE_API_KEY }}
+          responses-api-endpoint: https://omniroute.lavrynovych.net/v1/responses
+          model: combo/github
+          allow-bot-users: sonarqubecloud
+          permission-profile: ':workspace'
+          safety-strategy: drop-sudo
+          working-directory: source
+          prompt: |
+            Read the trusted instructions in `.sonar-fix.md` in this checkout.
+            The verified SonarCloud findings and source PR metadata are in `.sonar-context.json`.
+            Follow the trusted instructions, make focused changes for those findings, and do not run code or package scripts from this pull request.
+
+      - name: Capture and validate Codex changes
+        id: finalize
+        env:
+          SOURCE_DIRECTORY: source
+          SONAR_CONTEXT_PATH: ${{ runner.temp }}/sonar-fix-context/sonar-fix-context.json
+          RUNNER_TEMP: ${{ runner.temp }}
+        run: |
+          rm -f source/.sonar-fix.md source/.sonar-context.json
+          node .github/scripts/sonar-fix.mjs finalize
+
+      - name: Save proposed patch
+        if: steps.finalize.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonar-fix-patch
+          path: ${{ runner.temp }}/sonar-fix.patch
+          retention-days: 1
+
+  create-remediation-pr:
+    needs: [prepare, codex]
+    if: >-
+      needs.codex.outputs.has_changes == 'true' &&
+      needs.prepare.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out trusted default-branch workflow code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Check out the analyzed source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_head_ref }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download validated patch and context
+        uses: actions/download-artifact@v4
+        with:
+          name: sonar-fix-patch
+          path: ${{ runner.temp }}/sonar-fix-patch
+
+      - name: Download verified Sonar context
+        uses: actions/download-artifact@v4
+        with:
+          name: sonar-fix-context
+          path: ${{ runner.temp }}/sonar-fix-context
+
+      - name: Confirm the source branch has not moved
+        env:
+          EXPECTED_HEAD_SHA: ${{ needs.prepare.outputs.source_head_sha }}
+        run: |
+          actual_head_sha="$(git -C source rev-parse HEAD)"
+          if [ "$actual_head_sha" != "$EXPECTED_HEAD_SHA" ]; then
+            echo "The source branch changed while Codex was working. Wait for a new SonarCloud report and retry."
+            exit 1
+          fi
+
+      - name: Apply the validated patch
+        env:
+          PATCH_PATH: ${{ runner.temp }}/sonar-fix-patch/sonar-fix.patch
+        run: |
+          git -C source apply --check "$PATCH_PATH"
+          git -C source apply "$PATCH_PATH"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create a least-privilege GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.SONAR_FIX_APP_ID }}
+          private-key: ${{ secrets.SONAR_FIX_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: Ensure the Sonar Fix label exists
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_API_URL: ${{ github.api_url }}
+        run: node .github/scripts/sonar-fix.mjs ensure-label
+
+      - name: Prepare the review summary
+        id: metadata
+        env:
+          SONAR_CONTEXT_PATH: ${{ runner.temp }}/sonar-fix-context/sonar-fix-context.json
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SOURCE_DIRECTORY: source
+        run: node .github/scripts/sonar-fix.mjs write-pr-body
+
+      - name: Create or update the Sonar Fix draft pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          path: source
+          branch: automation/sonar-fix/pr-${{ needs.prepare.outputs.source_pr_number }}
+          base: ${{ needs.prepare.outputs.source_head_ref }}
+          title: '[Sonar Fix] Fix findings for #${{ needs.prepare.outputs.source_pr_number }}'
+          body: ${{ steps.metadata.outputs.pr_body }}
+          labels: '🤖 Automation: Sonar Fix'
+          draft: always-true
+          delete-branch: false
+          commit-message: '#178: Fix SonarCloud findings for PR #${{ needs.prepare.outputs.source_pr_number }}'
+          maintainer-can-modify: true

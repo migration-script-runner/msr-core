@@ -292,6 +292,7 @@ Before any GitHub issue, pull request, milestone, label, GitHub Release, tag, or
 
 - For task PR creation or updates, use the project skill [`.agents/skills/msr-github-pr/SKILL.md`](.agents/skills/msr-github-pr/SKILL.md) and its helper script. It applies the repository title, target branch, assignee, labels, milestone, and Development-link rules. The command requires an already-pushed, clean task branch; it never commits or pushes.
 - Link the related issue through GitHub's **Development** relationship. Do not put `Closes #<issue>` in the PR description. The script creates and verifies the manual link through GitHub GraphQL's `addCloseIssueReferences` mutation.
+- Generated Sonar remediation PRs use the exact title `[Sonar Fix] Fix findings for #<source-pr-number>` and the head branch `automation/sonar-fix/pr-<source-pr-number>`. This is the only task PR title exception; the title validator accepts it only when the branch matches. These PRs target the head branch of the source PR analyzed by SonarCloud, remain drafts for human review, and carry the `🤖 Automation: Sonar Fix` label.
 
 ### SonarCloud issue retrieval
 
@@ -304,6 +305,12 @@ Example URL pattern:
 ```text
 https://sonarcloud.io/api/issues/search?pullRequest=<PR>&componentKeys=<project>&organization=<organization>&ps=50&p=<page>&facets=impactSoftwareQualities%2CimpactSeverities&s=IMPACT_RANK&sinceLeakPeriod=true&issueStatuses=OPEN%2CCONFIRMED&additionalFields=_all
 ```
+
+- The automated remediation workflow recognizes only comments from `sonarqubecloud[bot]` (GitHub user ID `39514782`) with the `sqra-placement-anchor` marker and a matching SonarCloud issue-report URL. It rejects PRs from forks and PRs not opened by a repository owner, member, or collaborator.
+- To prevent loops, it exits before API/Codex work for PRs on `automation/sonar-fix/*`, with the `🤖 Automation: Sonar Fix` label, or with a `[Sonar Fix]` title. Repeated reports for one source PR reuse its deterministic remediation branch and open PR.
+- Use [`.agents/skills/msr-sonar-report/SKILL.md`](.agents/skills/msr-sonar-report/SKILL.md) and its `get-sonar-report.mjs` helper for both manual report retrieval and the automated remediation workflow. The helper calls SonarCloud's public issue-search endpoint without a Sonar token, retrieves all pages, and verifies the count against the API total.
+- The remediation workflow requires Actions secrets `OMNIROUTE_API_KEY`, `SONAR_FIX_APP_ID`, and `SONAR_FIX_APP_PRIVATE_KEY`. Codex uses the OmniRoute Responses endpoint `https://omniroute.lavrynovych.net/v1/responses` with model `combo/github`; the OmniRoute credential is not passed to the PR-writing job. The GitHub App installation needs `contents: write`, `pull-requests: write`, and `issues: write` to push the remediation branch, create/update the draft PR, and ensure its label. Use the App token so the created PR can trigger normal PR checks and SonarCloud analysis; GitHub suppresses many events created with `GITHUB_TOKEN`.
+- `issue_comment` workflows must exist on the default branch to receive comment events. Use `workflow_dispatch` with `dry_run=true` to exercise Codex without creating/updating a PR.
 
 ### Current validation setup
 

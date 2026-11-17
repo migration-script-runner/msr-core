@@ -283,6 +283,27 @@ npx my-db-migrate migrate --no-lock
 npx my-db-migrate migrate --config-file .env.production
 ```
 
+**Nested adapter options:** An adapter registers dot-notation options with `addCustomOptions`:
+
+```typescript
+addCustomOptions: (program) => {
+  program
+    .option('--db.url <url>', 'Database URL')
+    .option('--db.timeout <ms>', 'Connection timeout');
+}
+```
+
+Once registered, use them with the adapter's CLI:
+
+```bash
+npx my-db-migrate migrate \
+  --db.url https://localhost:5432 \
+  --db.timeout 5000
+```
+
+The adapter receives these values as `config.db.url` and `config.db.timeout` (`5000` is converted to a number).
+See the [adapter development guide](https://migration-script-runner.github.io/msr-core/guides/cli-options-and-flags#nested-configuration-flags) for details.
+
 **[→ Full CLI Documentation](https://migration-script-runner.github.io/msr-core/guides/cli-adapter-development)**
 
 ---

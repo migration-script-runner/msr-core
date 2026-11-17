@@ -25,4 +25,8 @@ describe('CLI Utils Module Exports', () => {
     it('should export mapFlagsToConfig function', () => {
         expect(utilsModule.mapFlagsToConfig).to.be.a('function');
     });
+
+    it('should export setNestedValue function', () => {
+        expect(utilsModule.setNestedValue).to.be.a('function');
+    });
 });

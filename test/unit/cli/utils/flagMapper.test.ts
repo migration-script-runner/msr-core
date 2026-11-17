@@ -86,6 +86,23 @@ describe('flagMapper', () => {
             expect(config.backupMode).to.equal(BackupMode.MANUAL);
         });
 
+        it('should map dot-notation flags to nested config and preserve existing values', () => {
+            const configWithDatabase = Object.assign(config, {
+                db: {url: 'old', credentials: {path: 'key.json'}}
+            });
+
+            mapFlagsToConfig(configWithDatabase, {
+                'db.url': 'https://localhost',
+                'db.timeout': '5000'
+            });
+
+            expect(configWithDatabase.db).to.deep.equal({
+                url: 'https://localhost',
+                timeout: 5000,
+                credentials: {path: 'key.json'}
+            });
+        });
+
         /**
          * Test: Maps multiple flags to config
          * Validates that multiple flags can be mapped simultaneously

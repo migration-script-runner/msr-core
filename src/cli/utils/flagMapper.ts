@@ -4,6 +4,7 @@ import {FileLogger} from '../../logger/FileLogger';
 import {SilentLogger} from '../../logger/SilentLogger';
 import {ILogger} from '../../interface/ILogger';
 import {BackupMode} from '../../model/BackupMode';
+import {setNestedValue} from './nestedValueParser';
 
 export const LOGGER_TYPES = ['console', 'file', 'silent'] as const;
 export const LOG_LEVELS = ['error', 'warn', 'info', 'debug'] as const;
@@ -70,6 +71,12 @@ export interface CLIFlags {
  * ```
  */
 export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | undefined {
+    for (const [key, value] of Object.entries(flags)) {
+        if (key.includes('.') && value !== undefined) {
+            setNestedValue(config, key, value);
+        }
+    }
+
     // Map simple config properties
     if (flags.folder !== undefined) {
         config.folder = flags.folder;

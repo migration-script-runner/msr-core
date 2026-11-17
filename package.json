@@ -4,6 +4,26 @@
   "description": "Migration Script Runner - Core Framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "cli/utils": ["dist/src/cli/utils/index.d.ts"]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./cli/utils": {
+      "types": "./dist/src/cli/utils/index.d.ts",
+      "require": "./dist/src/cli/utils/index.js",
+      "default": "./dist/src/cli/utils/index.js"
+    },
+    "./dist/src/cli/utils": "./dist/src/cli/utils/index.js",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
   "files": [
     "/dist"
   ],

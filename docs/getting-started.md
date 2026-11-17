@@ -527,7 +527,7 @@ program.parse(process.argv);
 - ✅ Type-safe with full generic support
 - ✅ Handles connection pooling, authentication, etc.
 
-**Learn More:** [Async Adapter Initialization Guide](guides/cli-adapter-development#async-adapter-initialization-v082)
+**Learn More:** [Async Adapter Initialization Guide](guides/cli-async-initialization#async-adapter-initialization-v082)
 
 ##### Simple Sync Pattern (For Basic Handlers)
 

@@ -159,9 +159,9 @@ Open your browser to: **http://localhost:4000**
 
 **Key pages to check:**
 - Homepage: http://localhost:4000
-- Origin Story: http://localhost:4000/about/origin-story
-- Philosophy: http://localhost:4000/about/philosophy
 - API Docs: http://localhost:4000/api
+
+The shared MSR **[origin story](https://migration-script-runner.dev/origin-story)** and **[design philosophy](https://migration-script-runner.dev/design-philosophy)** are hosted on the official website.
 
 ### Live Reload
 
@@ -383,7 +383,6 @@ docs/
 ├── api/                  # API reference docs
 ├── guides/               # User guides
 ├── development/          # Contributor docs
-├── about/                # Origin story & philosophy
 ├── assets/
 │   └── css/
 │       └── custom.css    # Custom styling

@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {
@@ -61,7 +62,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             getName(): string { return "Test Implementation" }
             getVersion(): string { return "1.0.0-test" }
         }
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: cfg });
 });
 
     beforeEach(() => {
@@ -85,7 +86,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
      * Verifies that all lifecycle hooks are called during successful migration
      */
     it('should call all success path hooks during migration', async () => {
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
@@ -113,7 +114,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
      * Verifies that hooks receive expected parameters
      */
     it('should call hooks with correct parameters', async () => {
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
@@ -148,7 +149,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
      * Verifies backward compatibility when no hooks are provided
      */
     it('should work without hooks provided', async () => {
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
             // No hooks provided
 , config: cfg });
 
@@ -168,7 +169,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // Only two hooks implemented
         };
 
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: partialHooks
 , config: cfg });
 
@@ -204,7 +205,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             }
         };
 
-        runner = new MigrationScriptRunner<IDB>({ handler: failingHandler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: failingHandler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
@@ -251,7 +252,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             })
         };
 
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: orderTrackingHooks
 , config: cfg });
 
@@ -279,7 +280,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
      * Verifies backup path is passed to the hook
      */
     it('should pass backup path to onAfterBackup hook', async () => {
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
@@ -324,7 +325,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             }
         };
 
-        runner = new MigrationScriptRunner<IDB>({ handler: allMigratedHandler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: allMigratedHandler, logger: new SilentLogger(),
             hooks: mockHooks
 , config: cfg });
 
@@ -356,7 +357,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // No onBeforeMigrate, onAfterMigrate, or onMigrationError
         };
 
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: nonMigrationHooks
 , config: cfg });
 
@@ -381,7 +382,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // No onAfterMigrate or onMigrationError
         };
 
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: partialMigrationHooks
 , config: cfg });
 
@@ -401,7 +402,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // No onBeforeMigrate or onMigrationError
         };
 
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: partialMigrationHooks
 , config: cfg });
 
@@ -421,7 +422,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
             // No onBeforeMigrate or onAfterMigrate
         };
 
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: errorOnlyHook
 , config: cfg });
 
@@ -449,7 +450,7 @@ describe('MigrationScriptRunner - Hooks Integration', () => {
 
         const compositeHooks = new CompositeHooks<IDB>([hook1, hook2]);
 
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: compositeHooks
 , config: cfg });
 

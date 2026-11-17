@@ -302,6 +302,10 @@ export class MongoDBHandler implements IDatabaseMigrationHandler<IDB> {
 // src/migrate.ts
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MongoDBHandler } from './database/MongoDBHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function runMigrations() {
   // Configure MongoDB connection
@@ -323,7 +327,7 @@ async function runMigrations() {
   config.backup.folder = './backups';
 
   // Create runner
-  const runner = new MigrationScriptRunner({ handler , config });
+  const runner = new ExampleRunner({ handler , config });
 
   try {
     console.log('Running migrations...');
@@ -570,6 +574,10 @@ export default class AddPreferencesField implements IRunnableScript<IDB> {
 import { expect } from 'chai';
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MongoDBHandler } from '../../src/database/MongoDBHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('MongoDB Migration Integration', () => {
   let handler: MongoDBHandler;
@@ -586,7 +594,7 @@ describe('MongoDB Migration Integration', () => {
     const config = new Config();
     config.folder = './migrations';
 
-    runner = new MigrationScriptRunner({ handler , config });
+    runner = new ExampleRunner({ handler , config });
   });
 
   after(async () => {

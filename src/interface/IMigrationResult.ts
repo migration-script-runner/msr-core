@@ -14,7 +14,12 @@ import {IDB} from "./dao";
  *
  * @example
  * ```typescript
- * const runner = new MigrationScriptRunner<IDB>(handler);
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
+ * const runner = new ExampleRunner<IDB>(handler);
  * const result = await runner.migrate();
  *
  * if (result.success) {

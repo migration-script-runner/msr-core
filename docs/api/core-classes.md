@@ -21,7 +21,7 @@ The main classes for executing and managing migrations.
 
 ### MigrationScriptRunner
 
-The main class for executing database migrations.
+The abstract base class for executing database migrations. Create a database-specific subclass before constructing a runner; `MigrationScriptRunner` cannot be instantiated directly.
 
 **Generic Type Parameters:**
 - **v0.6.0:** Database type parameter (`DB extends IDB`) provides database-specific type safety
@@ -31,6 +31,9 @@ The main class for executing database migrations.
 ```typescript
 import { MigrationScriptRunner, IDatabaseMigrationHandler, Config, IDB } from '@migration-script-runner/core';
 
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
 // Define your database type
 interface IMyDatabase extends IDB {
   query(sql: string): Promise<any>;
@@ -39,7 +42,7 @@ interface IMyDatabase extends IDB {
 // Basic usage - handler type inferred
 const handler = new MyDatabaseHandler();  // implements IDatabaseMigrationHandler<IMyDatabase>
 const config = new Config();
-const runner = new MigrationScriptRunner<IMyDatabase>({ handler , config });
+const runner = new ExampleRunner<IMyDatabase>({ handler , config });
 
 // v0.8.0: Type-safe adapter with handler generic (for custom adapters)
 class MyRunner extends MigrationScriptRunner<IMyDatabase, MyDatabaseHandler> {
@@ -163,7 +166,12 @@ runner.getHandler(): THandler
 
 **Example (Basic Handler Access):**
 ```typescript
-const runner = new MigrationScriptRunner({ handler, config });
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({ handler, config });
 const h = runner.getHandler();
 
 console.log(`Database: ${h.getName()}`);
@@ -173,9 +181,14 @@ console.log(`Version: ${h.getVersion()}`);
 **Example (CLI Custom Commands):**
 ```typescript
 import { createCLI } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const program = createCLI({
-  createRunner: (config) => new MigrationScriptRunner({ handler, config }),
+  createRunner: (config) => new ExampleRunner({ handler, config }),
   extendCLI: (program, createRunner) => {
     program
       .command('vacuum')

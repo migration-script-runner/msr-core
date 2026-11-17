@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect } from 'chai';
 import { MigrationScriptRunner, Config, SilentLogger, IDatabaseMigrationHandler, ValidationError, ISchemaVersion, IMigrationInfo, IDB, TransactionMode } from '../../../src';
 import fs from 'node:fs';
@@ -83,7 +84,7 @@ describe('MigrationScriptRunner - Validation Error Paths Coverage', () => {
             })
         }];
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
         const result = await runner.migrate();
@@ -116,7 +117,7 @@ describe('MigrationScriptRunner - Validation Error Paths Coverage', () => {
             migrationContent
         );
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
         // Should succeed with warnings
@@ -147,7 +148,7 @@ describe('MigrationScriptRunner - Validation Error Paths Coverage', () => {
             migrationContent
         );
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
         const result = await runner.migrate();
@@ -193,7 +194,7 @@ describe('MigrationScriptRunner - Validation Error Paths Coverage', () => {
         // Now modify the file to create checksum mismatch
         fs.writeFileSync(filepath, migrationContent + '// Modified');
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger()
 , config: config });
 
         const result = await runner.migrate();
@@ -271,7 +272,7 @@ describe('MigrationScriptRunner - Validation Error Paths Coverage', () => {
             log: (msg: string) => loggedMessages.push(`LOG: ${msg}`)
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: capturingLogger,
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: capturingLogger,
             migrationScanner: mockScanner as any
 , config: config });
 

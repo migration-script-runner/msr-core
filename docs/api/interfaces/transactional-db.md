@@ -494,6 +494,10 @@ import {
 } from '@migration-script-runner/core';
 import { PostgresDB } from './postgres-db';
 import { createHandler } from './handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Create database with transaction support
 const db = new PostgresDB(pool);
@@ -509,7 +513,7 @@ config.transaction.mode = TransactionMode.PER_MIGRATION;
 // 3. Wraps migrations in transactions
 // 4. Handles retries on deadlocks
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.up();
 ```
 

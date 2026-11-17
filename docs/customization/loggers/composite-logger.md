@@ -38,6 +38,11 @@ CompositeLogger implements the [Composite Pattern](https://en.wikipedia.org/wiki
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   CompositeLogger,
   ConsoleLogger,
   FileLogger,
@@ -50,7 +55,7 @@ const logger = new CompositeLogger([
   new FileLogger({ logPath: '/var/log/migrations.log' })
 ]);
 
-const runner = new MigrationScriptRunner({ handler,  logger });
+const runner = new ExampleRunner({ handler,  logger });
 await runner.migrate();
 ```
 
@@ -176,6 +181,11 @@ Disable all output during tests:
 
 ```typescript
 import { CompositeLogger, SilentLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration Tests', () => {
   it('should migrate successfully', async () => {
@@ -185,7 +195,7 @@ describe('Migration Tests', () => {
     // Or use SilentLogger explicitly
     const silentLogger = new CompositeLogger([new SilentLogger()]);
 
-    const runner = new MigrationScriptRunner({ handler,  logger });
+    const runner = new ExampleRunner({ handler,  logger });
     const result = await runner.migrate();
 
     expect(result.success).to.be.true;
@@ -486,6 +496,11 @@ logger.info('message'); // Does nothing
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   CompositeLogger,
   ConsoleLogger,
   FileLogger,
@@ -522,7 +537,7 @@ const createLogger = (): CompositeLogger => {
 
 // Use the logger
 const logger = createLogger();
-const runner = new MigrationScriptRunner({ handler,  logger });
+const runner = new ExampleRunner({ handler,  logger });
 
 const result = await runner.migrate();
 

@@ -5,11 +5,12 @@
 The main class for executing database migrations.
 
 ```typescript
-import { MigrationScriptRunner, IDatabaseMigrationHandler, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, IDatabaseMigrationHandler, Config, IDB } from '@migration-script-runner/core';
 
 const handler = new MyDatabaseHandler();
 const config = new Config();
-const runner = new MigrationScriptRunner(handler, config);
+class MyRunner extends MigrationScriptRunner<IDB> {}
+const runner = new MyRunner({ handler, config });
 ```
 
 #### Constructor
@@ -58,7 +59,8 @@ The `MigrationScriptRunner` exposes several service instances as public readonly
 
 **Example (Accessing Services):**
 ```typescript
-const runner = new MigrationScriptRunner(handler, config);
+class MyRunner extends MigrationScriptRunner<IDB> {}
+const runner = new MyRunner({ handler, config });
 
 // Check if backup should be created
 if (runner.rollbackService.shouldCreateBackup()) {
@@ -75,7 +77,8 @@ const results = await runner.validationService.validateAll(scripts, config);
 **Example (Custom Rollback Logic):**
 ```typescript
 // Access rollbackService for custom workflows
-const runner = new MigrationScriptRunner(handler, config);
+class MyRunner extends MigrationScriptRunner<IDB> {}
+const runner = new MyRunner({ handler, config });
 
 try {
   await runner.migrate();

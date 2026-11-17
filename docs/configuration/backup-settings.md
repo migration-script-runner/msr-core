@@ -790,12 +790,16 @@ runner.deleteBackup();
 
 ```typescript
 import { MigrationScriptRunner, Config, BackupMode } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.backupMode = BackupMode.MANUAL;
 config.backup.deleteBackup = true;
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Step 1: Create backup manually
 console.log('Creating backup...');

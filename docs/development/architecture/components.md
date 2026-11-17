@@ -180,9 +180,14 @@ graph TB
 **Location:** `src/service/MigrationScriptRunner.ts`
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Example usage (public API unchanged)
 const config = new Config();
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger: new SilentLogger(),  // Optional DI
     backupOrchestrator: customBackup  // Optional DI
 });

@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import {
@@ -74,7 +75,7 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
             deleteBackup: sinon.stub()
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: restoreHooks,
             backupOrchestrator: mockBackupOrchestrator
 , config: config });
@@ -116,7 +117,7 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
             })
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: orderTrackingHooks,
             backupOrchestrator: mockBackupOrchestrator
 , config: config });
@@ -144,7 +145,7 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
             deleteBackup: sinon.stub()
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: restoreHooks,
             backupOrchestrator: mockBackupOrchestrator
 , config: config });
@@ -169,7 +170,7 @@ describe('MigrationScriptRunner - Restore Hooks (Unit)', () => {
             deleteBackup: sinon.stub()
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             backupOrchestrator: mockBackupOrchestrator
             // No hooks provided
 , config: config });

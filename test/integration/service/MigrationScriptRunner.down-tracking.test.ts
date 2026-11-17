@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {
@@ -132,7 +133,7 @@ describe('MigrationScriptRunner - Track Executed Scripts for Rollback', () => {
         // Clear global tracker
         (global as any).__testDownCalls = [];
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         // Get down calls from global tracker
@@ -221,7 +222,7 @@ describe('MigrationScriptRunner - Track Executed Scripts for Rollback', () => {
 
         (global as any).__testDownCalls2 = [];
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         const calls = (global as any).__testDownCalls2 || [];
@@ -298,7 +299,7 @@ describe('MigrationScriptRunner - Track Executed Scripts for Rollback', () => {
 
         (global as any).__testDownCalls3 = [];
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
         const result = await runner.migrate();
 
         const calls = (global as any).__testDownCalls3 || [];

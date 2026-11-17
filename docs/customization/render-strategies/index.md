@@ -68,6 +68,11 @@ Choose the right render strategy for your environment:
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
     MigrationScriptRunner,
     AsciiTableRenderStrategy,
     JsonRenderStrategy,
@@ -76,20 +81,20 @@ import {
 
 // Default ASCII tables (no configuration needed)
 const config = new Config();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Pretty JSON for readability
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Compact JSON for log aggregation
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)
 });
 
 // Silent for testing
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 ```
@@ -100,9 +105,14 @@ Render strategies work seamlessly with custom loggers:
 
 ```typescript
 import { FileLogger, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const logger = new FileLogger({ logPath: './migrations.log' });
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(true)
 });

@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect } from 'chai';
 import {
     Config,
@@ -106,7 +107,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
     });
 
     it('should create MetricsCollectorHook when metricsCollectors provided', async () => {
-        const runner = new MigrationScriptRunner<IDB>(
+        const runner = new TestMigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -127,7 +128,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
     });
 
     it('should not create MetricsCollectorHook when metricsCollectors is empty', async () => {
-        const runner = new MigrationScriptRunner<IDB>(
+        const runner = new TestMigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -143,7 +144,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
     });
 
     it('should not create MetricsCollectorHook when metricsCollectors is undefined', async () => {
-        const runner = new MigrationScriptRunner<IDB>(
+        const runner = new TestMigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -158,7 +159,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
     });
 
     it('should call collectors for each migration lifecycle event', async () => {
-        const runner = new MigrationScriptRunner<IDB>(
+        const runner = new TestMigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),
@@ -200,7 +201,7 @@ describe('MigrationScriptRunner with Metrics Collectors', () => {
             }
         };
 
-        const runner = new MigrationScriptRunner<IDB>(
+        const runner = new TestMigrationScriptRunner<IDB>(
             {
                 handler: handler,
                 logger: new SilentLogger(),

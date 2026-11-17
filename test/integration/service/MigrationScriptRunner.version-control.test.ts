@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect, spy} from 'chai';
 import {afterEach} from "mocha";
 import sinon from 'sinon';
@@ -80,7 +81,7 @@ describe('MigrationScriptRunner - Version Control', () => {
         cfg.validateBeforeRun = false;
         cfg.validateMigratedFiles = false;
 
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
         initialized = true;
         created = true;
         valid = true;
@@ -393,7 +394,7 @@ describe('MigrationScriptRunner - Version Control', () => {
          */
         it('should handle hooks object with undefined methods', async () => {
             // Create runner with empty hooks object
-            const runnerWithEmptyHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runnerWithEmptyHooks = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {} // Hooks object exists but no methods defined
 , config: cfg });
 
@@ -492,7 +493,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             const onStartSpy = sinon.spy();
             const onCompleteSpy = sinon.spy();
 
-            const runnerWithAllHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runnerWithAllHooks = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onBeforeBackup: onBeforeBackupSpy,
                     onAfterBackup: onAfterBackupSpy,
@@ -541,7 +542,7 @@ describe('MigrationScriptRunner - Version Control', () => {
             const onStartSpy = sinon.spy();
             const onCompleteSpy = sinon.spy();
 
-            const runnerWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runnerWithHooks = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onStart: onStartSpy,
                     onComplete: onCompleteSpy
@@ -982,7 +983,7 @@ describe('MigrationScriptRunner - Version Control', () => {
          */
         it('should call onStart hook when rolling back', async () => {
             const onStartSpy = sinon.spy();
-            const runnerWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runnerWithHooks = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onStart: onStartSpy
                 }
@@ -1025,7 +1026,7 @@ describe('MigrationScriptRunner - Version Control', () => {
         it('should call onBeforeMigrate and onAfterMigrate hooks for each rollback', async () => {
             const onBeforeMigrateSpy = sinon.spy();
             const onAfterMigrateSpy = sinon.spy();
-            const runnerWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runnerWithHooks = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onBeforeMigrate: onBeforeMigrateSpy,
                     onAfterMigrate: onAfterMigrateSpy
@@ -1071,7 +1072,7 @@ describe('MigrationScriptRunner - Version Control', () => {
          */
         it('should call onComplete hook after successful rollback', async () => {
             const onCompleteSpy = sinon.spy();
-            const runnerWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runnerWithHooks = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onComplete: onCompleteSpy
                 }
@@ -1114,7 +1115,7 @@ describe('MigrationScriptRunner - Version Control', () => {
          */
         it('should call onError hook when rollback fails', async () => {
             const onErrorSpy = sinon.spy();
-            const runnerWithHooks = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
+            const runnerWithHooks = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
                 hooks: {
                     onError: onErrorSpy
                 }

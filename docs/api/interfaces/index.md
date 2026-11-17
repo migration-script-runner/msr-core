@@ -214,7 +214,7 @@ All interfaces now require generic type parameters for database-specific type sa
 - `IMetricsCollector` - Metrics collection for observability and performance tracking
 
 ### Constructor Signature Change (Breaking)
-- `MigrationScriptRunner` constructor now requires dependency injection pattern: `new MigrationScriptRunner({ handler }, config?)`
+- `MigrationScriptRunner` is an abstract base class. Create a concrete database-specific subclass and pass its constructor an `IRunnerDependencies` object.
 
 ---
 

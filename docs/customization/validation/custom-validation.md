@@ -1012,6 +1012,10 @@ import {
     MigrationScriptRunner
 } from '@migration-script-runner/core';
 import * as fs from 'fs';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // 1. Define validators
 class NamingValidator implements IMigrationValidator {
@@ -1082,7 +1086,7 @@ if (process.env.NODE_ENV === 'production') {
 config.customValidators = validators;
 
 // 3. Run migrations
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 try {
     const result = await runner.migrate();

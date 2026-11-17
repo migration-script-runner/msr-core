@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
@@ -153,7 +154,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: true });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -183,7 +184,7 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -203,7 +204,7 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -224,7 +225,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: false });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -252,7 +253,7 @@ describe('Migration Locking Mechanism', () => {
                 retryAttempts: 0 // Fail fast
             });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -281,7 +282,7 @@ describe('Migration Locking Mechanism', () => {
                 retryDelay: 10 // Fast for testing
             });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -308,7 +309,7 @@ describe('Migration Locking Mechanism', () => {
                 retryDelay: 10
             });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -333,7 +334,7 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -357,7 +358,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ enabled: true });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -399,7 +400,7 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -419,7 +420,7 @@ describe('Migration Locking Mechanism', () => {
             const config = new Config();
             config.folder = './test/fixtures/migrations/empty';
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -453,7 +454,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -482,7 +483,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -510,7 +511,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -544,7 +545,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()
@@ -581,7 +582,7 @@ describe('Migration Locking Mechanism', () => {
             config.folder = './test/fixtures/migrations/empty';
             config.locking = new LockingConfig({ retryAttempts: 0 });
 
-            const runner = new MigrationScriptRunner<IDB>({
+            const runner = new TestMigrationScriptRunner<IDB>({
                 handler,
                 config,
                 logger: new SilentLogger()

@@ -809,8 +809,12 @@ Run validation without executing:
 
 ```typescript
 import { MigrationScriptRunner, ValidationError } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({ handler , config });
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler , config });
 
 try {
     // This will validate but not execute if you catch the error early

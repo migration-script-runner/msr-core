@@ -89,6 +89,11 @@ Extend the validation system:
 
 ```typescript
 import { ILogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class MyLogger implements ILogger {
   log(message: string): void {
@@ -104,7 +109,7 @@ class MyLogger implements ILogger {
   }
 }
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
   logger: new MyLogger()
 });
 ```

@@ -362,8 +362,12 @@ For programmatic access, use the API:
 
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const runner = new MigrationScriptRunner({ handler, config });
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler, config });
 
 // Check lock status
 const status = await runner.getLockStatus();

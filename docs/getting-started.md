@@ -430,10 +430,14 @@ Use MSR as a library to integrate migrations into your application without termi
 ```typescript
 import { MigrationScriptRunner, IMigrationResult, Config } from '@migration-script-runner/core';
 import { IMyDatabase } from './types';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner<IMyDatabase>({ handler , config });
+const runner = new ExampleRunner<IMyDatabase>({ handler , config });
 
 // Run migrations and get structured results
 const result: IMigrationResult = await runner.up();
@@ -533,6 +537,10 @@ For simple handlers without async initialization needs:
 // create-cli.ts
 import { createCLI, MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const program = createCLI({
     name: 'myapp-migrate',
@@ -542,7 +550,7 @@ const program = createCLI({
     // Synchronous runner creation
     createRunner: (config) => {
         const handler = new MyDatabaseHandler();  // Sync initialization
-        return new MigrationScriptRunner({ handler, config });
+        return new ExampleRunner({ handler, config });
     }
 });
 
@@ -598,10 +606,14 @@ For standalone migration scripts without CLI, control the process exit based on 
 ```typescript
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { IMyDatabase } from './types';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner<IMyDatabase>({ handler , config });
+const runner = new ExampleRunner<IMyDatabase>({ handler , config });
 
 const result = await runner.up();
 process.exit(result.success ? 0 : 1);

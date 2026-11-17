@@ -686,12 +686,17 @@ When `dryRun` is enabled:
 **1. CI/CD Validation**
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // In your CI pipeline
 const config = new Config();
 config.dryRun = process.env.CI === 'true';
 config.validateBeforeRun = true;
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 const result = await runner.migrate();
 
 if (!result.success) {
@@ -752,6 +757,10 @@ Dry run mode respects [`validateBeforeRun`](validation-settings.md#validatebefor
 
 ```typescript
 import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 
@@ -768,7 +777,7 @@ config.displayLimit = 20;
 config.beforeMigrateName = 'beforeMigrate';
 
 // Initialize and run
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 

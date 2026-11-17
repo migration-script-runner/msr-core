@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {
@@ -138,7 +139,7 @@ describe('MigrationScriptRunner - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         const downCalls = (global as any).__cleanupDownCalls || [];
@@ -217,7 +218,7 @@ describe('MigrationScriptRunner - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: testLogger, config: config });
         const result = await runner.migrate();
 
         // Should fail
@@ -304,7 +305,7 @@ describe('MigrationScriptRunner - Failed Migration Cleanup', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
         const result = await runner.migrate();
 
         const downCalls = (global as any).__bothStrategyDownCalls || [];

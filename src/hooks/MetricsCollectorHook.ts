@@ -19,12 +19,17 @@ import { IDB } from '../interface/dao';
  *
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * const hook = new MetricsCollectorHook<IDB>([
  *   new ConsoleMetricsCollector(),
  *   new JsonMetricsCollector({ filePath: './metrics.json' })
  * ], logger);
  *
- * const runner = new MigrationScriptRunner<IDB>({
+ * const runner = new ExampleRunner<IDB>({
  *   handler,
  *   hooks: hook
  * }, config);

@@ -40,6 +40,11 @@ Migration hooks provide extension points throughout the migration lifecycle, ena
 
 ```typescript
 import { IMigrationHooks, MigrationScript, IMigrationResult } from 'migration-script-runner';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class NotificationHooks implements IMigrationHooks {
     async onStart(total: number, pending: number): Promise<void> {
@@ -56,7 +61,7 @@ class NotificationHooks implements IMigrationHooks {
 }
 
 // Use the hooks
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     hooks: new NotificationHooks()
 });
 
@@ -89,6 +94,11 @@ The `IMigrationHooks` interface provides 10 lifecycle hooks:
 ### Slack Notifications
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 class SlackHooks implements IMigrationHooks {
     constructor(private webhookUrl: string) {}
 
@@ -142,7 +152,7 @@ class SlackHooks implements IMigrationHooks {
 
 // Usage
 const hooks = new SlackHooks(process.env.SLACK_WEBHOOK_URL!);
-const runner = new MigrationScriptRunner({ handler,  hooks });
+const runner = new ExampleRunner({ handler,  hooks });
 ```
 
 ---
@@ -200,6 +210,11 @@ Track transaction-specific metrics when using transaction modes:
 
 ```typescript
 import { metrics } from './metrics-client'; // Your metrics library
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class TransactionMetricsHooks implements IMigrationHooks {
     private transactionStartTime?: number;
@@ -271,7 +286,7 @@ config.transaction.isolation = IsolationLevel.READ_COMMITTED;
 config.transaction.retries = 3;
 
 const hooks = new TransactionMetricsHooks();
-const runner = new MigrationScriptRunner({ handler,  hooks });
+const runner = new ExampleRunner({ handler,  hooks });
 
 await runner.migrate();
 ```
@@ -396,6 +411,11 @@ class DetailedFileLoggerHooks implements IMigrationHooks {
 ### Dry-Run Mode
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 class DryRunHooks implements IMigrationHooks {
     async onBeforeMigrate(script: MigrationScript): Promise<void> {
         console.log(`[DRY RUN] Would execute: ${script.name}`);
@@ -420,7 +440,7 @@ class DryRunHooks implements IMigrationHooks {
 
 // Usage
 const hooks = new DryRunHooks();
-const runner = new MigrationScriptRunner({ handler,  hooks });
+const runner = new ExampleRunner({ handler,  hooks });
 
 try {
     await runner.migrate();
@@ -474,6 +494,11 @@ class ValidationHooks implements IMigrationHooks {
 ### Backup and Restore Monitoring
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 class BackupMonitoringHooks implements IMigrationHooks {
     async onBeforeBackup(): Promise<void> {
         console.log('📦 Creating backup before migration...');
@@ -558,7 +583,7 @@ const config = new Config();
 config.rollbackStrategy = RollbackStrategy.BACKUP; // Enable backup/restore
 
 const hooks = new BackupMonitoringHooks();
-const runner = new MigrationScriptRunner({ handler,  hooks });
+const runner = new ExampleRunner({ handler,  hooks });
 
 await runner.migrate();
 ```
@@ -576,6 +601,11 @@ Use `CompositeHooks` to combine multiple hook implementations:
 
 ```typescript
 import { CompositeHooks } from 'migration-script-runner';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const hooks = new CompositeHooks([
     new SlackHooks(process.env.SLACK_WEBHOOK!),
@@ -584,13 +614,18 @@ const hooks = new CompositeHooks([
     new ValidationHooks()
 ]);
 
-const runner = new MigrationScriptRunner({ handler,  hooks });
+const runner = new ExampleRunner({ handler,  hooks });
 await runner.migrate();
 ```
 
 ### Dynamic Hook Management
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const hooks = new CompositeHooks();
 
 // Always use these hooks
@@ -607,7 +642,7 @@ if (process.env.ENABLE_DETAILED_LOGGING === 'true') {
     hooks.addHook(new DetailedFileLoggerHooks('/var/log/migrations.log'));
 }
 
-const runner = new MigrationScriptRunner({ handler,  hooks });
+const runner = new ExampleRunner({ handler,  hooks });
 ```
 
 ---
@@ -667,6 +702,11 @@ const hooks = new ConditionalHooks(() => process.env.NODE_ENV === 'production');
 ### Nested Composites
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Group related hooks
 const notificationHooks = new CompositeHooks([
     new SlackHooks(slackWebhook),
@@ -693,7 +733,7 @@ const allHooks = new CompositeHooks([
     loggingHooks
 ]);
 
-const runner = new MigrationScriptRunner({ handler,  hooks: allHooks });
+const runner = new ExampleRunner({ handler,  hooks: allHooks });
 ```
 
 ---
@@ -813,7 +853,12 @@ describe('SlackHooks', () => {
 **Solutions:**
 1. Verify hook is passed to MigrationScriptRunner:
    ```typescript
-   const runner = new MigrationScriptRunner({ handler,  hooks: myHooks });
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+   const runner = new ExampleRunner({ handler,  hooks: myHooks });
    ```
 
 2. Check method names match IMigrationHooks interface exactly
@@ -855,6 +900,11 @@ Complete example combining multiple patterns:
 
 ```typescript
 import { CompositeHooks, IMigrationHooks, MigrationScript, IMigrationResult } from 'migration-script-runner';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Create hook factory based on environment
 function createHooks(env: string): IMigrationHooks {
@@ -882,7 +932,7 @@ function createHooks(env: string): IMigrationHooks {
 
 // Use in your application
 const hooks = createHooks(process.env.NODE_ENV || 'development');
-const runner = new MigrationScriptRunner({ handler,  hooks });
+const runner = new ExampleRunner({ handler,  hooks });
 
 const result = await runner.migrate();
 

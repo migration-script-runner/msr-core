@@ -37,11 +37,16 @@ Spreadsheet-friendly metrics for Excel and data analysis.
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   MigrationScriptRunner,
   CsvMetricsCollector
 } from '@vlavrynovych/msr';
 
-const runner = new MigrationScriptRunner({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new CsvMetricsCollector({

@@ -55,13 +55,17 @@ describe('MigrationService', () => {
 
 ```typescript
 import { MigrationScriptRunner, SilentLogger } from 'msr-core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration execution', () => {
     let runner: MigrationScriptRunner;
 
     beforeEach(() => {
         // Silent logger prevents test output pollution
-        runner = new MigrationScriptRunner({ handler,
+        runner = new ExampleRunner({ handler,
             logger: new SilentLogger()
         });
     });
@@ -151,9 +155,13 @@ When processing many migrations where individual log messages are overwhelming:
 
 ```typescript
 import { MigrationScriptRunner, SilentLogger } from 'msr-core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function batchExecute(scripts: MigrationScript[]) {
-    const runner = new MigrationScriptRunner({ handler,
+    const runner = new ExampleRunner({ handler,
         logger: new SilentLogger()
     });
 

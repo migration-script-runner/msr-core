@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect } from "chai";
 import sinon from "sinon";
 import { MigrationScriptRunner } from "../../../src/service/MigrationScriptRunner";
@@ -76,7 +77,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
          * Verifies hooks are called before script execution.
          */
         it('should call onBeforeMigrate for each migration', async () => {
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -95,7 +96,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
          * Verifies hooks are called after successful script execution.
          */
         it('should call onAfterMigrate after each successful migration', async () => {
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -124,7 +125,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
             const testError = new Error('Migration failed');
             script1.script.up = sinon.stub().rejects(testError);
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -153,7 +154,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
         it('should stop execution after first failed migration', async () => {
             script1.script.up = sinon.stub().rejects(new Error('First failed'));
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -180,7 +181,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
         it('should handle empty migration result', async () => {
             script1.script.up = sinon.stub().resolves('');
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -199,7 +200,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
         it('should handle undefined migration result', async () => {
             script1.script.up = sinon.stub().resolves(undefined);
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -226,7 +227,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
                 // No onBeforeMigrate, onAfterMigrate, or onMigrationError
             };
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: noMigrationHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: noMigrationHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -250,7 +251,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
                 // No onAfterMigrate or onMigrationError
             };
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: partialHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: partialHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -275,7 +276,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
 
             script1.script.up = sinon.stub().rejects(new Error('Test error'));
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: errorOnlyHook,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: errorOnlyHook,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -300,7 +301,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
          * Verifies no errors with empty input.
          */
         it('should handle empty scripts array', async () => {
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: mockHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -337,7 +338,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
                 return 'success';
             });
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: orderTrackingHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: orderTrackingHooks,
                 logger: new SilentLogger()
 , config: cfg });
 
@@ -371,7 +372,7 @@ describe('MigrationScriptRunner - Hooks Execution', () => {
                 throw new Error('Failed');
             });
 
-            runner = new MigrationScriptRunner<IDB>({ handler: handler, hooks: orderTrackingHooks,
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler, hooks: orderTrackingHooks,
                 logger: new SilentLogger()
 , config: cfg });
 

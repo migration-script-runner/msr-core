@@ -135,6 +135,11 @@ interface ConfigLoaderOptions {
 **Examples:**
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Basic usage - instance method
 const loader = new ConfigLoader();
 const config = loader.load();
@@ -157,13 +162,13 @@ const config = loader.load({}, {
 });
 
 // Use with MigrationScriptRunner
-const runner = new MigrationScriptRunner({
+const runner = new ExampleRunner({
     handler,
     config: loader.load()
 });
 
 // Or pass loader to runner
-const runner = new MigrationScriptRunner({
+const runner = new ExampleRunner({
     handler,
     configLoader: loader
 });
@@ -822,9 +827,13 @@ Unexpected token at line 5, column 3
 
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Automatically loads: defaults → file → env vars
-const runner = new MigrationScriptRunner({ handler });
+const runner = new ExampleRunner({ handler });
 await runner.up();
 ```
 
@@ -836,6 +845,10 @@ await runner.up();
 
 ```typescript
 import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Load with waterfall
 const config = ConfigLoader.load();
@@ -846,7 +859,7 @@ const config = ConfigLoader.load({
     strictValidation: true
 });
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 
@@ -991,6 +1004,10 @@ const host = ConfigLoader.loadFromEnv('HOST', 'localhost');
 ```typescript
 import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
 import { PostgreSQLHandler } from '@migration-script-runner/postgresql';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Validate required environment variables
 ConfigLoader.validateRequired([
@@ -1006,7 +1023,7 @@ const config = ConfigLoader.load({
 
 // Create runner
 const handler = new PostgreSQLHandler(process.env.DATABASE_URL);
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Run migrations
 await runner.migrate();
@@ -1028,9 +1045,13 @@ MSR_BACKUP_DELETE_BACKUP=true
 
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // v0.7.0+: Automatically loads from .env files
-const runner = new MigrationScriptRunner({ handler });
+const runner = new ExampleRunner({ handler });
 await runner.up();
 
 // Or configure which .env files to load
@@ -1039,7 +1060,7 @@ config.envFileSources = ['.env.local', '.env']; // Default
 // config.envFileSources = ['.env.production', '.env']; // Production
 // config.envFileSources = []; // Disable .env loading
 
-const runner = new MigrationScriptRunner({ handler, config });
+const runner = new ExampleRunner({ handler, config });
 await runner.up();
 ```
 

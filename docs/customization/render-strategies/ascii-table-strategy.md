@@ -39,10 +39,14 @@ Since AsciiTableRenderStrategy is the default, you don't need to configure anyth
 
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Automatically uses AsciiTableRenderStrategy
 const config = new Config();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 
@@ -52,6 +56,11 @@ You can explicitly set the strategy if needed:
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
     MigrationScriptRunner,
     AsciiTableRenderStrategy,
     ConsoleLogger
@@ -60,7 +69,7 @@ import {
 const logger = new ConsoleLogger();
 const strategy = new AsciiTableRenderStrategy(logger);
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: strategy
 });
@@ -74,6 +83,11 @@ Works seamlessly with any logger implementation:
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
     AsciiTableRenderStrategy,
     FileLogger
 } from '@migration-script-runner/core';
@@ -81,7 +95,7 @@ import {
 const logger = new FileLogger({ logPath: './migrations.log' });
 const strategy = new AsciiTableRenderStrategy(logger);
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: strategy
 });
@@ -199,9 +213,13 @@ Perfect for interactive development with immediate visual feedback:
 
 ```typescript
 import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Beautiful table output for quick review
 await runner.list();
@@ -241,9 +259,14 @@ Great for scripts that require user review:
 
 ```typescript
 import { AsciiTableRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 console.log('Current migration status:');
 await runner.list();
@@ -259,9 +282,14 @@ if (answer === 'y') {
 ### 1. Use for Development and Interactive Scenarios
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Good: Local development
 const config = new Config();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 
 // Avoid for CI/CD: Use JsonRenderStrategy instead

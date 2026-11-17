@@ -186,8 +186,13 @@ export interface IRunnerOptions<
      *
      * @example
      * ```typescript
+     * import { MigrationScriptRunner } from '@migration-script-runner/core';
+     * import { IDB } from '@migration-script-runner/core';
+     *
+     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     *
      * // Add Slack notifications
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     hooks: new SlackNotificationHooks(webhookUrl)
      * });
@@ -210,14 +215,19 @@ export interface IRunnerOptions<
      *
      * @example
      * ```typescript
+     * import { MigrationScriptRunner } from '@migration-script-runner/core';
+     * import { IDB } from '@migration-script-runner/core';
+     *
+     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     *
      * // Single collector - console output
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     metricsCollectors: [new ConsoleMetricsCollector()]
      * });
      *
      * // Multiple collectors simultaneously
-     * const runner = new MigrationScriptRunner<IDB>({
+     * const runner = new ExampleRunner<IDB>({
      *     handler: myDatabaseHandler,
      *     metricsCollectors: [
      *         new ConsoleMetricsCollector(),
@@ -263,14 +273,19 @@ export interface IRunnerOptions<
      *
      * @example
      * ```typescript
+     * import { MigrationScriptRunner } from '@migration-script-runner/core';
+     * import { IDB } from '@migration-script-runner/core';
+     *
+     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+     *
      * // Use default loaders
-     * const runner = new MigrationScriptRunner<DB>(handler);
+     * const runner = new ExampleRunner<DB>(handler);
      * // Automatically uses TypeScript and SQL loaders
      *
      * // Register custom loader
      * const registry = LoaderRegistry.createDefault();
      * registry.register(new PythonLoader());
-     * const runner = new MigrationScriptRunner<DB>(handler, {
+     * const runner = new ExampleRunner<DB>(handler, {
      *     loaderRegistry: registry
      * });
      *

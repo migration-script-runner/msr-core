@@ -38,12 +38,17 @@ Add metrics collection to your runner in under 30 seconds:
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   MigrationScriptRunner,
   ConsoleMetricsCollector,
   JsonMetricsCollector
 } from '@vlavrynovych/msr';
 
-const runner = new MigrationScriptRunner({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),           // Real-time console output
@@ -307,7 +312,12 @@ new LoggerMetricsCollector({
 Send metrics to multiple destinations simultaneously:
 
 ```typescript
-const runner = new MigrationScriptRunner({
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     // Development feedback

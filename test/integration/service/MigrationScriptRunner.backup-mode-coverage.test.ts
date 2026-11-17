@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {
@@ -97,7 +98,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Stub migrationScanner to return the failing migration
         sinon.stub((runner as any).core.scanner, 'scan').resolves({
@@ -163,7 +164,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Stub migrationScanner to return the failing migration
         sinon.stub((runner as any).core.scanner, 'scan').resolves({
@@ -230,7 +231,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Stub migrationScanner to return the failing migration
         sinon.stub((runner as any).core.scanner, 'scan').resolves({
@@ -301,7 +302,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Stub migrationScanner to return the failing migration
         sinon.stub((runner as any).core.scanner, 'scan').resolves({
@@ -368,7 +369,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Stub migrationScanner to return the failing migration
         sinon.stub((runner as any).core.scanner, 'scan').resolves({
@@ -419,7 +420,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Call the public method directly
         const backupPath = await runner.createBackup();
@@ -467,7 +468,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Call the public method directly with specific path
         await runner.restoreFromBackup(testBackupPath);
@@ -507,7 +508,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Test rollbackService.shouldCreateBackup() with DOWN strategy
         const shouldCreate = (runner as any).core.rollback.shouldCreateBackup();
@@ -545,7 +546,7 @@ describe('MigrationScriptRunner - BackupMode Coverage', () => {
             getVersion(): string { return "1.0.0-test" }
         };
 
-        const runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(), config: config });
 
         // Create a backup first
         const backupPath = await runner.createBackup();

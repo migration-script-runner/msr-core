@@ -64,12 +64,16 @@ Each migration runs in its own transaction. If a migration fails, only that migr
 **Example:**
 ```typescript
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.transaction.mode = 'PER_MIGRATION';  // Default
 config.transaction.isolation = 'READ COMMITTED';
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 
@@ -94,11 +98,16 @@ All migrations in a batch run in a single transaction. If any migration fails, t
 
 **Example:**
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const config = new Config();
 config.transaction.mode = 'PER_BATCH';
 config.transaction.retries = 5;  // Retry entire batch on transient errors
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();  // All migrations in single transaction
 ```
 
@@ -126,10 +135,15 @@ No transaction wrapping. Each migration's `up()` method is responsible for its o
 
 **Example:**
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const config = new Config();
 config.transaction.mode = 'NONE';
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 
@@ -289,6 +303,11 @@ config.transaction.isolation = IsolationLevel.SERIALIZABLE;      // Highest isol
 ### Example: Production Configuration
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const config = new Config();
 config.transaction.mode = 'PER_BATCH';
 config.transaction.isolation = IsolationLevel.SERIALIZABLE;
@@ -296,7 +315,7 @@ config.transaction.retries = 3;
 config.transaction.retryDelay = 200;  // 200ms base delay
 config.transaction.retryBackoff = true;  // Exponential backoff
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 
@@ -326,6 +345,11 @@ These errors fail immediately without retry:
 ### Configuration
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const config = new Config();
 
 // Retry settings
@@ -333,7 +357,7 @@ config.transaction.retries = 5;           // Max retry attempts (default: 3)
 config.transaction.retryDelay = 100;      // Base delay in ms (default: 100)
 config.transaction.retryBackoff = true;   // Enable exponential backoff (default: true)
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 
@@ -478,6 +502,11 @@ MSR's `CallbackTransactionProvider` automatically:
 ```typescript
 import { Firestore, Transaction } from '@google-cloud/firestore';
 import { ICallbackTransactionalDB } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class FirestoreDB implements ICallbackTransactionalDB<Transaction> {
   constructor(private firestore: Firestore) {}
@@ -512,7 +541,7 @@ config.transaction.mode = 'PER_MIGRATION';  // Auto-uses CallbackTransactionProv
 config.transaction.retries = 5;
 config.transaction.retryBackoff = true;
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 
@@ -521,6 +550,11 @@ await runner.migrate();
 ```typescript
 import { MongoClient, ClientSession } from 'mongodb';
 import { ICallbackTransactionalDB } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class MongoDBDatabase implements ICallbackTransactionalDB<ClientSession> {
   constructor(private client: MongoClient) {}
@@ -562,7 +596,7 @@ const config = new Config();
 config.transaction.mode = 'PER_BATCH';  // All migrations in one transaction
 config.transaction.retries = 3;
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 await runner.migrate();
 ```
 
@@ -713,6 +747,11 @@ Monitor and react to transaction lifecycle events:
 
 ```typescript
 import { ITransactionHooks } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const hooks: ITransactionHooks = {
   async beforeBeginTransaction() {
@@ -740,7 +779,7 @@ const hooks: ITransactionHooks = {
   }
 };
 
-const runner = new MigrationScriptRunner({ handler, hooks , config });
+const runner = new ExampleRunner({ handler, hooks , config });
 await runner.migrate();
 ```
 
@@ -1289,6 +1328,11 @@ For advanced use cases, implement `ITransactionProvider`:
 
 ```typescript
 import { ITransactionProvider, ITransactionalDB } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class CustomTransactionProvider implements ITransactionProvider {
   constructor(
@@ -1335,7 +1379,7 @@ class CustomTransactionProvider implements ITransactionProvider {
 
 // Use custom transaction manager
 const txManager = new CustomTransactionProvider(db, logger);
-const runner = new MigrationScriptRunner(
+const runner = new ExampleRunner(
   handler,
   config,
   undefined,  // hooks

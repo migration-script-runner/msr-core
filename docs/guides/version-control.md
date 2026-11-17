@@ -49,10 +49,14 @@ The `up(targetVersion)` method executes all pending migrations up to and includi
 
 ```typescript
 import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 const handler = new MyDatabaseHandler();
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Migrate to specific version
 const targetVersion = 202501220300;

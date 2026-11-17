@@ -1,3 +1,4 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import {expect, spy} from 'chai';
 import {afterEach} from "mocha";
 import sinon from 'sinon';
@@ -55,7 +56,7 @@ describe('MigrationScriptRunner', () => {
         };
 
         // Create runner without config - should auto-load via ConfigLoader
-        const testRunner = new MigrationScriptRunner<IDB>({ handler: mockHandler , config: cfg });
+        const testRunner = new TestMigrationScriptRunner<IDB>({ handler: mockHandler , config: cfg });
 
         // Verify config was loaded (check a default property)
         expect(testRunner['config']).to.not.be.undefined;
@@ -109,7 +110,7 @@ describe('MigrationScriptRunner', () => {
     })
 
     beforeEach(() => {
-        runner = new MigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
+        runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: cfg });
         initialized = true
         created = true
         valid = true
@@ -612,7 +613,7 @@ describe('MigrationScriptRunner', () => {
 
         it('should throw error when hybrid migrations detected with transactions enabled', async () => {
             // Create runner with transaction mode enabled
-            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);
@@ -652,7 +653,7 @@ describe('MigrationScriptRunner', () => {
         });
 
         it('should NOT throw error when only SQL migrations', async () => {
-            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -670,7 +671,7 @@ describe('MigrationScriptRunner', () => {
         });
 
         it('should NOT throw error when only TypeScript migrations', async () => {
-            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -689,7 +690,7 @@ describe('MigrationScriptRunner', () => {
 
         it('should NOT throw error when transaction mode is NONE', async () => {
             config.transaction.mode = TransactionMode.NONE;
-            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             // Stub the entire workflow to return success (we're only testing hybrid check, not full workflow)
             const successResult: IMigrationResult<IDB> = {
@@ -707,7 +708,7 @@ describe('MigrationScriptRunner', () => {
         });
 
         it('should NOT check when no pending migrations', async () => {
-            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const mockScripts = {
                 all: [],
@@ -730,7 +731,7 @@ describe('MigrationScriptRunner', () => {
         });
 
         it('should throw error for hybrid with .js files', async () => {
-            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const js1 = new MigrationScript<IDB>('V002_InsertData.js', '/path/V002_InsertData.js', 2);
@@ -767,7 +768,7 @@ describe('MigrationScriptRunner', () => {
 
         it('should include transaction mode in error message', async () => {
             config.transaction.mode = TransactionMode.PER_BATCH;
-            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);
@@ -802,7 +803,7 @@ describe('MigrationScriptRunner', () => {
         });
 
         it('should provide helpful solutions in error message', async () => {
-            runner = new MigrationScriptRunner<IDB>({ handler: handler , config: config });
+            runner = new TestMigrationScriptRunner<IDB>({ handler: handler , config: config });
 
             const sql1 = new MigrationScript<IDB>('V001_CreateTable.up.sql', '/path/V001_CreateTable.up.sql', 1);
             const ts1 = new MigrationScript<IDB>('V002_InsertData.ts', '/path/V002_InsertData.ts', 2);

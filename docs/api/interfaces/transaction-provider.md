@@ -597,6 +597,11 @@ interface ITransactionContext {
 ### Hook Usage Example
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const hooks: ITransactionHooks = {
   afterTransactionBegin: async (context) => {
     console.log(`Transaction ${context.transactionId} started`);
@@ -622,7 +627,7 @@ const hooks: ITransactionHooks = {
   }
 };
 
-const runner = new MigrationScriptRunner({ handler,
+const runner = new ExampleRunner({ handler,
   logger,
   hooks
 });
@@ -673,6 +678,11 @@ await txManager.commit(); // Hooks invoked on retry
 ### Example 3: Custom Transaction Manager
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const handler: IDatabaseMigrationHandler = {
   db: myDB,
   schemaVersion: mySchemaVersion,
@@ -681,6 +691,6 @@ const handler: IDatabaseMigrationHandler = {
   getVersion: () => '1.0.0'
 };
 
-const runner = new MigrationScriptRunner({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 // Uses custom transaction manager instead of default
 ```

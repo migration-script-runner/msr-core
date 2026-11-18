@@ -488,7 +488,7 @@ export MSR_CONFIG_FILE=./config/production.config.js
 
 **Dockerfile:**
 ```dockerfile
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -611,7 +611,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm ci

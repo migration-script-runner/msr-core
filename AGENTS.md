@@ -320,7 +320,7 @@ https://sonarcloud.io/api/issues/search?pullRequest=<PR>&componentKeys=<project>
 
 ### Current validation setup
 
-- The package requires Node.js `>=20.0.0`. GitHub Actions currently tests Node.js 20.x and 22.x; CircleCI currently uses Node.js 20.18.
+- The package requires Node.js `>=22.0.0`. GitHub Actions tests Node.js 22.x and 26.x; CircleCI uses Node.js 22. Use Node.js 22 locally (`.nvmrc`).
 - Install dependencies from the lockfile with `npm ci`. The package `prepare` script installs Husky.
 - CI and some tests expect a `backups/` directory; create it with `mkdir -p backups` when needed.
 - Use the npm scripts that exist in `package.json`, including `npm run build`, `npm run lint`, `npm test`, `npm run test:coverage`, and `npm run test:mutation`. The documentation site uses `npm run docs:install` and `npm run docs:build`.
@@ -328,6 +328,11 @@ https://sonarcloud.io/api/issues/search?pullRequest=<PR>&componentKeys=<project>
 - The local `.husky/pre-commit` hook runs `npx tsc --noEmit`, build, lint, tests with coverage, and `nyc check-coverage` with 100% thresholds for statements, branches, functions, and lines.
 - User decision: retain the 100% coverage threshold as a local hook requirement. GitHub Actions and CircleCI may report coverage, but MUST NOT fail CI based on that threshold unless the user explicitly changes this decision.
 - GitHub Actions currently runs on pushes to `master`, `develop`, and `release/*`; pull request events target `master` and `develop`. Check the current workflow before relying on CI to run for a PR into another base branch.
+
+### Dependency update constraints
+
+- Keep Mocha on the 11.x line while `@stryker-mutator/mocha-runner` 10.1.1 is used. The runner currently imports Mocha's internal `mocha/lib/cli/run-helpers`, which is absent in Mocha 12; the sampled mutation run confirmed that incompatibility. Recheck upstream [Stryker issue #6239](https://github.com/stryker-mutator/stryker-js/issues/6239) before upgrading Mocha.
+- The current development dependency tree still reports npm audit advisories through Mocha and Stryker transitive dependency ranges. `npm audit --omit=dev` reports zero production vulnerabilities. Avoid `npm audit fix --force`: it proposes downgrading Mocha, Stryker, and NYC to versions that conflict with the current toolchain. Reassess when compatible upstream releases are available.
 
 ### Branch and release workflow
 

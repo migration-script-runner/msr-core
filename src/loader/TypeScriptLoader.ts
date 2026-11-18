@@ -70,7 +70,7 @@ export class TypeScriptLoader<DB extends IDB> implements IMigrationScriptLoader<
             } catch (e) {
                 const errorMsg = e instanceof Error ? e.message : String(e);
                 this.logger.error(errorMsg);
-                throw new Error(`${errorPrefix}: ${errorMsg}`);
+                throw new Error(`${errorPrefix}: ${errorMsg}`, {cause: e});
             }
         }
 

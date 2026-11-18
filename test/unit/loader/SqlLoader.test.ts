@@ -185,9 +185,10 @@ describe('SqlLoader', () => {
 
             const runnable = await loader.load(script);
 
+            const queryError = new Error('SQL syntax error');
             const db = {
                 query: async () => {
-                    throw new Error('SQL syntax error');
+                    throw queryError;
                 },
                 checkConnection: async () => true
             } as IDB;
@@ -199,6 +200,7 @@ describe('SqlLoader', () => {
                 expect((error as Error).message).to.include('SQL migration failed');
                 expect((error as Error).message).to.include('SQL syntax error');
                 expect((error as Error).message).to.include('SQL Preview:');
+                expect((error as Error).cause).to.equal(queryError);
                 // Short SQL should NOT have truncation
                 expect((error as Error).message).to.not.include('...');
             }
@@ -213,9 +215,10 @@ describe('SqlLoader', () => {
 
             const runnable = await loader.load(script);
 
+            const queryError = new Error('Rollback failed: table not found');
             const db = {
                 query: async () => {
-                    throw new Error('Rollback failed: table not found');
+                    throw queryError;
                 },
                 checkConnection: async () => true
             } as IDB;
@@ -227,6 +230,7 @@ describe('SqlLoader', () => {
                 expect((error as Error).message).to.include('SQL rollback failed');
                 expect((error as Error).message).to.include('Rollback failed');
                 expect((error as Error).message).to.include('SQL Preview:');
+                expect((error as Error).cause).to.equal(queryError);
                 // Short SQL should NOT have truncation
                 expect((error as Error).message).to.not.include('...');
             }

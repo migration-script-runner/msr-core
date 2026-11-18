@@ -206,7 +206,7 @@ program.parse(process.argv);
     "mongodb": "^6.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.0.0",
     "typescript": "^5.0.0"
   }
 }

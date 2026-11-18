@@ -244,10 +244,11 @@ describe('Utils', () => {
             try {
                 await Utils.parseRunnable(TestUtils.prepareMigration('V202311062345_invalid-parse-error.ts'), new SilentLogger());
                 expect.fail('Should have thrown');
-            } catch (e: any) {
+            } catch (error) {
                 // Verify the error includes parse error details
-                expect(e.message).to.eq("V202311062345_invalid-parse-error.ts: Cannot parse migration script: clazz is not a constructor");
-                expect(e).to.be.instanceOf(Error);
+                expect((error as Error).message).to.eq("V202311062345_invalid-parse-error.ts: Cannot parse migration script: clazz is not a constructor");
+                expect(error).to.be.instanceOf(Error);
+                expect((error as Error).cause).to.be.instanceOf(TypeError);
             }
         })
     })

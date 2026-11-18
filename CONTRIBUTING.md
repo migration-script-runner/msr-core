@@ -4,7 +4,7 @@ Thank you for contributing. The full [contributing guide](https://core.migration
 
 ## Quick start
 
-1. Fork and clone the repository, then install Node.js 20 or newer and run `npm ci`.
+1. Fork and clone the repository, then install Node.js 22 or newer and run `npm ci`.
 2. Create a branch from the release branch named by the issue's milestone. For work without a versioned target, follow the maintainer's chosen base branch.
 3. Make the code, tests, and documentation changes described in the issue.
 4. Run `npm run build`, `npm run lint`, and `npm run test:coverage`. The local pre-commit hook checks 100% coverage.

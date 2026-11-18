@@ -9,13 +9,18 @@ import { ILogger } from "../interface/ILogger";
  *
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * // Log to both console and file
  * const logger = new CompositeLogger([
  *     new ConsoleLogger(),
- *     new FileLogger('/var/log/migrations.log')
+ *     new FileLogger({ logPath: '/var/log/migrations.log' })
  * ]);
  *
- * const executor = new MigrationScriptExecutor<DB>(handler, { logger });
+ * const runner = new ExampleRunner<IDB>({ handler, logger });
  * ```
  *
  * @example
@@ -23,7 +28,7 @@ import { ILogger } from "../interface/ILogger";
  * // Log to console, file, and cloud service
  * const logger = new CompositeLogger([
  *     new ConsoleLogger(),
- *     new FileLogger('/var/log/migrations.log'),
+ *     new FileLogger({ logPath: '/var/log/migrations.log' }),
  *     new CloudWatchLogger()
  * ]);
  * ```
@@ -33,7 +38,7 @@ import { ILogger } from "../interface/ILogger";
  * // Add loggers dynamically
  * const logger = new CompositeLogger();
  * logger.addLogger(new ConsoleLogger());
- * logger.addLogger(new FileLogger('/tmp/migrations.log'));
+ * logger.addLogger(new FileLogger({ logPath: '/tmp/migrations.log' }));
  * ```
  */
 export class CompositeLogger implements ILogger {
@@ -54,7 +59,7 @@ export class CompositeLogger implements ILogger {
      * // Create with loggers
      * const logger = new CompositeLogger([
      *     new ConsoleLogger(),
-     *     new FileLogger('app.log')
+ *     new FileLogger({ logPath: 'app.log' })
      * ]);
      * ```
      *
@@ -79,7 +84,7 @@ export class CompositeLogger implements ILogger {
      * @example
      * ```typescript
      * const composite = new CompositeLogger([new ConsoleLogger()]);
-     * composite.addLogger(new FileLogger('migrations.log'));
+ * composite.addLogger(new FileLogger({ logPath: 'migrations.log' }));
      * // Now logs to both console and file
      * ```
      */
@@ -98,7 +103,7 @@ export class CompositeLogger implements ILogger {
      *
      * @example
      * ```typescript
-     * const fileLogger = new FileLogger('temp.log');
+ * const fileLogger = new FileLogger({ logPath: 'temp.log' });
      * const composite = new CompositeLogger([
      *     new ConsoleLogger(),
      *     fileLogger
@@ -128,7 +133,7 @@ export class CompositeLogger implements ILogger {
      * ```typescript
      * const composite = new CompositeLogger([
      *     new ConsoleLogger(),
-     *     new FileLogger('app.log')
+ *     new FileLogger({ logPath: 'app.log' })
      * ]);
      *
      * console.log(`Logging to ${composite.getLoggers().length} destinations`);

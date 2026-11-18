@@ -7,7 +7,7 @@ import {ILoaderRegistry} from "../interface/loader/ILoaderRegistry";
 import {MigrationScript} from "../model";
 import {ValidationError} from "../error/ValidationError";
 import {IMigrationScanner} from "../interface/service/IMigrationScanner";
-import {ISchemaVersionService} from "../interface/service/ISchemaVersionService";
+import {ISchemaVersionOrchestrator} from "../interface/service/ISchemaVersionOrchestrator";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
 
 /**
@@ -44,7 +44,7 @@ export interface MigrationValidationOrchestratorDependencies<DB extends IDB> {
     /**
      * Schema version service for database initialization.
      */
-    schemaVersionService: ISchemaVersionService<DB>;
+    schemaVersionOrchestrator: ISchemaVersionOrchestrator<DB>;
 
     /**
      * Database migration handler.
@@ -55,7 +55,7 @@ export interface MigrationValidationOrchestratorDependencies<DB extends IDB> {
 /**
  * Orchestrates migration validation.
  *
- * Extracted from MigrationScriptExecutor to separate validation concerns.
+ * Extracted from MigrationScriptRunner to separate validation concerns.
  * Handles validation of pending and executed migrations with comprehensive
  * error and warning logging.
  *
@@ -69,7 +69,7 @@ export interface MigrationValidationOrchestratorDependencies<DB extends IDB> {
  *     config,
  *     loaderRegistry,
  *     migrationScanner,
- *     schemaVersionService,
+ *     schemaVersionOrchestrator,
  *     handler
  * });
  *
@@ -83,7 +83,7 @@ export class MigrationValidationOrchestrator<DB extends IDB> implements IMigrati
     private readonly config: Config;
     private readonly loaderRegistry: ILoaderRegistry<DB>;
     private readonly migrationScanner: IMigrationScanner<DB>;
-    private readonly schemaVersionService: ISchemaVersionService<DB>;
+    private readonly schemaVersionOrchestrator: ISchemaVersionOrchestrator<DB>;
     private readonly handler: IDatabaseMigrationHandler<DB>;
 
     constructor(dependencies: MigrationValidationOrchestratorDependencies<DB>) {
@@ -92,7 +92,7 @@ export class MigrationValidationOrchestrator<DB extends IDB> implements IMigrati
         this.config = dependencies.config;
         this.loaderRegistry = dependencies.loaderRegistry;
         this.migrationScanner = dependencies.migrationScanner;
-        this.schemaVersionService = dependencies.schemaVersionService;
+        this.schemaVersionOrchestrator = dependencies.schemaVersionOrchestrator;
         this.handler = dependencies.handler;
     }
 
@@ -109,7 +109,7 @@ export class MigrationValidationOrchestrator<DB extends IDB> implements IMigrati
         await this.checkDatabaseConnection();
         this.logger.info('🔍 Starting migration validation...\n');
 
-        await this.schemaVersionService.init(this.config.tableName);
+        await this.schemaVersionOrchestrator.init(this.config.tableName);
         const scripts = await this.migrationScanner.scan();
 
         await this.validatePendingMigrations(scripts.pending);

@@ -14,7 +14,12 @@ import { ConsoleLogger } from '../../logger/ConsoleLogger';
  *
  * @example
  * ```typescript
- * const executor = new MigrationScriptExecutor<IDB>({
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
+ * const runner = new ExampleRunner<IDB>({
  *   handler,
  *   metricsCollectors: [new ConsoleMetricsCollector()]
  * }, config);
@@ -29,7 +34,7 @@ import { ConsoleLogger } from '../../logger/ConsoleLogger';
  * @example For production, use LoggerMetricsCollector instead
  * ```typescript
  * // Production-ready with file logging
- * const logger = new FileLogger('./logs/metrics.log');
+ * const logger = new FileLogger({ logPath: './logs/metrics.log' });
  * new LoggerMetricsCollector({ logger })
  *
  * // Or with cloud logging

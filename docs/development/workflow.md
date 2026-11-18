@@ -48,7 +48,16 @@ If you find a bug or have an idea:
 
 ## 2. Branching Strategy
 
-### Branch Naming
+### Branch selection and naming
+
+Choose the base branch from the issue's milestone and the current release plan before creating a branch.
+
+- For an issue assigned to a versioned milestone, use the matching `release/X.Y.Z` branch when it exists. Create a task branch from it and open the task PR back into that release branch.
+- Promote a completed release with a separate PR from `release/X.Y.Z` into `master`. Use a title such as `Release vX.Y.Z`.
+- For work without a versioned release target, use the base branch specified by the issue or maintainer; otherwise use `master`.
+- If a versioned milestone has no matching release branch, do not create one or guess a base branch. Confirm the intended release target first.
+
+Task branch names use `<type>/<description>`:
 
 ```
 <type>/<description>
@@ -61,6 +70,7 @@ If you find a bug or have an idea:
 - `refactor/` - Code refactoring
 - `test/` - Test improvements
 - `chore/` - Maintenance tasks
+- `hotfix/` - Urgent fixes based on the production branch
 
 **Examples:**
 ```bash
@@ -69,11 +79,19 @@ git checkout -b fix/issue-123-backup-error
 git checkout -b docs/improve-api-reference
 ```
 
+For a release-targeted issue, include the issue number or a short description in the task branch name and base it on the matching release branch, for example:
+
+```bash
+git checkout release/1.0.0
+git checkout -b docs/167-agents-guidance
+```
+
 ### Working on Your Branch
 
 ```bash
-# Create and switch to branch
-git checkout -b feature/my-feature
+# Check out the target selected above and create a task branch
+git checkout <target-branch>
+git checkout -b <type>/<description>
 
 # Make changes
 # ... edit files ...
@@ -168,26 +186,14 @@ npm run build
 # All tests
 npm test
 
-# Coverage (must be 100%)
+# Generate the coverage report
 npm run test:coverage
 
 # Specific test file
 npm run test:one -- test/unit/service/MyService.test.ts
 ```
 
-### Verify Coverage
-
-```
-Statements   : 100% ( 1041/1041 )
-Branches     : 100% ( 517/517 )
-Functions    : 100% ( 208/208 )
-Lines        : 100% ( 983/983 )
-```
-
-**If < 100%:**
-- Add tests for uncovered lines
-- Check branch coverage (if/else statements)
-- Test error cases
+The local pre-commit hook enforces 100% statements, branches, functions, and lines. Test counts and coverage totals vary as the source and tests change, so do not rely on a fixed count in documentation.
 
 ### Run Linter
 
@@ -229,24 +235,27 @@ No breaking changes.
 - Explain WHAT and WHY, not HOW
 - Mention breaking changes
 
-### Pre-Commit Hooks (v0.7.0+)
+### Pre-Commit Hook
 
 {: .note }
 > **Automatic Quality Checks:** Pre-commit hooks run automatically when you commit, ensuring code quality before your changes reach the repository.
 
 When you run `git commit`, these checks run automatically:
 
-1. **TypeScript Type Check** - Validates types (fast check)
-2. **Build Check** - Ensures project compiles successfully
-3. **ESLint** - Code style and error detection
-4. **Full Test Suite** - All unit and integration tests
-5. **Coverage Verification** - Ensures 100% coverage
+1. **TypeScript Type Check** - `npx tsc --noEmit`
+2. **Build Check** - `npm run build`
+3. **ESLint** - `npm run lint`
+4. **Tests with Coverage** - `npm run test:coverage`
+5. **Coverage Threshold** - `npx nyc check-coverage --lines 100 --branches 100 --functions 100 --statements 100`
+
+The 100% coverage threshold is a local pre-commit requirement. GitHub Actions and CircleCI generate coverage reports but do not enforce this threshold.
 
 **If checks fail:**
 ```bash
-# Fix the issues, then commit again
-npm run lint       # Check what needs fixing
-npm test          # Ensure tests pass
+# Fix the issues, then run the relevant checks
+npm run lint
+npm test
+npm run test:coverage
 git add .
 git commit -m "#123: Fix issues"
 ```
@@ -260,7 +269,7 @@ git commit --no-verify -m "WIP: work in progress"
 {: .warning }
 > **Never bypass hooks** for commits to `master` or `release/*` branches. All merged code must pass quality checks.
 
-See [Pre-Commit Hooks](setup#pre-commit-hooks-v070) in the Setup guide for detailed information.
+See [Pre-Commit Hook](setup#pre-commit-hook) in the Setup guide for detailed information.
 
 ### What to Commit
 
@@ -290,12 +299,12 @@ See [Pre-Commit Hooks](setup#pre-commit-hooks-v070) in the Setup guide for detai
 - ✅ No linting errors (`npm run lint`)
 - ✅ Documentation updated
 - ✅ Commits follow format
-- ✅ Branch is up-to-date with master
+- ✅ Branch is based on the target specified by the issue and is up-to-date with that target
 
 ### Create PR
 
-1. Push your branch to your fork
-2. Go to GitHub and click "New Pull Request"
+1. Push your task branch to the configured remote
+2. Create a pull request into the selected target branch (the matching release branch for release-targeted tasks)
 3. Fill out the PR template:
    - Link to issue (`Fixes #123`)
    - Description of changes
@@ -312,6 +321,9 @@ See [Pre-Commit Hooks](setup#pre-commit-hooks-v070) in the Setup guide for detai
 ```
 #123: Add MySQL database handler support
 ```
+
+The PR title validation workflow checks this format. Release promotion PRs use
+`Release vX.Y.Z` and are accepted by the same check.
 
 ### PR Description Template
 
@@ -347,10 +359,10 @@ OR
 
 ### What to Expect
 
-1. **Automated Checks** - CI/CD runs tests, linting, coverage
+1. **Automated Checks** - GitHub Actions runs lint, tests, and coverage reporting on supported branches; CircleCI runs the report workflow
 2. **Maintainer Review** - Code review by maintainers
 3. **Feedback** - Requested changes or approval
-4. **Merge** - PR merged to master
+4. **Merge** - Task PRs merge into their target branch; release PRs promote `release/X.Y.Z` into `master`
 
 ### Addressing Feedback
 
@@ -383,15 +395,15 @@ PR updates automatically.
 ### Clean Up
 
 ```bash
-# Switch back to master
-git checkout master
+# Switch back to the branch that was the PR target
+git checkout <target-branch>
 
-# Pull latest changes
-git pull upstream master
+# Update it from the configured remote
+git pull <remote> <target-branch>
 
 # Delete feature branch
-git branch -d feature/my-feature
-git push origin --delete feature/my-feature
+git branch -d <task-branch>
+git push <remote> --delete <task-branch>
 ```
 
 ### Your Contribution
@@ -442,9 +454,9 @@ Your changes are now part of MSR! 🎉
 ### 5. Keep Branch Updated
 
 ```bash
-# Regularly sync with master
-git fetch upstream
-git rebase upstream/master
+# Regularly sync with the selected PR target
+git fetch <remote>
+git rebase <remote>/<target-branch>
 ```
 
 ---
@@ -454,19 +466,19 @@ git rebase upstream/master
 ### PR Conflicts
 
 ```bash
-# Fetch latest master
-git fetch upstream
+# Fetch latest PR target
+git fetch <remote>
 
-# Rebase your branch
-git rebase upstream/master
+# Rebase the task branch onto the target
+git rebase <remote>/<target-branch>
 
 # Resolve conflicts
 # ... edit files ...
 git add .
 git rebase --continue
 
-# Force push (rebase changes history)
-git push origin feature/my-feature --force
+# Push the rebased task branch (use --force-with-lease only if a rebase rewrote already-pushed commits)
+git push <remote> <task-branch> --force-with-lease
 ```
 
 ### Failed CI Checks
@@ -479,7 +491,7 @@ git push origin feature/my-feature --force
 ### Stale PR
 
 If PR is open for a while:
-1. Rebase on latest master
+1. Rebase on the latest PR target
 2. Address any new feedback
 3. Ping maintainers if needed
 

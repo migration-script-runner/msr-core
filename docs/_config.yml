@@ -5,7 +5,7 @@
 title: Migration Script Runner
 description: Abstract database migration script runner for TypeScript/JavaScript
 baseurl: ""
-url: "https://core.msr.lavr.site"
+url: "https://core.migration-script-runner.dev"
 
 # Theme
 remote_theme: just-the-docs/just-the-docs

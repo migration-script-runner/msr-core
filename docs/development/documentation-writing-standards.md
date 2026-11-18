@@ -113,8 +113,8 @@ nav_order: 1
 ```
 
 **Rules:**
-- Always use `layout: default`
-- Title should match H1 heading in content
+- Use `layout: default` for standard content pages. Other layouts (for example `page`) are allowed when required by the page or theme behavior.
+- `title` is the concise navigation label; H1 is the reader-facing page heading. They must describe the same page, but do not have to be identical.
 - `nav_order` determines sidebar order (lower numbers appear first)
 - Use `has_children: true` only for parent sections
 - Keep `nav_order` sequential (1, 2, 3, ...) within each level
@@ -130,7 +130,7 @@ nav_order: 1
 1. **YAML front matter** (see above)
 2. **Page title** (H1 heading with `{: .no_toc }`)
 3. **Subtitle/description** (with `{: .fs-6 .fw-300 }`)
-4. **Table of contents** (for pages with multiple sections)
+4. **Table of contents** (for long pages or pages with many sections where it helps readers navigate; concise home, index, and compatibility pages may omit it)
 5. **Main content** (organized with H2 sections)
 6. **Horizontal separators** (`---`) between major sections
 
@@ -184,10 +184,11 @@ Learn how to write effective migration scripts for your database.
 
 ### Table of Contents
 
-**Use TOC when:**
-- Page has 3+ H2 sections
-- Page is longer than 200 lines
-- Content benefits from quick navigation
+**Use a TOC when:**
+- A page is longer than 200 lines, except for the home page and concise overview/index pages
+- A page has several substantial sections and readers benefit from jumping between them
+
+Do not add a TOC mechanically to short index, compatibility, or summary pages.
 
 **Standard format:**
 ```markdown
@@ -293,13 +294,13 @@ Keep sequence diagrams simple with 4-6 participants maximum:
 ```mermaid
 sequenceDiagram
     participant User
-    participant Executor
+    participant Runner
     participant Service
 
-    User->>Executor: migrate()
-    Executor->>Service: init()
-    Service-->>Executor: Ready
-    Executor-->>User: Success
+    User->>Runner: migrate()
+    Runner->>Service: init()
+    Service-->>Runner: Ready
+    Runner-->>User: Success
 ```
 ````
 
@@ -308,7 +309,7 @@ sequenceDiagram
 ````markdown
 ```mermaid
 classDiagram
-    class MigrationExecutor {
+    class MigrationRunner {
         -handler: Handler
         -service: Service
         +migrate() Promise
@@ -319,7 +320,7 @@ classDiagram
         +execute() Promise
     }
 
-    MigrationExecutor --> Service
+    MigrationRunner --> Service
 ```
 ````
 
@@ -472,7 +473,7 @@ class CustomBackup implements IBackup {
 - "schema version" (not "migration version")
 
 **Capitalization:**
-- `MigrationScriptExecutor` - class names
+- `MigrationScriptRunner` - class names
 - `IDatabaseMigrationHandler` - interface names
 - `Config` - class names
 - Migration Script Runner or MSR - product name
@@ -483,14 +484,14 @@ When referencing code in text, use inline code formatting.
 
 **Examples:**
 - Methods: "The `migrate()` method..."
-- Classes: "Create a `MigrationScriptExecutor` instance..."
+- Classes: "Create a `MigrationScriptRunner` instance..."
 - Interfaces: "Implement the `IDatabaseMigrationHandler` interface..."
 - Properties: "Set the `config.folder` property..."
 - Types: "The function returns a `MigrationResult` object..."
 
 **File references with line numbers:**
 ```
-The backup implementation in src/services/BackupService.ts:42
+The backup implementation in src/services/BackupOrchestrator.ts:42
 ```
 
 ---
@@ -503,7 +504,12 @@ Always specify language for syntax highlighting:
 
 ````markdown
 ```typescript
-const executor = new MigrationScriptExecutor({ handler , config });
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({ handler , config });
 ```
 
 ```bash
@@ -529,16 +535,20 @@ npm install @migration-script-runner/core
 
 **Example (good):**
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.folder = './migrations';
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
-const result = await executor.migrate();
+const result = await runner.migrate();
 if (result.success) {
   console.log('✅ Migrations completed');
 }
@@ -547,7 +557,7 @@ if (result.success) {
 **Example (bad):**
 ```typescript
 // Incomplete, missing imports and context
-executor.migrate();
+runner.migrate();
 ```
 
 ### Comments
@@ -612,6 +622,19 @@ Coverage: 100% Lines | 100% Branches | 100% Functions
 - Leave gaps for future additions (skip 9 for flexibility)
 - Keep sequential within each section
 - Update all affected pages when reordering
+
+### Release Changelogs and Migration Guide Navigation
+
+For a release, keep the root `CHANGELOG.md`, release notes, and migration-guide navigation consistent:
+
+- Keep in-progress work in `CHANGELOG.md` under `## [Unreleased]`, grouped under the existing Keep a Changelog categories. Keep each entry concise, describe the user-visible change, and link its issue when one exists.
+- During the release documentation review, replace `[Unreleased]` with the target version heading once the release scope is reviewed. Do not add a release date until the version is published; package metadata or an open release branch alone does not mean the release is published.
+- In `docs/version-migration/index.md`, list only the latest upgrade guide under **Current Upgrade Guide**. Move the previous current guide under **Previous Releases**.
+- Keep the latest historical guide available on `docs/version-migration/previous.md` and in its sidebar submenu. Its front matter must use `parent: Previous`, `grand_parent: Version Migration`, and a sequential `nav_order` with the newest historical guide first.
+- When adding a new current guide, update both the index and the `Previous` page/sidebar metadata. Preserve older migration guides and their historical API examples.
+- Build the documentation site after changing navigation to catch malformed front matter and links.
+
+Use the repository's [publishing guide](publishing) for the release checklist and the Codex `msr-release-changelog` skill, when available, for the MSR-specific editing workflow.
 
 ### Parent/Child Relationships
 

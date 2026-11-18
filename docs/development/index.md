@@ -21,6 +21,9 @@ This section contains documentation for developers who want to contribute to Mig
 
 ## Getting Started
 
+### 🧩 [Compatibility](../compatibility)
+Node.js, TypeScript, and database adapter support.
+
 ### 🚀 [Development Setup](setup)
 Set up your development environment:
 - Clone and install dependencies
@@ -41,6 +44,12 @@ Contribution guidelines and standards:
 - How to contribute
 - Pull request process
 - Issue reporting
+
+### 🗂️ [GitHub Project Workflow](github-project-workflow)
+Manage repository work on GitHub:
+- Issues, labels, and milestones
+- Release branches and pull requests
+- GitHub Releases and npm publication
 
 ---
 

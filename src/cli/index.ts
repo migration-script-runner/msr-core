@@ -7,6 +7,7 @@
 
 export {createCLI, CLIOptions} from './createCLI';
 export {CLIFlags, mapFlagsToConfig} from './utils/flagMapper';
+export {setNestedValue} from './utils/nestedValueParser';
 export {EXIT_CODES} from './utils/exitCodes';
 export {
     addMigrateCommand,

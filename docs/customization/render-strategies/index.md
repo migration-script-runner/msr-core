@@ -8,9 +8,6 @@ has_children: true
 
 # Render Strategy Implementations
 
-New in v0.3.0
-{: .label .label-green }
-
 MSR uses the Strategy Pattern to provide multiple output formats for migration information, from beautiful terminal tables to structured JSON for CI/CD integration.
 
 ## Available Render Strategies
@@ -68,7 +65,12 @@ Choose the right render strategy for your environment:
 
 ```typescript
 import {
-    MigrationScriptExecutor,
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+    MigrationScriptRunner,
     AsciiTableRenderStrategy,
     JsonRenderStrategy,
     SilentRenderStrategy
@@ -76,20 +78,20 @@ import {
 
 // Default ASCII tables (no configuration needed)
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Pretty JSON for readability
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Compact JSON for log aggregation
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)
 });
 
 // Silent for testing
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     renderStrategy: new SilentRenderStrategy()
 });
 ```
@@ -100,9 +102,14 @@ Render strategies work seamlessly with custom loggers:
 
 ```typescript
 import { FileLogger, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const logger = new FileLogger({ logPath: './migrations.log' });
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(true)
 });
@@ -110,10 +117,10 @@ const executor = new MigrationScriptExecutor({ handler,
 
 ## Creating Custom Render Strategies
 
-All render strategies implement the `IRenderStrategy` interface. See the [Custom Rendering Guide](../customization/custom-rendering.md) for detailed examples of creating your own render strategy implementations.
+All render strategies implement the `IRenderStrategy` interface. See the [Custom Rendering Guide](../custom-rendering.md) for detailed examples of creating your own render strategy implementations.
 
 ## Next Steps
 
 - Choose a render strategy from the list above to learn more
-- Read the [Custom Rendering Guide](../customization/custom-rendering.md) for advanced usage
-- See [Getting Started](../getting-started.md) for basic setup
+- Read the [Custom Rendering Guide](../custom-rendering.md) for advanced usage
+- See [Getting Started](../../getting-started.md) for basic setup

@@ -140,7 +140,7 @@ export class LoaderRegistry<DB extends IDB> implements ILoaderRegistry<DB> {
      * const registry = LoaderRegistry.createDefault<IDB>();
      *
      * // Use custom logger
-     * const logger = new FileLogger('./migrations.log');
+     * const logger = new FileLogger({ logPath: './migrations.log' });
      * const registry = LoaderRegistry.createDefault<IDB>(logger);
      * ```
      */

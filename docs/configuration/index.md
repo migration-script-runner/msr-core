@@ -12,6 +12,8 @@ has_children: true
 Complete guide to configuring Migration Script Runner
 {: .fs-6 .fw-300 }
 
+For a consolidated property list with types, defaults, and environment-variable names, see the [Config Reference](config-reference).
+
 ## Table of contents
 {: .no_toc .text-delta }
 
@@ -38,8 +40,12 @@ Migration Script Runner uses the `Config` class to control all aspects of migrat
 ### Basic Configuration
 
 ```typescript
-import { Config, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Create configuration
 const config = new Config();
@@ -49,9 +55,9 @@ config.folder = './migrations';
 
 // Initialize and run
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
-await executor.up();
+await runner.up();
 ```
 
 ---
@@ -72,7 +78,7 @@ const config = new Config();
 
 | Category | Properties | Description |
 |----------|-----------|-------------|
-| 🎯 [Migration Settings](migration-settings) | `folder`, `filePattern`, `tableName`, `displayLimit`, `beforeMigrateName`, `recursive` | Control how migrations are discovered and tracked |
+| 🎯 [Migration Settings](migration-settings) | `folder`, `filePatterns`, `tableName`, `displayLimit`, `beforeMigrateName`, `recursive` | Control how migrations are discovered and tracked |
 | 🎚️ Logging Settings | `logLevel`, `showBanner` | Configure output verbosity and display options |
 | 🗂️ Environment Settings | `envFileSources` | Configure .env file loading (v0.7.0+) |
 | ✅ [Validation Settings](validation-settings) | `validateBeforeRun`, `strictValidation`, `downMethodPolicy`, `customValidators` | Control validation behavior and rules |
@@ -209,9 +215,13 @@ import {
     DownMethodPolicy,
     TransactionMode,
     IsolationLevel,
-    MigrationScriptExecutor
+    MigrationScriptRunner
 } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Create configuration
 const config = new Config();
@@ -258,12 +268,12 @@ if (process.env.NODE_ENV === 'production') {
     ];
 }
 
-// Initialize executor
+// Initialize runner
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Run migrations
-await executor.migrate();
+await runner.migrate();
 ```
 
 ---
@@ -280,21 +290,25 @@ Configuration is loaded in this order (highest priority last):
 2. **Config file** - Auto-detected or from `MSR_CONFIG_FILE`
    Supported formats: `.js`, `.json`, `.yaml`, `.yml`, `.toml`, `.xml`
 3. **Environment variables** - `MSR_*` environment variables
-4. **Constructor overrides** - Passed directly to MigrationScriptExecutor
+4. **Constructor overrides** - Passed directly to MigrationScriptRunner
 
 ### Automatic Loading
 
 With v0.5.0+, configuration is loaded automatically if not provided:
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Automatically loads config from env vars, files, or defaults
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler });
+const runner = new ExampleRunner({ handler });
 
-await executor.up();
+await runner.up();
 ```
 
 ### Manual Loading with ConfigLoader
@@ -302,7 +316,11 @@ await executor.up();
 For more control, use `ConfigLoader.load()`:
 
 ```typescript
-import { ConfigLoader, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Load with waterfall approach (auto-detect config file)
 const config = ConfigLoader.load();
@@ -322,7 +340,7 @@ const config = ConfigLoader.load({}, {
 });
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 ```
 
 ---
@@ -343,6 +361,7 @@ export MSR_BACKUP_FOLDER=./backups
 - 📖 **[Environment Variables User Guide](../guides/environment-variables)** - How-to guide with practical examples, platform-specific configs (Docker, Kubernetes, etc.), and troubleshooting
 - 📋 **[Environment Variables API Reference](../api/environment-variables/)** - Complete reference with detailed descriptions for all MSR_* variables (Core, Validation, Logging, Backup, Transaction)
 - 🔧 **[ConfigLoader API](../api/ConfigLoader)** - API reference for programmatic configuration loading
+- 📋 **[Config Reference](config-reference)** - Complete property, default, and environment-variable reference
 - 🏷️ **[EnvironmentVariables Type](../../src/model/env/index.ts)** - Type-safe environment variable names
 
 ---

@@ -33,8 +33,8 @@ test/unit/service/
   ├── MigrationScriptSelector.test.ts  (11 tests)
   ├── MigrationScanner.test.ts         (11 tests)
   ├── MigrationRunner.test.ts          (16 tests)
-  ├── BackupService.test.ts
-  ├── SchemaVersionService.test.ts
+  ├── BackupOrchestrator.test.ts
+  ├── SchemaVersionOrchestrator.test.ts
   └── ...
 ```
 
@@ -45,7 +45,7 @@ test/unit/service/
 
 ```
 test/integration/service/
-  └── MigrationScriptExecutor.test.ts  (190+ tests)
+  └── MigrationScriptRunner.test.ts  (190+ tests)
 ```
 
 ### Test Doubles
@@ -62,6 +62,11 @@ test/integration/service/
 
 ```typescript
 import { ILogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 class CloudLogger implements ILogger {
     log(message: string) {
@@ -70,7 +75,7 @@ class CloudLogger implements ILogger {
     // ... implement other methods
 }
 
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     logger: new CloudLogger()
 });
 ```
@@ -78,9 +83,14 @@ const executor = new MigrationScriptExecutor({ handler,
 ### Custom Backup
 
 ```typescript
-import { IBackupService } from '@migration-script-runner/core';
+import { IBackupOrchestrator } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-class S3BackupService implements IBackupService {
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+class S3BackupOrchestrator implements IBackupOrchestrator {
     async backup() {
         const dump = await createDump();
         await s3.upload(dump);
@@ -88,8 +98,8 @@ class S3BackupService implements IBackupService {
     // ... implement restore, deleteBackup
 }
 
-const executor = new MigrationScriptExecutor({ handler, 
-    backupService: new S3BackupService()
+const runner = new ExampleRunner({ handler,
+    backupOrchestrator: new S3BackupOrchestrator()
 });
 ```
 
@@ -97,9 +107,14 @@ const executor = new MigrationScriptExecutor({ handler,
 
 ```typescript
 import { IRenderStrategy, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Use built-in JSON render strategy
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)  // pretty-printed JSON
 });
 
@@ -111,7 +126,7 @@ class CustomRenderStrategy implements IRenderStrategy {
     // ... implement other methods
 }
 
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     renderStrategy: new CustomRenderStrategy()
 });
 ```
@@ -127,7 +142,7 @@ MSR uses `Promise.all()` for parallel operations where safe:
 ```typescript
 // Parallel: Independent operations (in MigrationScanner)
 const { migrated, all } = await Utils.promiseAll({
-    migrated: schemaVersionService.getAllMigratedScripts(),
+    migrated: schemaVersionOrchestrator.getAllMigratedScripts(),
     all: migrationService.readMigrationScripts(handler.cfg)
 });
 
@@ -163,9 +178,14 @@ for (const script of scripts) {
 
 ✅ **Good:** Use dependency injection for testability
 ```typescript
-new MigrationScriptExecutor({ handler, 
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+new ExampleRunner({ handler,
     logger: mockLogger,
-    backupService: mockBackup
+    backupOrchestrator: mockBackup
 });
 ```
 

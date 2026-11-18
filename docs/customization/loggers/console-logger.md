@@ -9,6 +9,14 @@ nav_order: 1
 
 The `ConsoleLogger` is the default logger implementation that outputs all messages to the console using Node.js's built-in `console.*` methods.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 ConsoleLogger is perfect for development and debugging scenarios where you want immediate, interactive feedback. It requires no configuration and works out of the box.
@@ -44,16 +52,20 @@ await service.readMigrationScripts(config);
 // Output: [INFO] Reading migration scripts from ./migrations
 ```
 
-### With MigrationScriptExecutor
+### With MigrationScriptRunner
 
 ```typescript
-import { MigrationScriptExecutor, ConsoleLogger } from 'msr-core';
+import { MigrationScriptRunner, ConsoleLogger } from 'msr-core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     logger: new ConsoleLogger()
 });
 
-await executor.executeMigration(script, context);
+await runner.executeMigration(script, context);
 // Output: [INFO] Executing migration V202311020036_add_users_table.ts
 ```
 
@@ -175,7 +187,7 @@ logger.debug('Object:', { id: 1, name: 'Test', nested: { value: 42 } });
 
 ```typescript
 import {
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     ConsoleLogger,
     IMigrationScriptHandler
 } from 'msr-core';
@@ -204,13 +216,13 @@ class MyHandler implements IMigrationScriptHandler {
 ### With Backup Service
 
 ```typescript
-import { BackupService, ConsoleLogger } from 'msr-core';
+import { BackupOrchestrator, ConsoleLogger } from 'msr-core';
 
 const logger = new ConsoleLogger();
-const backupService = new BackupService(logger);
+const backupOrchestrator = new BackupOrchestrator(logger);
 
 logger.info('Creating backup...');
-await backupService.createBackup(config, version);
+await backupOrchestrator.createBackup(config, version);
 logger.info('✓ Backup created successfully');
 ```
 

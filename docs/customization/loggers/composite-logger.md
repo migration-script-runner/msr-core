@@ -38,10 +38,15 @@ CompositeLogger implements the [Composite Pattern](https://en.wikipedia.org/wiki
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   CompositeLogger,
   ConsoleLogger,
   FileLogger,
-  MigrationScriptExecutor
+  MigrationScriptRunner
 } from '@migration-script-runner/core';
 
 // Create composite with multiple loggers
@@ -50,8 +55,8 @@ const logger = new CompositeLogger([
   new FileLogger({ logPath: '/var/log/migrations.log' })
 ]);
 
-const executor = new MigrationScriptExecutor({ handler,  logger });
-await executor.migrate();
+const runner = new ExampleRunner({ handler,  logger });
+await runner.migrate();
 ```
 
 Every log message will be written to both the console and the file.
@@ -176,6 +181,11 @@ Disable all output during tests:
 
 ```typescript
 import { CompositeLogger, SilentLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration Tests', () => {
   it('should migrate successfully', async () => {
@@ -185,8 +195,8 @@ describe('Migration Tests', () => {
     // Or use SilentLogger explicitly
     const silentLogger = new CompositeLogger([new SilentLogger()]);
 
-    const executor = new MigrationScriptExecutor({ handler,  logger });
-    const result = await executor.migrate();
+    const runner = new ExampleRunner({ handler,  logger });
+    const result = await runner.migrate();
 
     expect(result.success).to.be.true;
   });
@@ -486,10 +496,15 @@ logger.info('message'); // Does nothing
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   CompositeLogger,
   ConsoleLogger,
   FileLogger,
-  MigrationScriptExecutor
+  MigrationScriptRunner
 } from '@migration-script-runner/core';
 
 // Create loggers based on environment
@@ -522,9 +537,9 @@ const createLogger = (): CompositeLogger => {
 
 // Use the logger
 const logger = createLogger();
-const executor = new MigrationScriptExecutor({ handler,  logger });
+const runner = new ExampleRunner({ handler,  logger });
 
-const result = await executor.migrate();
+const result = await runner.migrate();
 
 if (result.success) {
   logger.info(`✅ Migrated ${result.executed.length} scripts`);

@@ -300,8 +300,12 @@ export class MongoDBHandler implements IDatabaseMigrationHandler<IDB> {
 
 ```typescript
 // src/migrate.ts
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MongoDBHandler } from './database/MongoDBHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function runMigrations() {
   // Configure MongoDB connection
@@ -322,12 +326,12 @@ async function runMigrations() {
   config.folder = './migrations';
   config.backup.folder = './backups';
 
-  // Create executor
-  const executor = new MigrationScriptExecutor({ handler , config });
+  // Create runner
+  const runner = new ExampleRunner({ handler , config });
 
   try {
     console.log('Running migrations...');
-    const result = await executor.up();
+    const result = await runner.up();
 
     if (result.success) {
       console.log(`✅ Success! Executed ${result.executed.length} migrations`);
@@ -568,12 +572,16 @@ export default class AddPreferencesField implements IRunnableScript<IDB> {
 ```typescript
 // test/integration/mongodb-migrations.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MongoDBHandler } from '../../src/database/MongoDBHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('MongoDB Migration Integration', () => {
   let handler: MongoDBHandler;
-  let executor: MigrationScriptExecutor;
+  let runner: MigrationScriptRunner;
 
   before(async () => {
     handler = new MongoDBHandler({
@@ -586,7 +594,7 @@ describe('MongoDB Migration Integration', () => {
     const config = new Config();
     config.folder = './migrations';
 
-    executor = new MigrationScriptExecutor({ handler , config });
+    runner = new ExampleRunner({ handler , config });
   });
 
   after(async () => {
@@ -604,14 +612,14 @@ describe('MongoDB Migration Integration', () => {
   });
 
   it('should execute all migrations', async () => {
-    const result = await executor.up();
+    const result = await runner.up();
 
     expect(result.success).to.be.true;
     expect(result.executed.length).to.be.greaterThan(0);
   });
 
   it('should create collections with validation', async () => {
-    await executor.up();
+    await runner.up();
 
     const collections = await handler.db.db.listCollections({ name: 'users' }).toArray();
     expect(collections).to.have.lengthOf(1);
@@ -622,7 +630,7 @@ describe('MongoDB Migration Integration', () => {
   });
 
   it('should create indexes', async () => {
-    await executor.up();
+    await runner.up();
 
     const users = handler.db.collection('users');
     const indexes = await users.indexes();
@@ -631,8 +639,8 @@ describe('MongoDB Migration Integration', () => {
   });
 
   it('should rollback using down methods', async () => {
-    await executor.up();
-    await executor.downTo(0);
+    await runner.up();
+    await runner.downTo(0);
 
     const collections = await handler.db.db.listCollections().toArray();
     const nonSystemCollections = collections.filter(c => !c.name.startsWith('system.'));

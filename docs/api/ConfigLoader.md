@@ -27,9 +27,9 @@ Utility class for loading configuration using environment variables and config f
 - Built-in defaults
 - Constructor overrides
 
-**New in v0.7.0:** Generic class design with instance methods that can be extended by database adapters for custom environment variable handling
+Generic class design with instance methods that can be extended by database adapters for custom environment variable handling
 
-**New in v0.6.0:** YAML, TOML, and XML configuration file support with optional peer dependencies
+YAML, TOML, and XML configuration file support with optional peer dependencies
 
 **Import:**
 ```typescript
@@ -65,8 +65,6 @@ const tableName = process.env[ENV.MSR_TABLE_NAME];
 
 ## Generic Type Parameter
 
-**New in v0.7.0:**
-
 ```typescript
 class ConfigLoader<C extends Config = Config> implements IConfigLoader<C>
 ```
@@ -95,7 +93,7 @@ class PostgreSqlConfigLoader extends ConfigLoader<PostgreSqlConfig> {
 
 ## Instance Methods
 
-**New in v0.7.0:** `load()` and `applyEnvironmentVariables()` are now instance methods that can be overridden by adapters extending `ConfigLoader`.
+`load()` and `applyEnvironmentVariables()` are now instance methods that can be overridden by adapters extending `ConfigLoader`.
 
 ### load()
 
@@ -128,13 +126,18 @@ interface ConfigLoaderOptions {
 **Priority Order:**
 1. Built-in defaults (lowest)
 2. Config file
-3. .env files (v0.7.0+) - Loaded from `config.envFileSources`
+3. .env files - Loaded from `config.envFileSources`
 4. Environment variables
 5. Constructor overrides (highest)
 
 **Examples:**
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Basic usage - instance method
 const loader = new ConfigLoader();
 const config = loader.load();
@@ -156,14 +159,14 @@ const config = loader.load({}, {
     configFile: './custom-config.yaml'
 });
 
-// Use with MigrationScriptExecutor
-const executor = new MigrationScriptExecutor({
+// Use with MigrationScriptRunner
+const runner = new ExampleRunner({
     handler,
     config: loader.load()
 });
 
-// Or pass loader to executor
-const executor = new MigrationScriptExecutor({
+// Or pass loader to runner
+const runner = new ExampleRunner({
     handler,
     configLoader: loader
 });
@@ -177,7 +180,7 @@ const executor = new MigrationScriptExecutor({
 
 ### applyEnvironmentVariables()
 
-**New in v0.7.0:** Instance method that can be overridden by adapters.
+Instance method that can be overridden by adapters.
 
 Apply environment variables to configuration object.
 
@@ -218,7 +221,7 @@ class PostgreSqlConfigLoader extends ConfigLoader {
 
 ### autoApplyEnvironmentVariables()
 
-**New in v0.7.0:** Automatic environment variable parsing using reflection and type inference.
+Automatic environment variable parsing using reflection and type inference.
 
 Automatically discover and apply environment variables for any config object based on its structure. This eliminates the need for manual env var handling in adapters.
 
@@ -243,7 +246,7 @@ protected autoApplyEnvironmentVariables(
 - **Type Coercion**: Automatically converts env var strings to correct types
 - **Naming Convention**: Converts `camelCase` properties to `SNAKE_CASE` env vars
 - **Nested Support**: Handles nested objects with dot-notation (`PREFIX_PROP_NESTED`)
-- **.env File Support** (v0.7.0+): Automatically loads from files specified in `config.envFileSources`
+- **.env File Support**: Automatically loads from files specified in `config.envFileSources`
 - **Override System**: Allows custom parsing logic for special cases
 
 **How It Works:**
@@ -738,7 +741,7 @@ ConfigLoader.validateRequired([
 // Please set these variables before running.
 
 // In adapter, ensure critical env vars are set
-class PostgreSQLAdapter {
+class PostgreSQLConfigValidator {
     constructor() {
         ConfigLoader.validateRequired([
             'PG_HOST',
@@ -758,7 +761,7 @@ class PostgreSQLAdapter {
 
 ---
 
-## Plugin Architecture (v0.6.0+)
+## Plugin Architecture
 
 ConfigLoader uses a plugin-based architecture for loading different file formats:
 
@@ -821,11 +824,15 @@ Unexpected token at line 5, column 3
 **Recommended:** Let MSR load configuration automatically:
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Automatically loads: defaults → file → env vars
-const executor = new MigrationScriptExecutor({ handler });
-await executor.up();
+const runner = new ExampleRunner({ handler });
+await runner.up();
 ```
 
 ---
@@ -835,7 +842,11 @@ await executor.up();
 **Advanced:** Load configuration explicitly:
 
 ```typescript
-import { ConfigLoader, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Load with waterfall
 const config = ConfigLoader.load();
@@ -846,8 +857,8 @@ const config = ConfigLoader.load({
     strictValidation: true
 });
 
-const executor = new MigrationScriptExecutor({ handler , config });
-await executor.migrate();
+const runner = new ExampleRunner({ handler , config });
+await runner.migrate();
 ```
 
 ---
@@ -938,7 +949,7 @@ ConfigLoader is database-agnostic and does not parse database-specific connectio
 ConfigLoader.parseDatabaseUrl('postgres://...');
 
 // ✅ Use in database adapters
-class PostgreSQLAdapter {
+class PostgreSQLConnectionStringParser {
     parseConnectionString(url: string) {
         // Database-specific parsing
     }
@@ -989,8 +1000,12 @@ const host = ConfigLoader.loadFromEnv('HOST', 'localhost');
 ### Complete Production Setup
 
 ```typescript
-import { ConfigLoader, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
 import { PostgreSQLHandler } from '@migration-script-runner/postgresql';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Validate required environment variables
 ConfigLoader.validateRequired([
@@ -1004,18 +1019,18 @@ const config = ConfigLoader.load({
     strictValidation: process.env.CI === 'true'
 });
 
-// Create executor
+// Create runner
 const handler = new PostgreSQLHandler(process.env.DATABASE_URL);
-const executor = new MigrationScriptExecutor({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 // Run migrations
-await executor.migrate();
+await runner.migrate();
 ```
 
 ### Development with .env File
 
 {: .note }
-> **Auto-loading in v0.7.0+:** MSR automatically loads `.env` files without requiring `dotenv` package. By default, it looks for `.env.local`, `.env`, and `env` files in priority order.
+> MSR automatically loads `.env` files without requiring `dotenv` package. By default, it looks for `.env.local`, `.env`, and `env` files in priority order.
 
 ```bash
 # .env.local (for local development, add to .gitignore)
@@ -1027,11 +1042,15 @@ MSR_BACKUP_DELETE_BACKUP=true
 ```
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-// v0.7.0+: Automatically loads from .env files
-const executor = new MigrationScriptExecutor({ handler });
-await executor.up();
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+// Automatically loads from .env files
+const runner = new ExampleRunner({ handler });
+await runner.up();
 
 // Or configure which .env files to load
 const config = new Config();
@@ -1039,8 +1058,8 @@ config.envFileSources = ['.env.local', '.env']; // Default
 // config.envFileSources = ['.env.production', '.env']; // Production
 // config.envFileSources = []; // Disable .env loading
 
-const executor = new MigrationScriptExecutor({ handler, config });
-await executor.up();
+const runner = new ExampleRunner({ handler, config });
+await runner.up();
 ```
 
 ### Custom Config Directory

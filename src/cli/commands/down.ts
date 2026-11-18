@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 
@@ -10,7 +10,7 @@ import {IDB} from '../../interface';
  * Executes down() methods in reverse chronological order.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor
+ * @param createRunner - Factory function to create MigrationScriptRunner
  *
  * @example
  * ```bash
@@ -24,7 +24,7 @@ import {IDB} from '../../interface';
  */
 export function addDownCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>
+    createRunner: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     program
         .command('down <targetVersion>')
@@ -32,7 +32,7 @@ export function addDownCommand<DB extends IDB>(
         .description('Roll back migrations to target version')
         .action(async (targetVersion: string) => {
             try {
-                const executor = await createExecutor();
+                const runner = await createRunner();
                 const target = parseInt(targetVersion, 10);
 
                 if (isNaN(target)) {
@@ -41,7 +41,7 @@ export function addDownCommand<DB extends IDB>(
                     return;
                 }
 
-                const result = await executor.down(target);
+                const result = await runner.down(target);
 
                 if (result.success) {
                     console.log(`✓ Successfully rolled back ${result.executed.length} migration(s) to version ${target}`);

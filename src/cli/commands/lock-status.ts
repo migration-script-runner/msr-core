@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 
@@ -9,7 +9,7 @@ import {IDB} from '../../interface';
  * Displays the current migration lock status including who holds it and when it expires.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor
+ * @param createRunner - Factory function to create MigrationScriptRunner
  *
  * @example
  * ```bash
@@ -22,20 +22,20 @@ import {IDB} from '../../interface';
  */
 export function addLockStatusCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>
+    createRunner: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     program
         .command('lock:status')
         .description('Display current migration lock status')
         .action(async () => {
             try {
-                const executor = await createExecutor();
-                const status = await executor.getLockStatus();
+                const runner = await createRunner();
+                const status = await runner.getLockStatus();
 
                 if (!status) {
                     console.log('\nLock Status: NOT CONFIGURED');
                     console.log('Locking service is not available in your database handler.');
-                    console.log('See documentation for implementing ILockingService.\n');
+                    console.log('See documentation for implementing ILockingProvider.\n');
                     process.exit(EXIT_CODES.SUCCESS);
                     return;
                 }

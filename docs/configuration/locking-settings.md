@@ -32,7 +32,7 @@ Locking settings prevent multiple processes from running migrations simultaneous
 MSR uses database-level locking similar to Knex.js and Liquibase, making it one of the few Node.js migration tools with built-in concurrency protection.
 
 {: .tip }
-> **Opt-In Feature (v0.8.0)**: Locking is disabled by default for backwards compatibility. Enable it by adding a `lockingService` to your handler. Once enabled, locking is active by default (recommended for production).
+> **Opt-In Feature (v0.8.0)**: Locking is disabled by default for backwards compatibility. Enable it by adding a `lockingProvider` to your handler. Once enabled, locking is active by default (recommended for production).
 
 ---
 
@@ -284,7 +284,7 @@ msr lock:status
 msr lock:release --force
 ```
 
-See [Lock Commands](/cli/lock-commands) for full CLI documentation.
+See [Lock Commands](/guides/lock-commands) for full CLI documentation.
 
 ---
 
@@ -332,23 +332,23 @@ See [Lock Commands](/cli/lock-commands) for full CLI documentation.
 
 ## Implementation Requirements
 
-To use locking, your database handler must implement `ILockingService`:
+To use locking, your database handler must implement `ILockingProvider`:
 
 ```typescript
-import { ILockingService, ILockStatus } from '@migration-script-runner/core';
+import { ILockingProvider, ILockStatus } from '@migration-script-runner/core';
 
-class MyLockingService implements ILockingService<MyDB> {
-  async acquireLock(executorId: string): Promise<boolean> {
+class MyLockingProvider implements ILockingProvider<MyDB> {
+  async acquireLock(runnerId: string): Promise<boolean> {
     // Attempt to acquire lock using SELECT FOR UPDATE NOWAIT or equivalent
     // Return true if acquired, false if already locked
   }
 
-  async releaseLock(executorId: string): Promise<void> {
-    // Release lock held by this executor
+  async releaseLock(runnerId: string): Promise<void> {
+    // Release lock held by this runner
   }
 
-  async verifyLockOwnership(executorId: string): Promise<boolean> {
-    // Verify this executor still owns the lock
+  async verifyLockOwnership(runnerId: string): Promise<boolean> {
+    // Verify this runner still owns the lock
     // Prevents race conditions
   }
 
@@ -380,7 +380,7 @@ class MyLockingService implements ILockingService<MyDB> {
 }
 
 // Add to handler
-handler.lockingService = new MyLockingService(handler.db);
+handler.lockingProvider = new MyLockingProvider(handler.db);
 ```
 
 {: .new }
@@ -406,12 +406,12 @@ Creates lock storage structures (tables, collections, paths) before first use.
 
 **Example (PostgreSQL):**
 ```typescript
-class PostgresLockingService implements ILockingService<IPostgresDB> {
+class PostgresLockingProvider implements ILockingProvider<IPostgresDB> {
   async initLockStorage(): Promise<void> {
     await this.db.query(`
       CREATE TABLE IF NOT EXISTS migration_locks (
         id SERIAL PRIMARY KEY,
-        executor_id VARCHAR(255) UNIQUE NOT NULL,
+        runner_id VARCHAR(255) UNIQUE NOT NULL,
         locked_at TIMESTAMP NOT NULL DEFAULT NOW(),
         expires_at TIMESTAMP NOT NULL
       )
@@ -428,7 +428,7 @@ class PostgresLockingService implements ILockingService<IPostgresDB> {
 
 **Example (MongoDB):**
 ```typescript
-class MongoLockingService implements ILockingService<IMongoDBInterface> {
+class MongoLockingProvider implements ILockingProvider<IMongoDBInterface> {
   async initLockStorage(): Promise<void> {
     const db = this.db.client.db();
 
@@ -438,9 +438,9 @@ class MongoLockingService implements ILockingService<IMongoDBInterface> {
       await db.createCollection('migration_locks');
     }
 
-    // Create unique index on executor_id
+    // Create unique index on runner_id
     await db.collection('migration_locks').createIndex(
-      { executor_id: 1 },
+      { runner_id: 1 },
       { unique: true }
     );
   }
@@ -463,7 +463,7 @@ Verifies lock storage is accessible before attempting lock operations.
 
 **Example:**
 ```typescript
-class PostgresLockingService implements ILockingService<IPostgresDB> {
+class PostgresLockingProvider implements ILockingProvider<IPostgresDB> {
   async ensureLockStorageAccessible(): Promise<boolean> {
     try {
       await this.db.query('SELECT 1 FROM migration_locks LIMIT 1');
@@ -481,11 +481,11 @@ class PostgresLockingService implements ILockingService<IPostgresDB> {
 class MyHandler implements IDatabaseMigrationHandler<IDB> {
   async initialize(): Promise<void> {
     // Initialize lock storage
-    if (this.lockingService) {
-      await this.lockingService.initLockStorage();
+    if (this.lockingProvider) {
+      await this.lockingProvider.initLockStorage();
 
       // Verify storage is accessible
-      const accessible = await this.lockingService.ensureLockStorageAccessible();
+      const accessible = await this.lockingProvider.ensureLockStorageAccessible();
       if (!accessible) {
         throw new Error('Lock storage not accessible. Check permissions and run initLockStorage().');
       }
@@ -518,31 +518,31 @@ import { ILockingHooks, ILockStatus } from '@migration-script-runner/core';
 
 interface ILockingHooks {
   // Before acquiring lock
-  onBeforeAcquireLock?(executorId: string, timeout: number): Promise<void>;
+  onBeforeAcquireLock?(runnerId: string, timeout: number): Promise<void>;
 
   // After successfully acquiring and verifying lock
-  onLockAcquired?(executorId: string, status: ILockStatus): Promise<void>;
+  onLockAcquired?(runnerId: string, status: ILockStatus): Promise<void>;
 
   // When lock acquisition fails after all retries
-  onLockAcquisitionFailed?(executorId: string, currentOwner: string): Promise<void>;
+  onLockAcquisitionFailed?(runnerId: string, currentOwner: string): Promise<void>;
 
   // Before each retry attempt
-  onAcquireRetry?(executorId: string, attempt: number, currentOwner: string): Promise<void>;
+  onAcquireRetry?(runnerId: string, attempt: number, currentOwner: string): Promise<void>;
 
   // When ownership verification fails after acquisition
-  onOwnershipVerificationFailed?(executorId: string): Promise<void>;
+  onOwnershipVerificationFailed?(runnerId: string): Promise<void>;
 
   // Before releasing lock
-  onBeforeReleaseLock?(executorId: string): Promise<void>;
+  onBeforeReleaseLock?(runnerId: string): Promise<void>;
 
   // After successfully releasing lock
-  onLockReleased?(executorId: string): Promise<void>;
+  onLockReleased?(runnerId: string): Promise<void>;
 
   // When lock is force-released
   onForceReleaseLock?(status: ILockStatus | null): Promise<void>;
 
   // On any lock operation error
-  onLockError?(operation: string, error: Error, executorId?: string): Promise<void>;
+  onLockError?(operation: string, error: Error, runnerId?: string): Promise<void>;
 }
 ```
 
@@ -559,22 +559,22 @@ class MetricsLockingHooks implements ILockingHooks {
     this.metricsClient = metricsClient;
   }
 
-  async onBeforeAcquireLock(executorId: string, timeout: number): Promise<void> {
+  async onBeforeAcquireLock(runnerId: string, timeout: number): Promise<void> {
     this.startTime = Date.now();
-    console.log(`[Metrics] Attempting to acquire lock: ${executorId}`);
+    console.log(`[Metrics] Attempting to acquire lock: ${runnerId}`);
   }
 
-  async onLockAcquired(executorId: string, status: ILockStatus): Promise<void> {
+  async onLockAcquired(runnerId: string, status: ILockStatus): Promise<void> {
     const duration = this.startTime ? Date.now() - this.startTime : 0;
 
     // Send metrics to DataDog/CloudWatch
     this.metricsClient.timing('migration.lock.acquired', duration);
     this.metricsClient.increment('migration.lock.success');
 
-    console.log(`[Metrics] Lock acquired in ${duration}ms by ${executorId}`);
+    console.log(`[Metrics] Lock acquired in ${duration}ms by ${runnerId}`);
   }
 
-  async onLockAcquisitionFailed(executorId: string, currentOwner: string): Promise<void> {
+  async onLockAcquisitionFailed(runnerId: string, currentOwner: string): Promise<void> {
     // Track lock conflicts
     this.metricsClient.increment('migration.lock.conflict');
     this.metricsClient.tag('current_owner', currentOwner);
@@ -582,12 +582,12 @@ class MetricsLockingHooks implements ILockingHooks {
     console.error(`[Metrics] Lock conflict - held by ${currentOwner}`);
   }
 
-  async onAcquireRetry(executorId: string, attempt: number, currentOwner: string): Promise<void> {
+  async onAcquireRetry(runnerId: string, attempt: number, currentOwner: string): Promise<void> {
     this.metricsClient.increment('migration.lock.retry');
     console.log(`[Metrics] Lock retry #${attempt}, waiting for ${currentOwner}`);
   }
 
-  async onLockError(operation: string, error: Error, executorId?: string): Promise<void> {
+  async onLockError(operation: string, error: Error, runnerId?: string): Promise<void> {
     this.metricsClient.increment('migration.lock.error');
     this.metricsClient.tag('operation', operation);
     console.error(`[Metrics] Lock error during ${operation}:`, error.message);
@@ -597,7 +597,7 @@ class MetricsLockingHooks implements ILockingHooks {
 // Usage
 const hooks = new MetricsLockingHooks(myMetricsClient);
 const handler = new MyHandler({
-  lockingService: myLockingService,
+  lockingProvider: myLockingProvider,
   lockingHooks: hooks  // Pass hooks to handler
 });
 ```
@@ -612,13 +612,13 @@ class SlackAlertHooks implements ILockingHooks {
     this.slackWebhook = slackWebhook;
   }
 
-  async onLockAcquisitionFailed(executorId: string, currentOwner: string): Promise<void> {
+  async onLockAcquisitionFailed(runnerId: string, currentOwner: string): Promise<void> {
     await this.sendSlackAlert({
       text: '⚠️ Migration Lock Conflict',
       attachments: [{
         color: 'warning',
         fields: [
-          { title: 'Attempted By', value: executorId },
+          { title: 'Attempted By', value: runnerId },
           { title: 'Currently Held By', value: currentOwner },
           { title: 'Action', value: 'Wait for lock release or force-release if stale' }
         ]
@@ -658,19 +658,19 @@ class AuditLogHooks implements ILockingHooks {
     this.auditLogger = auditLogger;
   }
 
-  async onLockAcquired(executorId: string, status: ILockStatus): Promise<void> {
+  async onLockAcquired(runnerId: string, status: ILockStatus): Promise<void> {
     this.auditLogger.info({
       event: 'lock_acquired',
-      executorId,
+      runnerId,
       timestamp: status.lockedAt,
       expiresAt: status.expiresAt
     });
   }
 
-  async onLockReleased(executorId: string): Promise<void> {
+  async onLockReleased(runnerId: string): Promise<void> {
     this.auditLogger.info({
       event: 'lock_released',
-      executorId,
+      runnerId,
       timestamp: new Date()
     });
   }
@@ -694,21 +694,21 @@ Hooks are automatically passed to `LockingOrchestrator` when provided to the han
 import { IDatabaseMigrationHandler, ILockingHooks } from '@migration-script-runner/core';
 
 class MyHandler implements IDatabaseMigrationHandler<IDB> {
-  lockingService?: ILockingService<IDB>;
+  lockingProvider?: ILockingProvider<IDB>;
   lockingHooks?: ILockingHooks;  // Add hooks property
 
   constructor(options: {
-    lockingService?: ILockingService<IDB>;
+    lockingProvider?: ILockingProvider<IDB>;
     lockingHooks?: ILockingHooks;  // Accept hooks in constructor
   }) {
-    this.lockingService = options.lockingService;
+    this.lockingProvider = options.lockingProvider;
     this.lockingHooks = options.lockingHooks;
   }
 }
 
 // Create handler with hooks
 const handler = new MyHandler({
-  lockingService: new MyLockingService(db),
+  lockingProvider: new MyLockingProvider(db),
   lockingHooks: new MetricsLockingHooks(metricsClient)
 });
 ```
@@ -724,7 +724,7 @@ const handler = new MyHandler({
 
 ### Overview
 
-`LockingOrchestrator` is an internal decorator service that wraps your `ILockingService` implementation. It handles:
+`LockingOrchestrator` is an internal decorator service that wraps your `ILockingProvider` implementation. It handles:
 
 - **Retry Logic**: Automatically retries lock acquisition with configurable attempts and delays
 - **Two-Phase Locking**: Acquires lock then verifies ownership to prevent race conditions
@@ -738,13 +738,13 @@ MSR follows a **decorator pattern** for lock orchestration:
 
 ```
 Your Handler
-├── lockingService: ILockingService (adapter implementation)
+├── lockingProvider: ILockingProvider (adapter implementation)
 │   └── Database-specific lock operations
 └── lockingHooks?: ILockingHooks (optional hooks)
 
 MigrationWorkflowOrchestrator (internal)
 └── lockingOrchestrator: LockingOrchestrator
-    ├── Wraps your lockingService
+    ├── Wraps your lockingProvider
     ├── Applies retry logic
     ├── Invokes hooks
     └── Two-phase locking verification
@@ -752,7 +752,7 @@ MigrationWorkflowOrchestrator (internal)
 
 **Key Design Principles:**
 
-1. **Adapters Stay Simple**: Your `ILockingService` only implements database operations
+1. **Adapters Stay Simple**: Your `ILockingProvider` only implements database operations
 2. **Core Handles Orchestration**: MSR core manages retry, hooks, and verification
 3. **No Duplication**: Retry logic is centralized, not repeated in every adapter
 4. **Consistent Behavior**: All databases get the same orchestration
@@ -763,29 +763,29 @@ MigrationWorkflowOrchestrator (internal)
 
 ```typescript
 // Your code
-const acquired = await executor.up();
+const acquired = await runner.up();
 
 // What LockingOrchestrator does internally:
 for (let attempt = 1; attempt <= config.locking.retryAttempts; attempt++) {
-  await hooks?.onBeforeAcquireLock?.(executorId, timeout);
+  await hooks?.onBeforeAcquireLock?.(runnerId, timeout);
 
-  const acquired = await lockingService.acquireLock(executorId);
+  const acquired = await lockingProvider.acquireLock(runnerId);
   if (acquired) {
     // Success - verify ownership
-    const verified = await lockingService.verifyLockOwnership(executorId);
+    const verified = await lockingProvider.verifyLockOwnership(runnerId);
     if (verified) {
-      await hooks?.onLockAcquired?.(executorId, status);
+      await hooks?.onLockAcquired?.(runnerId, status);
       return true;
     }
   }
 
   // Retry
-  await hooks?.onAcquireRetry?.(executorId, attempt, currentOwner);
+  await hooks?.onAcquireRetry?.(runnerId, attempt, currentOwner);
   await sleep(config.locking.retryDelay);
 }
 
 // Failed after all retries
-await hooks?.onLockAcquisitionFailed?.(executorId, currentOwner);
+await hooks?.onLockAcquisitionFailed?.(runnerId, currentOwner);
 return false;
 ```
 
@@ -795,13 +795,13 @@ Prevents race conditions by verifying ownership after acquisition:
 
 ```typescript
 // Phase 1: Acquire lock
-const acquired = await lockingService.acquireLock(executorId);
+const acquired = await lockingProvider.acquireLock(runnerId);
 
 // Phase 2: Verify ownership (catches race conditions)
-const verified = await lockingService.verifyLockOwnership(executorId);
+const verified = await lockingProvider.verifyLockOwnership(runnerId);
 
 if (!verified) {
-  await hooks?.onOwnershipVerificationFailed?.(executorId);
+  await hooks?.onOwnershipVerificationFailed?.(runnerId);
   throw new Error('Lock ownership verification failed');
 }
 ```
@@ -817,37 +817,37 @@ Hooks are called at specific lifecycle points:
 
 ```typescript
 // Before any operation
-await hooks?.onBeforeAcquireLock?.(executorId, timeout);
+await hooks?.onBeforeAcquireLock?.(runnerId, timeout);
 
 // On success
-await hooks?.onLockAcquired?.(executorId, status);
+await hooks?.onLockAcquired?.(runnerId, status);
 
 // On failure
-await hooks?.onLockAcquisitionFailed?.(executorId, currentOwner);
+await hooks?.onLockAcquisitionFailed?.(runnerId, currentOwner);
 
 // On retry
-await hooks?.onAcquireRetry?.(executorId, attempt, currentOwner);
+await hooks?.onAcquireRetry?.(runnerId, attempt, currentOwner);
 
 // On error
-await hooks?.onLockError?.('acquire', error, executorId);
+await hooks?.onLockError?.('acquire', error, runnerId);
 ```
 
 ### Automatic Integration
 
-You don't instantiate `LockingOrchestrator` directly. It's created automatically by `MigrationWorkflowOrchestrator` when your handler provides a `lockingService`:
+You don't instantiate `LockingOrchestrator` directly. It's created automatically by `MigrationWorkflowOrchestrator` when your handler provides a `lockingProvider`:
 
 ```typescript
 // In your handler
 class MyHandler implements IDatabaseMigrationHandler<IDB> {
-  lockingService = new MyLockingService(db);  // You provide this
+  lockingProvider = new MyLockingProvider(db);  // You provide this
   lockingHooks = new MetricsHooks();          // Optional
 }
 
 // MSR creates orchestrator internally
 // MigrationWorkflowOrchestrator.constructor():
-if (handler.lockingService) {
+if (handler.lockingProvider) {
   this.lockingOrchestrator = new LockingOrchestrator(
-    handler.lockingService,  // Your adapter
+    handler.lockingProvider,  // Your adapter
     config.locking,          // Retry config
     logger,                  // Logger
     handler.lockingHooks     // Optional hooks
@@ -873,8 +873,8 @@ config.locking.timeout = 60000;      // Lock expires after 60 seconds
 **Before v0.8.1** (without LockingOrchestrator):
 ```typescript
 // Every adapter had to implement retry logic
-class MyLockingService implements ILockingService<IDB> {
-  async acquireLock(executorId: string): Promise<boolean> {
+class MyLockingProvider implements ILockingProvider<IDB> {
+  async acquireLock(runnerId: string): Promise<boolean> {
     // Adapter must implement retry logic ❌
     // Adapter must implement hook calls ❌
     // Adapter must implement two-phase locking ❌
@@ -886,8 +886,8 @@ class MyLockingService implements ILockingService<IDB> {
 **After v0.8.1** (with LockingOrchestrator):
 ```typescript
 // Adapters only implement database operations
-class MyLockingService implements ILockingService<IDB> {
-  async acquireLock(executorId: string): Promise<boolean> {
+class MyLockingProvider implements ILockingProvider<IDB> {
+  async acquireLock(runnerId: string): Promise<boolean> {
     // Pure database operation ✅
     const result = await this.db.transaction(/* ... */);
     return result.committed;
@@ -905,10 +905,10 @@ All errors are caught, logged, and hooks are invoked:
 
 ```typescript
 try {
-  await lockingService.acquireLock(executorId);
+  await lockingProvider.acquireLock(runnerId);
 } catch (error) {
   logger.error(`Lock acquisition error: ${error}`);
-  await hooks?.onLockError?.('acquire', error, executorId);
+  await hooks?.onLockError?.('acquire', error, runnerId);
   throw error;  // Re-throw to fail migration
 }
 ```

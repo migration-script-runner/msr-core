@@ -24,10 +24,10 @@ export interface MigrationHookExecutorDependencies<DB extends IDB> {
 /**
  * Executes migrations with lifecycle hooks.
  *
- * Extracted from MigrationScriptExecutor to separate hook orchestration concerns.
+ * Extracted from MigrationScriptRunner to separate hook orchestration concerns.
  * Wraps migration execution with onBeforeMigrate, onAfterMigrate, and onMigrationError hooks.
  *
- * Part of MigrationScriptExecutor refactoring to separate concerns.
+ * Part of MigrationScriptRunner refactoring to separate concerns.
  *
  * @template DB - Database interface type
  *
@@ -36,10 +36,10 @@ export interface MigrationHookExecutorDependencies<DB extends IDB> {
  * const hookExecutor = new MigrationHookExecutor({
  *     runner: new MigrationRunner({
  *         handler,
- *         schemaVersionService,
+ *         schemaVersionOrchestrator,
  *         logger,
  *         config,
- *         transactionManager
+ *         transactionProvider
  *     }),
  *     hooks: {
  *         onBeforeMigrate: async (script) => console.log(`Starting ${script.name}`),

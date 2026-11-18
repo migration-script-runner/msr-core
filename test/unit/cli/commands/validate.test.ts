@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 import {Command} from 'commander';
 import {addValidateCommand} from '../../../../src/cli/commands/validate';
-import {MigrationScriptExecutor} from '../../../../src/service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../../../src/service/MigrationScriptRunner';
 import {EXIT_CODES} from '../../../../src/cli/utils/exitCodes';
 import {IDB} from '../../../../src/interface';
 import {ValidationIssueType} from '../../../../src/model/ValidationIssueType';
@@ -13,8 +13,8 @@ interface MockDB extends IDB {
 
 describe('validate command', () => {
     let program: Command;
-    let mockExecutor: sinon.SinonStubbedInstance<MigrationScriptExecutor<MockDB>>;
-    let createExecutorStub: sinon.SinonStub;
+    let mockRunner: sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
+    let createRunnerStub: sinon.SinonStub;
     let consoleLogStub: sinon.SinonStub;
     let consoleErrorStub: sinon.SinonStub;
     let processExitStub: sinon.SinonStub;
@@ -23,13 +23,13 @@ describe('validate command', () => {
         program = new Command();
         program.exitOverride(); // Prevent actual process exit in tests
 
-        // Create mock executor
-        mockExecutor = {
+        // Create mock runner
+        mockRunner = {
             validate: sinon.stub(),
-        } as unknown as sinon.SinonStubbedInstance<MigrationScriptExecutor<MockDB>>;
+        } as unknown as sinon.SinonStubbedInstance<MigrationScriptRunner<MockDB>>;
 
         // Create factory stub
-        createExecutorStub = sinon.stub().returns(mockExecutor);
+        createRunnerStub = sinon.stub().returns(mockRunner);
 
         // Stub console and process.exit
         consoleLogStub = sinon.stub(console, 'log');
@@ -37,7 +37,7 @@ describe('validate command', () => {
         processExitStub = sinon.stub(process, 'exit');
 
         // Add command
-        addValidateCommand(program, createExecutorStub);
+        addValidateCommand(program, createRunnerStub);
     });
 
     afterEach(() => {
@@ -73,7 +73,7 @@ describe('validate command', () => {
          * Validates that validate() is called and success message is displayed
          */
         it('should validate all migrations successfully', async () => {
-            mockExecutor.validate.resolves({
+            mockRunner.validate.resolves({
                 pending: [
                     {valid: true, issues: [], script: {timestamp: 1, name: 'migration1'} as any},
                     {valid: true, issues: [], script: {timestamp: 2, name: 'migration2'} as any},
@@ -85,8 +85,8 @@ describe('validate command', () => {
 
             await program.parseAsync(['node', 'test', 'validate']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
-            expect(mockExecutor.validate.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
+            expect(mockRunner.validate.calledOnce).to.be.true;
             expect(consoleLogStub.calledWith('\nValidation Results:')).to.be.true;
             expect(consoleLogStub.calledWith('  Pending migrations validated: 2')).to.be.true;
             expect(consoleLogStub.calledWith('  Pending migrations with errors: 0')).to.be.true;
@@ -101,7 +101,7 @@ describe('validate command', () => {
          * Validates correct output when no migrations exist
          */
         it('should validate with no migrations', async () => {
-            mockExecutor.validate.resolves({
+            mockRunner.validate.resolves({
                 pending: [],
                 migrated: [],
             });
@@ -121,7 +121,7 @@ describe('validate command', () => {
          * Validates error reporting when pending migrations have errors
          */
         it('should handle pending migrations with errors', async () => {
-            mockExecutor.validate.resolves({
+            mockRunner.validate.resolves({
                 pending: [
                     {valid: false, issues: [{type: ValidationIssueType.ERROR, message: 'Syntax error', code: 'migration1'}], script: {timestamp: 1, name: 'migration1'} as any},
                     {valid: false, issues: [{type: ValidationIssueType.ERROR, message: 'Missing up method', code: 'migration2'}, {type: ValidationIssueType.ERROR, message: 'Invalid return type', code: 'migration2'}], script: {timestamp: 2, name: 'migration2'} as any},
@@ -143,7 +143,7 @@ describe('validate command', () => {
          * Validates error reporting when executed migrations have issues
          */
         it('should handle migrated migrations with issues', async () => {
-            mockExecutor.validate.resolves({
+            mockRunner.validate.resolves({
                 pending: [],
                 migrated: [
                     {type: ValidationIssueType.ERROR, message: 'Checksum mismatch', code: 'migration1'},
@@ -164,7 +164,7 @@ describe('validate command', () => {
          * Validates error reporting when both types have issues
          */
         it('should handle both pending and migrated errors', async () => {
-            mockExecutor.validate.resolves({
+            mockRunner.validate.resolves({
                 pending: [
                     {valid: false, issues: [{type: ValidationIssueType.ERROR, message: 'Invalid syntax', code: 'migration3'}], script: {timestamp: 3, name: 'migration3'} as any},
                 ],
@@ -183,11 +183,11 @@ describe('validate command', () => {
 
         /**
          * Test: Handles exception during validation
-         * Validates error handling when executor throws
+         * Validates error handling when runner throws
          */
         it('should handle exception during validation', async () => {
             const error = new Error('Failed to load migrations');
-            mockExecutor.validate.rejects(error);
+            mockRunner.validate.rejects(error);
 
             await program.parseAsync(['node', 'test', 'validate']);
 
@@ -197,10 +197,10 @@ describe('validate command', () => {
 
         /**
          * Test: Handles non-Error exception
-         * Validates error handling when executor throws non-Error object
+         * Validates error handling when runner throws non-Error object
          */
         it('should handle non-Error exception', async () => {
-            mockExecutor.validate.callsFake(async () => {
+            mockRunner.validate.callsFake(async () => {
                 throw 'String error';
             });
 
@@ -217,7 +217,7 @@ describe('validate command', () => {
         it('should handle Error with empty message', async () => {
             const errorWithoutMessage = new Error();
             errorWithoutMessage.message = '';
-            mockExecutor.validate.rejects(errorWithoutMessage);
+            mockRunner.validate.rejects(errorWithoutMessage);
 
             await program.parseAsync(['node', 'test', 'validate']);
 
@@ -226,25 +226,25 @@ describe('validate command', () => {
         });
     });
 
-    describe('Executor creation', () => {
+    describe('Runner creation', () => {
         /**
-         * Test: Creates executor when action runs
-         * Validates that factory is called to create executor
+         * Test: Creates runner when action runs
+         * Validates that factory is called to create runner
          */
-        it('should create executor when action runs', async () => {
-            mockExecutor.validate.resolves({pending: [], migrated: []});
+        it('should create runner when action runs', async () => {
+            mockRunner.validate.resolves({pending: [], migrated: []});
 
             await program.parseAsync(['node', 'test', 'validate']);
 
-            expect(createExecutorStub.calledOnce).to.be.true;
+            expect(createRunnerStub.calledOnce).to.be.true;
         });
 
         /**
-         * Test: Does not create executor before action
+         * Test: Does not create runner before action
          * Validates that factory is not called during command setup
          */
-        it('should not create executor before action', () => {
-            expect(createExecutorStub.called).to.be.false;
+        it('should not create runner before action', () => {
+            expect(createRunnerStub.called).to.be.false;
         });
     });
 
@@ -254,7 +254,7 @@ describe('validate command', () => {
          * Validates that all relevant metrics are shown
          */
         it('should display comprehensive validation summary', async () => {
-            mockExecutor.validate.resolves({
+            mockRunner.validate.resolves({
                 pending: [
                     {valid: true, issues: [], script: {timestamp: 3, name: 'migration3'} as any},
                     {valid: false, issues: [{type: ValidationIssueType.ERROR, message: 'Error 1', code: 'migration4'}], script: {timestamp: 4, name: 'migration4'} as any},

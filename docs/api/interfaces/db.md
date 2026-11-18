@@ -57,8 +57,6 @@ async checkConnection(): Promise<void>
 - Should complete successfully if connection is healthy
 - MSR calls this before migrations to fail fast
 
-{: .important }
-> **Breaking Change (v0.4.0):** The `checkConnection()` method is now **required** for all IDB implementations. This enables early detection of connection issues before migration execution.
 
 ---
 
@@ -199,8 +197,6 @@ interface ISqlDB extends IDB {
 - For any SQL-based database (PostgreSQL, MySQL, SQLite, etc.)
 - Even if you only use TypeScript migrations, implementing ISqlDB is harmless
 
-{: .note }
-> **New in v0.4.0:** The `ISqlDB` interface was added to support SQL migration files. If your database handler doesn't implement ISqlDB, SQL migrations (`.up.sql` / `.down.sql`) will fail with a clear error message.
 
 ---
 

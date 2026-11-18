@@ -26,9 +26,18 @@ This section contains comprehensive API documentation for all public classes, in
 
 ### [Core Classes](core-classes)
 The main classes you'll interact with:
-- **MigrationScriptExecutor** - Primary class for executing migrations
+- **MigrationScriptRunner** - Primary class for executing migrations
 - **Config** - Configuration management
 - **MigrationScript** - Migration script representation
+
+### [MigrationScriptRunner API](migration-script-runner)
+Constructor, generic parameters, and all public runner methods.
+
+### [CLI Reference](cli-reference)
+Built-in commands, common flags, adapter options, and exit codes.
+
+### [Configuration Reference](../configuration/config-reference)
+All `Config` properties, defaults, nested settings, and environment-variable names.
 
 ### [Interfaces](interfaces)
 Core interfaces for implementing database handlers and custom components:
@@ -36,14 +45,14 @@ Core interfaces for implementing database handlers and custom components:
 - **ISchemaVersion** - Schema version tracking
 - **IDB** - Database connection interface
 - **IMigrationInfo** - Migration metadata
-- **IMetricsCollector** - Metrics collection interface (v0.6.0+)
+- **IMetricsCollector** - Metrics collection interface
 - And more...
 
 ### [Services](services)
 Internal service classes (advanced usage):
 - **MigrationService** - Migration file discovery
 - **MigrationValidationService** - Validation logic
-- **BackupService** - Backup/restore operations
+- **BackupOrchestrator** - Backup/restore operations
 - **RollbackService** - Rollback orchestration
 - And more...
 
@@ -62,14 +71,14 @@ Type definitions and aliases for TypeScript users
 ## Quick Navigation
 
 **Getting Started?**
-- Start with [MigrationScriptExecutor](core-classes#migrationscriptexecutor)
-- Configure with [Config](core-classes#config)
-- Implement [IDatabaseMigrationHandler](interfaces#idatabasemigrationhandler)
+- Start with [MigrationScriptRunner](core-classes#migrationscriptrunner)
+- Configure with the [configuration reference](../configuration/config-reference)
+- Implement [IDatabaseMigrationHandler](interfaces/database-handler#idatabasemigrationhandler)
 
 **Customizing?**
-- Custom loggers: [ILogger](interfaces#ilogger)
-- Custom validators: [IMigrationValidator](interfaces#imigrationvalidator)
-- Lifecycle hooks: [IMigrationHooks](interfaces#imigrationhooks)
+- Custom loggers: [ILogger](../customization/custom-logging#the-ilogger-interface)
+- Custom validators: [IMigrationValidator](../customization/validation/custom-validation#imigrationvalidator-interface)
+- Lifecycle hooks: [IMigrationHooks](../customization/hooks#available-lifecycle-hooks)
 - Metrics collection: [IMetricsCollector](interfaces/metrics-collector)
 
 **Advanced Usage?**
@@ -81,7 +90,7 @@ Type definitions and aliases for TypeScript users
 ## API Versioning
 
 MSR follows [Semantic Versioning](https://semver.org/). This documentation reflects:
-- **Current Version**: v0.6.0
+- **Current Version**: v1.0.0-beta.1
 - **Breaking Changes**: Documented in [Migration Guides](../version-migration/)
 - **Deprecations**: Marked with `@deprecated` in source code
 

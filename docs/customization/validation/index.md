@@ -41,16 +41,20 @@ Migration Script Runner includes a comprehensive validation system that checks m
 Validation is enabled by default and runs automatically:
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.folder = './migrations';
 
 // Validation is enabled by default (validateBeforeRun = true)
-const executor = new MigrationScriptExecutor({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 
 try {
-    await executor.migrate();
+    await runner.migrate();
 } catch (error) {
     if (error.name === 'ValidationError') {
         // Handle validation failure
@@ -211,7 +215,7 @@ When validation fails, MSR throws a `ValidationError`:
 import { ValidationError } from '@migration-script-runner/core';
 
 try {
-    await executor.migrate();
+    await runner.migrate();
 } catch (error) {
     if (error instanceof ValidationError) {
         console.error(`Validation failed!`);
@@ -413,7 +417,7 @@ config.customValidators = validators;
 
 ```typescript
 try {
-    const result = await executor.migrate();
+    const result = await runner.migrate();
     if (!result.success) {
         process.exit(1);
     }
@@ -434,4 +438,4 @@ try {
 - **Learn about built-in validation** → [Built-in Validation Guide](built-in-validation)
 - **Understand checksum integrity** → [Checksum & Integrity Guide](checksum-integrity)
 - **Create custom validators** → [Custom Validation Guide](custom-validation)
-- **Configure validation** → [Configuration Reference](../configuration)
+- **Configure validation** → [Configuration Reference](../../configuration)

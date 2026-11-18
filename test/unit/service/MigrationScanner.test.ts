@@ -4,7 +4,7 @@ import { MigrationScanner } from '../../../src/service/MigrationScanner';
 import { IDB } from '../../../src/interface/dao';
 import {MigrationScriptSelector} from '../../../src/service/MigrationScriptSelector';
 import {IMigrationService} from '../../../src/interface/service/IMigrationService';
-import {ISchemaVersionService} from '../../../src/interface/service/ISchemaVersionService';
+import {ISchemaVersionOrchestrator} from '../../../src/interface/service/ISchemaVersionOrchestrator';
 import {Config, MigrationScript} from '../../../src';
 import {IMigrationInfo} from '../../../src/interface/IMigrationInfo';
 
@@ -22,7 +22,7 @@ import {IMigrationInfo} from '../../../src/interface/IMigrationInfo';
 describe('MigrationScanner', () => {
     let scanner: MigrationScanner<IDB>;
     let migrationService: sinon.SinonStubbedInstance<IMigrationService<IDB>>;
-    let schemaVersionService: sinon.SinonStubbedInstance<ISchemaVersionService<IDB>>;
+    let schemaVersionOrchestrator: sinon.SinonStubbedInstance<ISchemaVersionOrchestrator<IDB>>;
     let selector: MigrationScriptSelector<IDB>;
     let config: Config;
 
@@ -32,18 +32,18 @@ describe('MigrationScanner', () => {
             findMigrationScripts: sinon.stub()
         } as sinon.SinonStubbedInstance<IMigrationService<IDB>>;
 
-        schemaVersionService = {
+        schemaVersionOrchestrator = {
             getAllMigratedScripts: sinon.stub(),
             init: sinon.stub(),
             save: sinon.stub()
-        } as sinon.SinonStubbedInstance<ISchemaVersionService<IDB>>;
+        } as sinon.SinonStubbedInstance<ISchemaVersionOrchestrator<IDB>>;
 
         selector = new MigrationScriptSelector<IDB>();
         config = new Config();
 
         scanner = new MigrationScanner<IDB>(
             migrationService,
-            schemaVersionService,
+            schemaVersionOrchestrator,
             selector,
             config
         );
@@ -71,7 +71,7 @@ describe('MigrationScanner', () => {
                 new MigrationScript<IDB>('V300_migration.ts', '/path/V300_migration.ts', 300)
             ];
 
-            schemaVersionService.getAllMigratedScripts.resolves(migratedScripts);
+            schemaVersionOrchestrator.getAllMigratedScripts.resolves(migratedScripts);
             migrationService.findMigrationScripts.resolves(allScripts);
 
             // Execute
@@ -114,7 +114,7 @@ describe('MigrationScanner', () => {
                 new MigrationScript<IDB>('V400_migration.ts', '/path/V400_migration.ts', 400)
             ];
 
-            schemaVersionService.getAllMigratedScripts.resolves(migratedScripts);
+            schemaVersionOrchestrator.getAllMigratedScripts.resolves(migratedScripts);
             migrationService.findMigrationScripts.resolves(allScripts);
 
             const result = await scanner.scan();
@@ -140,7 +140,7 @@ describe('MigrationScanner', () => {
                 new MigrationScript<IDB>('V300_migration.ts', '/path/V300_migration.ts', 300)  // Pending
             ];
 
-            schemaVersionService.getAllMigratedScripts.resolves(migratedScripts);
+            schemaVersionOrchestrator.getAllMigratedScripts.resolves(migratedScripts);
             migrationService.findMigrationScripts.resolves(allScripts);
 
             const result = await scanner.scan();
@@ -152,7 +152,7 @@ describe('MigrationScanner', () => {
         });
 
         it('should handle no migrations case', async () => {
-            schemaVersionService.getAllMigratedScripts.resolves([]);
+            schemaVersionOrchestrator.getAllMigratedScripts.resolves([]);
             migrationService.findMigrationScripts.resolves([]);
 
             const result = await scanner.scan();
@@ -185,7 +185,7 @@ describe('MigrationScanner', () => {
                 new MigrationScript<IDB>('V200_migration.ts', '/path/V200_migration.ts', 200)
             ];
 
-            schemaVersionService.getAllMigratedScripts.resolves(migratedScripts);
+            schemaVersionOrchestrator.getAllMigratedScripts.resolves(migratedScripts);
             migrationService.findMigrationScripts.resolves(allScripts);
 
             const result = await scanner.scan();
@@ -201,7 +201,7 @@ describe('MigrationScanner', () => {
                 new MigrationScript<IDB>('V300_migration.ts', '/path/V300_migration.ts', 300)
             ];
 
-            schemaVersionService.getAllMigratedScripts.resolves([]);
+            schemaVersionOrchestrator.getAllMigratedScripts.resolves([]);
             migrationService.findMigrationScripts.resolves(allScripts);
 
             const result = await scanner.scan();
@@ -215,19 +215,19 @@ describe('MigrationScanner', () => {
             const migratedScripts: MigrationScript<IDB>[] = [];
             const allScripts: MigrationScript<IDB>[] = [];
 
-            schemaVersionService.getAllMigratedScripts.resolves(migratedScripts);
+            schemaVersionOrchestrator.getAllMigratedScripts.resolves(migratedScripts);
             migrationService.findMigrationScripts.resolves(allScripts);
 
             await scanner.scan();
 
             // Both services should be called
-            expect(schemaVersionService.getAllMigratedScripts.called).to.be.true;
+            expect(schemaVersionOrchestrator.getAllMigratedScripts.called).to.be.true;
             expect(migrationService.findMigrationScripts.called).to.be.true;
         });
 
-        it('should propagate errors from schemaVersionService', async () => {
+        it('should propagate errors from schemaVersionOrchestrator', async () => {
             const error = new Error('Database connection failed');
-            schemaVersionService.getAllMigratedScripts.rejects(error);
+            schemaVersionOrchestrator.getAllMigratedScripts.rejects(error);
             migrationService.findMigrationScripts.resolves([]);
 
             try {
@@ -240,7 +240,7 @@ describe('MigrationScanner', () => {
 
         it('should propagate errors from migrationService', async () => {
             const error = new Error('Filesystem read failed');
-            schemaVersionService.getAllMigratedScripts.resolves([]);
+            schemaVersionOrchestrator.getAllMigratedScripts.resolves([]);
             migrationService.findMigrationScripts.rejects(error);
 
             try {

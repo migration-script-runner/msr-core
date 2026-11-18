@@ -1,9 +1,29 @@
 {
   "name": "@migration-script-runner/core",
-  "version": "0.8.4",
+  "version": "1.0.0-beta.1",
   "description": "Migration Script Runner - Core Framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "cli/utils": ["dist/src/cli/utils/index.d.ts"]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./cli/utils": {
+      "types": "./dist/src/cli/utils/index.d.ts",
+      "require": "./dist/src/cli/utils/index.js",
+      "default": "./dist/src/cli/utils/index.js"
+    },
+    "./dist/src/cli/utils": "./dist/src/cli/utils/index.js",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
   "files": [
     "/dist"
   ],
@@ -12,7 +32,8 @@
     "start:js": "npm run build && node dist/index.js",
     "start:ts": "npm run build && npx ts-node src/index.ts",
     "build": "rimraf ./dist && tsc && rimraf ./dist/test",
-    "test": "npm run lint && npm run test:mocha",
+    "test": "npm run test:pr-helper && npm run lint && npm run test:mocha",
+    "test:pr-helper": "node --test test/scripts/manage-pr.test.mjs test/scripts/pr-title-validation.test.mjs test/scripts/sonar-fix.test.mjs test/scripts/sonar-report.test.mjs",
     "test:mocha": "cross-env TS_NODE_FILES=true mocha",
     "_mocha": "npm run test:mocha -- --no-config --require ts-node/register --require test/setup.ts",
     "test:unit": "npm run _mocha -- test/unit/**/*.test.ts",
@@ -90,11 +111,11 @@
   },
   "dependencies": {
     "ascii-table3": "^1.0.1",
-    "auto-envparse": "^2.1.0",
+    "auto-envparse": "^3.0.0",
     "commander": "^12.1.0",
-    "figlet": "^1.9.4",
-    "lodash": "^4.17.21",
-    "moment": "^2.30.1"
+    "figlet": "^1.12.0",
+    "lodash": "^4.18.1",
+    "moment": "^2.31.0"
   },
   "peerDependencies": {
     "@iarna/toml": "^2.2.5",

@@ -26,7 +26,9 @@ By default, MSR uses `ConsoleLogger` which outputs all messages to the console u
 - Using `SilentLogger` to suppress all output (useful for testing or library usage)
 - Creating custom logger implementations for files, cloud services, or other destinations
 
-All services that produce output accept an optional `ILogger` parameter in their constructors.
+Pass a logger through `MigrationScriptRunner` dependencies. Other service constructors expose their logger parameter alongside the service-specific dependencies shown in their API signatures.
+
+The runner examples below use `createDatabaseHandler(config)` as a placeholder for the adapter's handler factory; this helper is adapter-specific and is not exported by MSR Core.
 
 ---
 
@@ -48,37 +50,53 @@ interface ILogger {
 
 ## Built-in Logger Implementations
 
-MSR provides three built-in logger implementations. For detailed documentation on each, see the [Logger Documentation](/msr-core/loggers).
+MSR provides three built-in logger implementations. For detailed documentation on each, see the [Logger Documentation](/customization/loggers).
 
 ### Quick Overview
 
-- **[ConsoleLogger](/msr-core/loggers/console-logger)** - Default logger that outputs to console. Perfect for development and debugging.
-- **[SilentLogger](/msr-core/loggers/silent-logger)** - Suppresses all output. Ideal for testing and silent operations.
-- **[FileLogger](/msr-core/loggers/file-logger)** - Writes to files with automatic rotation. Best for production environments.
+- **[ConsoleLogger](/customization/loggers/console-logger)** - Default logger that outputs to console. Perfect for development and debugging.
+- **[SilentLogger](/customization/loggers/silent-logger)** - Suppresses all output. Ideal for testing and silent operations.
+- **[FileLogger](/customization/loggers/file-logger)** - Writes to files with automatic rotation. Best for production environments.
 
 ### ConsoleLogger (Default)
 
 ```typescript
-import { MigrationScriptExecutor, ConsoleLogger } from '@migration-script-runner/core';
+import { Config, IDB, IDatabaseMigrationHandler, MigrationScriptRunner, ConsoleLogger } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
-    logger: new ConsoleLogger()
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
+
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config);
+
+const runner = new ExampleRunner({
+  handler,
+  config,
+  logger: new ConsoleLogger()
 });
 ```
 
-[→ Full ConsoleLogger Documentation](/msr-core/loggers/console-logger)
+[→ Full ConsoleLogger Documentation](/customization/loggers/console-logger)
 
 ### SilentLogger
 
 ```typescript
-import { MigrationScriptExecutor, SilentLogger } from '@migration-script-runner/core';
+import { Config, IDB, IDatabaseMigrationHandler, MigrationScriptRunner, SilentLogger } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
-    logger: new SilentLogger()
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
+
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config);
+
+const runner = new ExampleRunner({
+  handler,
+  config,
+  logger: new SilentLogger()
 });
 ```
 
-[→ Full SilentLogger Documentation](/msr-core/loggers/silent-logger)
+[→ Full SilentLogger Documentation](/customization/loggers/silent-logger)
 
 ### FileLogger
 
@@ -94,7 +112,7 @@ const logger = new FileLogger({
 const service = new MigrationService(logger);
 ```
 
-[→ Full FileLogger Documentation](/msr-core/loggers/file-logger)
+[→ Full FileLogger Documentation](/customization/loggers/file-logger)
 
 ---
 
@@ -105,8 +123,15 @@ const service = new MigrationService(logger);
 Log all migration activity to a file:
 
 ```typescript
-import { ILogger } from '@migration-script-runner/core';
-import fs from 'fs';
+import { Config, IDB, IDatabaseMigrationHandler, ILogger, MigrationScriptRunner } from '@migration-script-runner/core';
+import * as fs from 'node:fs';
+
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
+
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config);
+
 
 class FileLogger implements ILogger {
   constructor(private logPath: string) {}
@@ -139,10 +164,12 @@ class FileLogger implements ILogger {
 }
 
 // Use the file logger
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({
+  handler,
+  config,
   logger: new FileLogger('/var/log/migrations.log')
 });
-await executor.migrate();
+await runner.migrate();
 ```
 
 **Output in `/var/log/migrations.log`:**
@@ -159,29 +186,35 @@ await executor.migrate();
 Send logs to a cloud service like AWS CloudWatch or Datadog:
 
 ```typescript
-import { ILogger } from '@migration-script-runner/core';
-import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs';
+import { Config, IDB, IDatabaseMigrationHandler, ILogger, MigrationScriptRunner } from '@migration-script-runner/core';
+import { CloudWatchLogsClient, PutLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
+
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
+
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config);
 
 class CloudWatchLogger implements ILogger {
-  private client: CloudWatchLogs;
+  private client: CloudWatchLogsClient;
   private logGroupName: string;
   private logStreamName: string;
 
   constructor(logGroupName: string, logStreamName: string) {
-    this.client = new CloudWatchLogs({ region: 'us-east-1' });
+    this.client = new CloudWatchLogsClient({ region: 'us-east-1' });
     this.logGroupName = logGroupName;
     this.logStreamName = logStreamName;
   }
 
   private async sendLog(level: string, message: string, ...args: unknown[]): Promise<void> {
-    await this.client.putLogEvents({
+    await this.client.send(new PutLogEventsCommand({
       logGroupName: this.logGroupName,
       logStreamName: this.logStreamName,
       logEvents: [{
         timestamp: Date.now(),
         message: `[${level}] ${message} ${args.join(' ')}`
       }]
-    });
+    }));
   }
 
   info(message: string, ...args: unknown[]): void {
@@ -206,7 +239,9 @@ class CloudWatchLogger implements ILogger {
 }
 
 // Use in production
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({
+  handler,
+  config,
   logger: new CloudWatchLogger('/aws/migrations', 'production')
 });
 ```
@@ -216,6 +251,15 @@ const executor = new MigrationScriptExecutor({ handler,
 Log to both console and file simultaneously:
 
 ```typescript
+import { Config, IDB, IDatabaseMigrationHandler, ILogger, MigrationScriptRunner } from '@migration-script-runner/core';
+import { ConsoleLogger, FileLogger } from '@migration-script-runner/core';
+
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
+
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config);
+
 class CombinedLogger implements ILogger {
   constructor(
     private loggers: ILogger[]
@@ -243,10 +287,12 @@ class CombinedLogger implements ILogger {
 }
 
 // Log to both console and file
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({
+  handler,
+  config,
   logger: new CombinedLogger([
     new ConsoleLogger(),
-    new FileLogger('/var/log/migrations.log')
+    new FileLogger({ logPath: '/var/log/migrations.log' })
   ])
 });
 ```
@@ -260,9 +306,15 @@ const executor = new MigrationScriptExecutor({ handler,
 Use the default `ConsoleLogger` for immediate visual feedback:
 
 ```typescript
+import { Config, IDB, IDatabaseMigrationHandler, MigrationScriptRunner, ConsoleLogger } from '@migration-script-runner/core';
+
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
+
 const config = new Config();
-const executor = new MigrationScriptExecutor({ handler , config });
-// or explicitly: new MigrationScriptExecutor({ handler,  logger: new ConsoleLogger() });
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config);
+const runner = new ExampleRunner({ handler, config });
+// or explicitly: new ExampleRunner({ handler,  logger: new ConsoleLogger() });
 ```
 
 ### Testing
@@ -270,14 +322,22 @@ const executor = new MigrationScriptExecutor({ handler , config });
 Use `SilentLogger` to keep test output clean:
 
 ```typescript
-import { SilentLogger } from '@migration-script-runner/core';
+import { Config, IDB, IDatabaseMigrationHandler, MigrationScriptRunner, SilentLogger } from '@migration-script-runner/core';
+
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
+
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
 
 describe('Migration Tests', () => {
   it('should execute migrations successfully', async () => {
-    const executor = new MigrationScriptExecutor({ handler, 
+    const config = new Config();
+    const handler = createDatabaseHandler(config);
+    const runner = new ExampleRunner({
+      handler,
+      config,
       logger: new SilentLogger()
     });
-    const result = await executor.migrate();
+    const result = await runner.migrate();
     expect(result.success).toBe(true);
   });
 });
@@ -285,28 +345,33 @@ describe('Migration Tests', () => {
 
 ### Production
 
-Use custom loggers for structured logging and monitoring:
+Use a custom logger for structured logging and monitoring:
 
 ```typescript
-// Send to cloud service for centralized logging
-const executor = new MigrationScriptExecutor({ handler, 
-  logger: new CloudWatchLogger('/prod/migrations', process.env.HOSTNAME)
-});
+import {
+  Config,
+  IDB,
+  IDatabaseMigrationHandler,
+  ILogger,
+  MigrationScriptRunner
+} from '@migration-script-runner/core';
 
-// Or use combined logging
-const executor = new MigrationScriptExecutor({ handler, 
-  logger: new CombinedLogger([
-    new FileLogger('/var/log/migrations.log'),
-    new CloudWatchLogger('/prod/migrations', process.env.HOSTNAME)
-  ])
-});
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
+
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+declare function createProductionLogger(): ILogger;
+const handler = createDatabaseHandler(config);
+const logger = createProductionLogger(); // Application-specific logger factory
+const runner = new ExampleRunner({ handler, config, logger });
 ```
-
 ### CI/CD
 
 Format logs for your CI system:
 
 ```typescript
+import { ILogger } from '@migration-script-runner/core';
+
 class CILogger implements ILogger {
   info(message: string, ...args: unknown[]): void {
     console.log(`::notice::${message}`, ...args);
@@ -332,37 +397,30 @@ class CILogger implements ILogger {
 
 ---
 
-## Which Services Accept Logger?
+## Passing a logger to the runner
 
-The following services accept an optional `ILogger` parameter:
+Pass an `ILogger` implementation through the runner dependencies. Core will use it for migration logs and apply the configured log-level filtering.
 
-- **MigrationScriptExecutor** - Main migration executor
-- **BackupService** - Backup creation and restoration
-- **MigrationService** - Migration script discovery
-- **MigrationRenderer** - Migration output rendering (delegates to render strategies)
-- **AsciiTableRenderStrategy** - ASCII table rendering
-- **JsonRenderStrategy** - JSON output rendering
-- **Utils.parseRunnable()** - Migration script parsing
-
-**Example:**
 ```typescript
 import {
-  MigrationScriptExecutor,
-  BackupService,
-  MigrationService,
+  Config,
+  IDB,
+  IDatabaseMigrationHandler,
+  MigrationScriptRunner,
   SilentLogger
 } from '@migration-script-runner/core';
 
-const logger = new SilentLogger();
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
 
-// Pass logger through dependency injection
-const executor = new MigrationScriptExecutor({ handler,  logger });
-
-// Other services accept logger directly
-const backupService = new BackupService(handler, logger);
-const migrationService = new MigrationService(logger);
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config);
+const runner = new ExampleRunner({
+  handler,
+  config,
+  logger: new SilentLogger()
+});
 ```
-
 ---
 
 ## Best Practices

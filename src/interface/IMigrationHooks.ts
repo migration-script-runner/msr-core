@@ -27,6 +27,11 @@ import {IDB} from "./dao";
  *
  * @example
  * ```typescript
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
  * // Slack notifications for all lifecycle events
  * class SlackHooks implements IMigrationHooks<IDB> {
  *     constructor(private webhookUrl: string) {}
@@ -57,7 +62,8 @@ import {IDB} from "./dao";
  *     }
  * }
  *
- * const executor = new MigrationScriptExecutor<IDB>(handler, {
+ * const runner = new ExampleRunner<IDB>({
+ *     handler,
  *     hooks: new SlackHooks(process.env.SLACK_WEBHOOK)
  * });
  * ```

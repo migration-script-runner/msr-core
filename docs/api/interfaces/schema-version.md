@@ -33,8 +33,6 @@ interface ISchemaVersion {
 }
 ```
 
-> **Breaking Change (v0.4.0):** Property `migrations` renamed to `migrationRecords` for clarity.
-{: .important }
 
 **Purpose:** Manages the database table that tracks which migrations have been executed.
 
@@ -52,15 +50,6 @@ migrationRecords: IMigrationScript
 
 Provides CRUD operations for the migration records stored in the schema version table.
 
-**Before (v0.3.x):**
-```typescript
-await schemaVersion.migrations.getAll();
-```
-
-**After (v0.4.0):**
-```typescript
-await schemaVersion.migrationRecords.getAllExecuted();
-```
 
 See [`IMigrationScript` interface](#imigrationscript) below for methods.
 
@@ -317,8 +306,6 @@ interface IMigrationScript {
 }
 ```
 
-> **Breaking Change (v0.4.0):** Method `getAll()` renamed to `getAllExecuted()` to clarify it returns executed migrations only.
-{: .important }
 
 **Purpose:** Provides database operations for migration tracking records.
 
@@ -336,15 +323,6 @@ async getAllExecuted(): Promise<IMigrationInfo[]>
 
 **Returns:** Array of migration records sorted by timestamp (oldest first)
 
-**Before (v0.3.x):**
-```typescript
-const executed = await handler.schemaVersion.migrations.getAll();
-```
-
-**After (v0.4.0):**
-```typescript
-const executed = await handler.schemaVersion.migrationRecords.getAllExecuted();
-```
 
 **Example (PostgreSQL):**
 ```typescript

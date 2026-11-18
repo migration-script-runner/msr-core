@@ -96,7 +96,12 @@ export class HttpMetricsCollector implements IMetricsCollector {
 
 **Usage:**
 ```typescript
-new MigrationScriptExecutor({
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+new ExampleRunner({
   handler,
   metricsCollectors: [
     new HttpMetricsCollector('https://api.example.com/metrics')
@@ -197,8 +202,13 @@ export class DataDogCollector implements IMetricsCollector {
 **Usage:**
 ```typescript
 import { DataDogCollector } from './collectors/DataDogCollector';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-new MigrationScriptExecutor({
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+new ExampleRunner({
   handler,
   metricsCollectors: [
     new DataDogCollector({
@@ -355,8 +365,13 @@ export class CloudWatchCollector implements IMetricsCollector {
 **Usage:**
 ```typescript
 import { CloudWatchCollector } from './collectors/CloudWatchCollector';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-new MigrationScriptExecutor({
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+new ExampleRunner({
   handler,
   metricsCollectors: [
     new CloudWatchCollector({

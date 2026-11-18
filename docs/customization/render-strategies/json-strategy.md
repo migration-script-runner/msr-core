@@ -9,6 +9,14 @@ nav_order: 2
 
 The `JsonRenderStrategy` renders migration information as structured JSON, perfect for CI/CD pipelines, log aggregators, and automated tools that need to parse migration output programmatically.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 JsonRenderStrategy provides machine-readable output in JSON format with support for both pretty-printed (indented) and compact modes. This makes it ideal for integrating migrations into automated workflows, monitoring systems, and log analysis tools.
@@ -39,13 +47,17 @@ import { JsonRenderStrategy } from '@migration-script-runner/core';
 Pretty-printed JSON with indentation for readability:
 
 ```typescript
-import { MigrationScriptExecutor, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)  // pretty: true
 });
 
-await executor.migrate();
+await runner.migrate();
 ```
 
 ### Compact Mode
@@ -53,20 +65,29 @@ await executor.migrate();
 Compact JSON for log aggregation and minimal file size:
 
 ```typescript
-import { MigrationScriptExecutor, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)  // pretty: false
 });
 
-await executor.migrate();
+await runner.migrate();
 ```
 
 ### With Custom Logger
 
 ```typescript
 import {
-    MigrationScriptExecutor,
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+    MigrationScriptRunner,
     JsonRenderStrategy,
     FileLogger
 } from '@migration-script-runner/core';
@@ -74,7 +95,7 @@ import {
 const logger = new FileLogger({ logPath: './migrations.json' });
 const strategy = new JsonRenderStrategy(true);
 
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: strategy
 });
@@ -236,13 +257,17 @@ interface BannerOutput {
 Parse migration results in your CI/CD pipeline:
 
 ```typescript
-import { MigrationScriptExecutor, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)  // Compact for CI logs
 });
 
-const result = await executor.migrate();
+const result = await runner.migrate();
 
 // Parse JSON output from logs
 const migrations = JSON.parse(output);
@@ -257,12 +282,17 @@ Send structured logs to aggregation services:
 
 ```typescript
 import { FileLogger, JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const logger = new FileLogger({
     logPath: '/var/l../version-migration/migrations.jsonl'  // JSON Lines format
 });
 
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(false)  // Compact format
 });
@@ -280,13 +310,18 @@ Monitor migration status programmatically:
 
 ```typescript
 import { JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler, 
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Capture output
-const output = captureStdout(() => executor.migrate());
+const output = captureStdout(() => runner.migrate());
 const migrations = JSON.parse(output);
 
 // Check for failures or warnings
@@ -314,15 +349,20 @@ Generate migration reports:
 ```typescript
 import fs from 'fs';
 import { JsonRenderStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Capture migration history
 const logger = new FileLogger({ logPath: './migration-report.json' });
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     logger,
     renderStrategy: new JsonRenderStrategy(true)
 });
 
-await executor.list();
+await runner.list();
 
 // Parse and analyze
 const report = JSON.parse(fs.readFileSync('./migration-report.json', 'utf-8'));
@@ -346,7 +386,7 @@ const app = express();
 
 app.get('/a../version-migration/status', async (req, res) => {
     // Capture JSON output
-    const output = await captureOutput(() => executor.list());
+    const output = await captureOutput(() => runner.list());
     const migrations = JSON.parse(output);
 
     res.json({
@@ -362,13 +402,18 @@ app.get('/a../version-migration/status', async (req, res) => {
 ### 1. Use Compact Mode for Production Logs
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Good: Minimal log file size
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(false)
 });
 
 // Avoid: Large indented logs in production
-const executor = new MigrationScriptExecutor({ handler, 
+const runner = new ExampleRunner({ handler,
     renderStrategy: new JsonRenderStrategy(true)
 });
 ```

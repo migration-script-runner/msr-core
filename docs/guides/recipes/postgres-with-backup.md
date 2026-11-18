@@ -388,8 +388,12 @@ export class PostgreSQLHandler implements IDatabaseMigrationHandler<IDB> {
 
 ```typescript
 // src/migrate.ts
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { PostgreSQLHandler } from './database/PostgreSQLHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function runMigrations() {
   // Configure PostgreSQL connection
@@ -410,12 +414,12 @@ async function runMigrations() {
   config.backup.folder = './backups';
   config.backup.deleteBackup = false;  // Keep backups in production
 
-  // Create executor
-  const executor = new MigrationScriptExecutor({ handler , config });
+  // Create runner
+  const runner = new ExampleRunner({ handler , config });
 
   try {
     console.log('Running migrations...');
-    const result = await executor.up();
+    const result = await runner.up();
 
     if (result.success) {
       console.log(`✅ Success! Executed ${result.executed.length} migrations`);
@@ -575,12 +579,16 @@ describe('PostgreSQLHandler', () => {
 
 ```typescript
 // test/integration/migrations.test.ts
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { PostgreSQLHandler } from '../../src/database/PostgreSQLHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration Integration', () => {
   let handler: PostgreSQLHandler;
-  let executor: MigrationScriptExecutor;
+  let runner: MigrationScriptRunner;
 
   before(async () => {
     handler = new PostgreSQLHandler({
@@ -594,7 +602,7 @@ describe('Migration Integration', () => {
     const config = new Config();
     config.folder = './test/fixtures/migrations';
 
-    executor = new MigrationScriptExecutor({ handler , config });
+    runner = new ExampleRunner({ handler , config });
   });
 
   after(async () => {
@@ -602,7 +610,7 @@ describe('Migration Integration', () => {
   });
 
   it('should execute all migrations successfully', async () => {
-    const result = await executor.up();
+    const result = await runner.up();
 
     expect(result.success).to.be.true;
     expect(result.executed.length).to.be.greaterThan(0);
@@ -610,7 +618,7 @@ describe('Migration Integration', () => {
 
   it('should rollback on migration failure', async () => {
     // This test requires a migration that intentionally fails
-    const result = await executor.up();
+    const result = await runner.up();
 
     // Verify database was restored to previous state
     const tables = await handler.db.query(`

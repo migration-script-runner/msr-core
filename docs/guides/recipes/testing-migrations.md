@@ -242,12 +242,16 @@ export class TestDatabaseHandler extends PostgreSQLHandler {
 ```typescript
 // test/integration/migrations.integration.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { TestDatabaseHandler } from './helpers/TestDatabaseHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration Integration Tests', () => {
   let handler: TestDatabaseHandler;
-  let executor: MigrationScriptExecutor;
+  let runner: MigrationScriptRunner;
   let config: Config;
 
   before(async () => {
@@ -257,7 +261,7 @@ describe('Migration Integration Tests', () => {
     config.folder = './migrations';
     config.backup.folder = './test/backups';
 
-    executor = new MigrationScriptExecutor({ handler , config });
+    runner = new ExampleRunner({ handler , config });
 
     // Initialize schema version table
     await handler.schemaVersion.init();
@@ -274,7 +278,7 @@ describe('Migration Integration Tests', () => {
 
   describe('Forward Migrations', () => {
     it('should execute all pending migrations', async () => {
-      const result = await executor.up();
+      const result = await runner.up();
 
       expect(result.success).to.be.true;
       expect(result.executed.length).to.be.greaterThan(0);
@@ -282,22 +286,22 @@ describe('Migration Integration Tests', () => {
     });
 
     it('should track executed migrations', async () => {
-      await executor.up();
+      await runner.up();
 
       const migrated = await handler.schemaVersion.list();
       expect(migrated.length).to.be.greaterThan(0);
     });
 
     it('should be idempotent - running twice does nothing', async () => {
-      const result1 = await executor.up();
-      const result2 = await executor.up();
+      const result1 = await runner.up();
+      const result2 = await runner.up();
 
       expect(result1.executed.length).to.be.greaterThan(0);
       expect(result2.executed.length).to.equal(0); // No new migrations
     });
 
     it('should create expected database schema', async () => {
-      await executor.up();
+      await runner.up();
 
       // Verify users table exists
       const tables = await handler.db.query<{ tablename: string }>(`
@@ -323,7 +327,7 @@ describe('Migration Integration Tests', () => {
   describe('Rollback Tests', () => {
     it('should rollback all migrations using downTo(0)', async () => {
       // First, run migrations
-      await executor.up();
+      await runner.up();
 
       // Verify tables exist
       let tables = await handler.db.query<{ tablename: string }>(`
@@ -333,7 +337,7 @@ describe('Migration Integration Tests', () => {
       expect(tables.length).to.be.greaterThan(0);
 
       // Rollback all
-      const result = await executor.down(0);
+      const result = await runner.down(0);
 
       expect(result.success).to.be.true;
       expect(result.executed.length).to.be.greaterThan(0);
@@ -348,13 +352,13 @@ describe('Migration Integration Tests', () => {
 
     it('should rollback to specific version', async () => {
       // Run all migrations
-      await executor.up();
+      await runner.up();
 
       const allMigrations = await handler.schemaVersion.list();
       const targetVersion = allMigrations[1].timestamp; // Rollback to 2nd migration
 
       // Rollback to target
-      const result = await executor.down(targetVersion);
+      const result = await runner.down(targetVersion);
 
       expect(result.success).to.be.true;
 
@@ -374,7 +378,7 @@ describe('Migration Integration Tests', () => {
       `);
 
       // Migrate up
-      const upResult = await executor.up();
+      const upResult = await runner.up();
       expect(upResult.success).to.be.true;
 
       // Verify changes
@@ -385,7 +389,7 @@ describe('Migration Integration Tests', () => {
       expect(migratedTables.length).to.be.greaterThan(initialTables.length);
 
       // Migrate down
-      const downResult = await executor.down(0);
+      const downResult = await runner.down(0);
       expect(downResult.success).to.be.true;
 
       // Verify back to initial state
@@ -402,9 +406,9 @@ describe('Migration Integration Tests', () => {
       // This test assumes a migration that will fail
       config.folder = './test/fixtures/failing-migrations';
 
-      const failingExecutor = new MigrationScriptExecutor({ handler , config });
+      const failingRunner = new ExampleRunner({ handler , config });
 
-      const result = await failingExecutor.migrate();
+      const result = await failingRunner.migrate();
 
       expect(result.success).to.be.false;
       expect(result.errors.length).to.be.greaterThan(0);
@@ -524,8 +528,12 @@ export class SpyDatabase implements IDB {
 ```typescript
 // test/unit/migrations-with-mocks.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config, SilentLogger } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, SilentLogger } from '@migration-script-runner/core';
 import { createMockHandler, SpyDatabase } from '../helpers/mocks';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migrations with Mocks', () => {
   it('should execute migrations without real database', async () => {
@@ -533,11 +541,11 @@ describe('Migrations with Mocks', () => {
     const config = new Config();
     config.folder = './migrations';
 
-    const executor = new MigrationScriptExecutor({ handler, 
+    const runner = new ExampleRunner({ handler,
       logger: new SilentLogger()
     });
 
-    const result = await executor.up();
+    const result = await runner.up();
 
     expect(result.success).to.be.true;
   });
@@ -665,8 +673,12 @@ Create a validation script that uses dry run mode:
 
 ```typescript
 // test/scripts/validate-migrations.ts
-import { Config, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { Config, MigrationScriptRunner } from '@migration-script-runner/core';
 import { createDatabaseHandler } from '../helpers/database';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function validateMigrations() {
   const handler = await createDatabaseHandler();
@@ -677,10 +689,10 @@ async function validateMigrations() {
   config.validateBeforeRun = true;
   config.folder = './migrations';
 
-  const executor = new MigrationScriptExecutor({ handler , config });
+  const runner = new ExampleRunner({ handler , config });
 
   try {
-    const result = await executor.up();
+    const result = await runner.up();
 
     if (!result.success) {
       console.error('❌ Migration validation failed');
@@ -750,13 +762,13 @@ describe('V202501220100_create_users', () => {
 ```typescript
 describe('Edge Cases', () => {
   it('should handle empty database', async () => {
-    const result = await executor.up();
+    const result = await runner.up();
     expect(result.success).to.be.true;
   });
 
   it('should handle already-migrated database', async () => {
-    await executor.up(); // First run
-    const result = await executor.up(); // Second run
+    await runner.up(); // First run
+    const result = await runner.up(); // Second run
     expect(result.executed.length).to.equal(0);
   });
 
@@ -787,8 +799,12 @@ it('should normalize all email addresses to lowercase', async () => {});
 ```typescript
 // test/performance/migration-speed.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { TestDatabaseHandler } from '../helpers/TestDatabaseHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration Performance', () => {
   it('should complete within acceptable time', async function() {
@@ -796,10 +812,10 @@ describe('Migration Performance', () => {
 
     const handler = new TestDatabaseHandler();
     const config = new Config();
-    const executor = new MigrationScriptExecutor({ handler , config });
+    const runner = new ExampleRunner({ handler , config });
 
     const startTime = Date.now();
-    await executor.up();
+    await runner.up();
     const duration = Date.now() - startTime;
 
     console.log(`Migrations completed in ${duration}ms`);
@@ -867,8 +883,12 @@ const mockDb = {
 ```typescript
 // test/migrations.complete.test.ts
 import { expect } from 'chai';
-import { MigrationScriptExecutor, Config, RollbackStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, RollbackStrategy } from '@migration-script-runner/core';
 import { TestDatabaseHandler } from './helpers/TestDatabaseHandler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Complete Migration Test Suite', () => {
   let handler: TestDatabaseHandler;
@@ -889,9 +909,9 @@ describe('Complete Migration Test Suite', () => {
   describe('Standard Migration Flow', () => {
     it('should execute all migrations successfully', async () => {
       const config = new Config();
-      const executor = new MigrationScriptExecutor({ handler , config });
+      const runner = new ExampleRunner({ handler , config });
 
-      const result = await executor.up();
+      const result = await runner.up();
 
       expect(result.success).to.be.true;
       expect(result.executed.length).to.be.greaterThan(0);
@@ -902,7 +922,7 @@ describe('Complete Migration Test Suite', () => {
     it('should rollback using BACKUP strategy', async () => {
       const config = new Config();
       config.rollbackStrategy = RollbackStrategy.BACKUP;
-      const executor = new MigrationScriptExecutor({ handler , config });
+      const runner = new ExampleRunner({ handler , config });
 
       // Test with failing migration...
     });
@@ -910,7 +930,7 @@ describe('Complete Migration Test Suite', () => {
     it('should rollback using DOWN strategy', async () => {
       const config = new Config();
       config.rollbackStrategy = RollbackStrategy.DOWN;
-      const executor = new MigrationScriptExecutor({ handler , config });
+      const runner = new ExampleRunner({ handler , config });
 
       // Test rollback...
     });
@@ -919,9 +939,9 @@ describe('Complete Migration Test Suite', () => {
   describe('Version Control', () => {
     it('should migrate to specific version', async () => {
       const config = new Config();
-      const executor = new MigrationScriptExecutor({ handler , config });
+      const runner = new ExampleRunner({ handler , config });
 
-      const result = await executor.up(202501220200);
+      const result = await runner.up(202501220200);
 
       expect(result.success).to.be.true;
 

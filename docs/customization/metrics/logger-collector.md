@@ -45,7 +45,12 @@ Send metrics directly to cloud monitoring services:
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+  MigrationScriptRunner,
   LoggerMetricsCollector,
   CloudLogger
 } from '@vlavrynovych/msr';
@@ -56,7 +61,7 @@ const logger = new CloudLogger({
   apiKey: process.env.DD_API_KEY
 });
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -64,7 +69,7 @@ const executor = new MigrationScriptExecutor({
   config
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Result:** Metrics sent to Datadog in real-time for monitoring and alerting
@@ -77,14 +82,19 @@ Write metrics to log files for aggregation:
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+  MigrationScriptRunner,
   LoggerMetricsCollector,
   FileLogger
 } from '@vlavrynovych/msr';
 
-const logger = new FileLogger('./logs/metrics.log');
+const logger = new FileLogger({ logPath: './logs/metrics.log' });
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -92,7 +102,7 @@ const executor = new MigrationScriptExecutor({
   config
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Result:** Metrics written to `./logs/metrics.log` for log aggregation tools
@@ -105,10 +115,15 @@ For local development (or just use [ConsoleMetricsCollector](console-collector))
 
 ```typescript
 import { ConsoleLogger } from '@vlavrynovych/msr';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const logger = new ConsoleLogger();
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -152,7 +167,7 @@ The `ILogger` implementation to use:
 ```typescript
 // FileLogger - Write to file
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 
 // ConsoleLogger - Console output
@@ -168,7 +183,7 @@ new LoggerMetricsCollector({
 // CompositeLogger - Multiple destinations
 new LoggerMetricsCollector({
   logger: new CompositeLogger([
-    new FileLogger('./logs/app.log'),
+    new FileLogger({ logPath: './logs/app.log' }),
     new CloudLogger({ service: 'datadog' })
   ])
 })
@@ -206,13 +221,18 @@ new LoggerMetricsCollector({
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   LoggerMetricsCollector,
   FileLogger
 } from '@vlavrynovych/msr';
 
-const logger = new FileLogger('./logs/production-metrics.log');
+const logger = new FileLogger({ logPath: './logs/production-metrics.log' });
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -227,6 +247,11 @@ const executor = new MigrationScriptExecutor({
 
 ```typescript
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
   LoggerMetricsCollector,
   CompositeLogger,
   FileLogger,
@@ -234,8 +259,8 @@ import {
 } from '@vlavrynovych/msr';
 
 const logger = new CompositeLogger([
-  new FileLogger('./logs/app.log'),
-  new FileLogger('./logs/metrics-only.log'),
+  new FileLogger({ logPath: './logs/app.log' }),
+  new FileLogger({ logPath: './logs/metrics-only.log' }),
   new CloudLogger({
     service: 'cloudwatch',
     region: 'us-east-1',
@@ -243,7 +268,7 @@ const logger = new CompositeLogger([
   })
 ]);
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -259,16 +284,21 @@ const executor = new MigrationScriptExecutor({
 ### Development vs Production
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 const logger = isDevelopment
   ? new ConsoleLogger()
   : new CompositeLogger([
-      new FileLogger('./logs/app.log'),
+      new FileLogger({ logPath: './logs/app.log' }),
       new CloudLogger({ service: 'datadog' })
     ]);
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new LoggerMetricsCollector({ logger })
@@ -303,7 +333,7 @@ import { LevelAwareLogger, FileLogger } from '@vlavrynovych/msr';
 
 // Only log 'info' and above
 const logger = new LevelAwareLogger(
-  new FileLogger('./logs/metrics.log'),
+  new FileLogger({ logPath: './logs/metrics.log' }),
   'info'
 );
 
@@ -379,9 +409,14 @@ logger.warn('[METRICS] Warning: 1 scripts never completed')
 ### Pattern 1: Unified Application Logging
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Single logger for app and metrics
 const appLogger = new CompositeLogger([
-  new FileLogger('./logs/application.log'),
+  new FileLogger({ logPath: './logs/application.log' }),
   new CloudLogger({ service: 'datadog' })
 ]);
 
@@ -389,7 +424,7 @@ const appLogger = new CompositeLogger([
 const service = new MyService(appLogger);
 
 // Metrics use same logger
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   logger: appLogger,  // App logging
   metricsCollectors: [
@@ -406,11 +441,16 @@ const executor = new MigrationScriptExecutor({
 ### Pattern 2: Separate Metrics Logger
 
 ```typescript
-// Separate loggers for app and metrics
-const appLogger = new FileLogger('./logs/app.log');
-const metricsLogger = new FileLogger('./logs/metrics-only.log');
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+// Separate loggers for app and metrics
+const appLogger = new FileLogger({ logPath: './logs/app.log' });
+const metricsLogger = new FileLogger({ logPath: './logs/metrics-only.log' });
+
+const runner = new ExampleRunner({
   handler,
   logger: appLogger,  // Application logs
   metricsCollectors: [
@@ -486,7 +526,7 @@ recordScriptComplete(script: MigrationScript, duration: number): void {
    fs.mkdirSync('./logs', { recursive: true });
 
    new LoggerMetricsCollector({
-     logger: new FileLogger('./logs/metrics.log')
+     logger: new FileLogger({ logPath: './logs/metrics.log' })
    });
    ```
 

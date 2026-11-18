@@ -9,6 +9,14 @@ nav_order: 2
 
 The `SilentLogger` suppresses all log output completely. It's designed for testing environments and scenarios where logging is not desired or would interfere with output.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 SilentLogger implements the `ILogger` interface but discards all log messages. This is particularly useful in unit tests where you want to test the migration logic without cluttering test output with log messages.
@@ -54,21 +62,25 @@ describe('MigrationService', () => {
 ### In Integration Tests
 
 ```typescript
-import { MigrationScriptExecutor, SilentLogger } from 'msr-core';
+import { MigrationScriptRunner, SilentLogger } from 'msr-core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 describe('Migration execution', () => {
-    let executor: MigrationScriptExecutor;
+    let runner: MigrationScriptRunner;
 
     beforeEach(() => {
         // Silent logger prevents test output pollution
-        executor = new MigrationScriptExecutor({ handler, 
+        runner = new ExampleRunner({ handler,
             logger: new SilentLogger()
         });
     });
 
     it('should handle migration errors', async () => {
         await expect(
-            executor.executeMigration(invalidScript, context)
+            runner.executeMigration(invalidScript, context)
         ).to.be.rejected;
     });
 });
@@ -82,12 +94,12 @@ Keep test output focused on test results, not migration logs:
 
 ```typescript
 import { describe, it, expect } from '@jest/globals';
-import { BackupService, SilentLogger } from 'msr-core';
+import { BackupOrchestrator, SilentLogger } from 'msr-core';
 
-describe('BackupService', () => {
+describe('BackupOrchestrator', () => {
     it('should create backup successfully', async () => {
         const logger = new SilentLogger();
-        const service = new BackupService(logger);
+        const service = new BackupOrchestrator(logger);
 
         const backupPath = await service.createBackup(config, version);
 
@@ -150,17 +162,21 @@ async function runMigrations() {
 When processing many migrations where individual log messages are overwhelming:
 
 ```typescript
-import { MigrationScriptExecutor, SilentLogger } from 'msr-core';
+import { MigrationScriptRunner, SilentLogger } from 'msr-core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function batchExecute(scripts: MigrationScript[]) {
-    const executor = new MigrationScriptExecutor({ handler, 
+    const runner = new ExampleRunner({ handler,
         logger: new SilentLogger()
     });
 
     console.log(`Processing ${scripts.length} migrations...`);
 
     for (const script of scripts) {
-        await executor.executeMigration(script, context);
+        await runner.executeMigration(script, context);
         // No log spam for each migration
     }
 
@@ -176,8 +192,8 @@ Here's a complete test suite using SilentLogger:
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
     MigrationService,
-    MigrationScriptExecutor,
-    BackupService,
+    MigrationScriptRunner,
+    BackupOrchestrator,
     SilentLogger,
     MigrationConfig
 } from 'msr-core';
@@ -211,9 +227,9 @@ describe('Migration System', () => {
         });
     });
 
-    describe('BackupService', () => {
+    describe('BackupOrchestrator', () => {
         it('should create backup before migration', async () => {
-            const service = new BackupService(logger);
+            const service = new BackupOrchestrator(logger);
             const backupPath = await service.createBackup(config, 'v1.0.0');
 
             expect(fs.existsSync(backupPath)).toBe(true);

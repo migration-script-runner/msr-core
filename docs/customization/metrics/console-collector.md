@@ -41,18 +41,23 @@ Zero-configuration metrics output for development and debugging.
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+  MigrationScriptRunner,
   ConsoleMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector()  // That's it!
   ], config
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Output:**
@@ -246,14 +251,19 @@ This means:
 
 ```typescript
 import { ConsoleMetricsCollector } from '@vlavrynovych/msr';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [new ConsoleMetricsCollector()], 
   config 
 });
 
-await executor.up();
+await runner.up();
 ```
 
 ---
@@ -261,7 +271,12 @@ await executor.up();
 ### With Other Collectors
 
 ```typescript
-const executor = new MigrationScriptExecutor({
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),  // Real-time feedback
@@ -278,6 +293,11 @@ const executor = new MigrationScriptExecutor({
 ### Environment-Based
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 const collectors: IMetricsCollector[] = [];
 
 // Only use console in development
@@ -290,7 +310,7 @@ collectors.push(new JsonMetricsCollector({
   filePath: `./metrics/${process.env.NODE_ENV}.json`
 }));
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: collectors, 
   config
@@ -336,7 +356,7 @@ new ConsoleMetricsCollector()
 
 // Production - upgrade to LoggerMetricsCollector
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 ```
 

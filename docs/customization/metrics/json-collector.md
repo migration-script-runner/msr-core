@@ -37,11 +37,16 @@ Detailed structured metrics for analysis and debugging.
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+  MigrationScriptRunner,
   JsonMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new JsonMetricsCollector({
@@ -52,7 +57,7 @@ const executor = new MigrationScriptExecutor({
   config
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Output file** (`./metrics/migration.json`):

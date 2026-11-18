@@ -4,6 +4,7 @@ import {Config} from '../../../../src/model/Config';
 import {ConsoleLogger} from '../../../../src/logger/ConsoleLogger';
 import {FileLogger} from '../../../../src/logger/FileLogger';
 import {SilentLogger} from '../../../../src/logger/SilentLogger';
+import {BackupMode} from '../../../../src/model/BackupMode';
 
 describe('flagMapper', () => {
     let config: Config;
@@ -71,6 +72,46 @@ describe('flagMapper', () => {
             const flags: CLIFlags = {noLock: false};
             mapFlagsToConfig(config, flags);
             expect(config.locking.enabled).to.equal(true);
+        });
+
+        it('should map backupMode flag to config.backupMode', () => {
+            const flags: CLIFlags = {backupMode: BackupMode.RESTORE_ONLY};
+            mapFlagsToConfig(config, flags);
+            expect(config.backupMode).to.equal(BackupMode.RESTORE_ONLY);
+        });
+
+        it('should preserve config.backupMode when the flag is undefined', () => {
+            config.backupMode = BackupMode.MANUAL;
+            mapFlagsToConfig(config, {});
+            expect(config.backupMode).to.equal(BackupMode.MANUAL);
+        });
+
+        it('should map logLevel flag to config.logLevel', () => {
+            mapFlagsToConfig(config, {logLevel: 'debug'});
+            expect(config.logLevel).to.equal('debug');
+        });
+
+        it('should preserve config.logLevel when the flag is undefined', () => {
+            config.logLevel = 'warn';
+            mapFlagsToConfig(config, {});
+            expect(config.logLevel).to.equal('warn');
+        });
+
+        it('should map dot-notation flags to nested config and preserve existing values', () => {
+            const configWithDatabase = Object.assign(config, {
+                db: {url: 'old', credentials: {path: 'key.json'}}
+            });
+
+            mapFlagsToConfig(configWithDatabase, {
+                'db.url': 'https://localhost',
+                'db.timeout': '5000'
+            });
+
+            expect(configWithDatabase.db).to.deep.equal({
+                url: 'https://localhost',
+                timeout: 5000,
+                credentials: {path: 'key.json'}
+            });
         });
 
         /**

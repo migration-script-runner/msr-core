@@ -90,7 +90,12 @@ interface MetricsData {
  *
  * @example
  * ```typescript
- * const executor = new MigrationScriptExecutor<IDB>({
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
+ *
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
+ * const runner = new ExampleRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new JsonMetricsCollector({
@@ -100,7 +105,7 @@ interface MetricsData {
  *   ]
  * }, config);
  *
- * await executor.up();
+ * await runner.up();
  *
  * // Read and parse metrics
  * const metrics = JSON.parse(fs.readFileSync('./metrics/migrations.json', 'utf-8'));

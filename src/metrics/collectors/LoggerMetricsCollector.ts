@@ -36,23 +36,28 @@ export interface LoggerMetricsCollectorConfig {
  *
  * @example Basic usage
  * ```typescript
- * const logger = new FileLogger('./logs/metrics.log');
+ * import { MigrationScriptRunner } from '@migration-script-runner/core';
+ * import { IDB } from '@migration-script-runner/core';
  *
- * const executor = new MigrationScriptExecutor<IDB>({
+ * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+ *
+ * const logger = new FileLogger({ logPath: './logs/metrics.log' });
+ *
+ * const runner = new ExampleRunner<IDB>({
  *   handler,
  *   metricsCollectors: [
  *     new LoggerMetricsCollector({ logger })
  *   ]
  * }, config);
  *
- * await executor.up();
+ * await runner.up();
  * // Metrics written to ./logs/metrics.log
  * ```
  *
  * @example Multiple destinations with CompositeLogger
  * ```typescript
  * const logger = new CompositeLogger([
- *   new FileLogger('./logs/app.log'),
+ *   new FileLogger({ logPath: './logs/app.log' }),
  *   new CloudLogger({ service: 'datadog' })
  * ]);
  *

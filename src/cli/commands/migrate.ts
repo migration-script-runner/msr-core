@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 
@@ -9,7 +9,7 @@ import {IDB} from '../../interface';
  * Executes pending database migrations. Can optionally target a specific version.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor (returns Promise in v0.8.2+)
+ * @param createRunner - Factory function to create MigrationScriptRunner (returns Promise in v0.8.2+)
  *
  * @example
  * ```bash
@@ -25,7 +25,7 @@ import {IDB} from '../../interface';
  */
 export function addMigrateCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>
+    createRunner: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     program
         .command('migrate [targetVersion]')
@@ -33,7 +33,7 @@ export function addMigrateCommand<DB extends IDB>(
         .description('Run pending migrations')
         .action(async (targetVersion?: string) => {
             try {
-                const executor = await createExecutor();
+                const runner = await createRunner();
                 const target = targetVersion ? parseInt(targetVersion, 10) : undefined;
 
                 if (targetVersion && isNaN(target!)) {
@@ -42,7 +42,7 @@ export function addMigrateCommand<DB extends IDB>(
                     return;
                 }
 
-                const result = await executor.migrate(target);
+                const result = await runner.migrate(target);
 
                 if (result.success) {
                     console.log(`✓ Successfully executed ${result.executed.length} migration(s)`);

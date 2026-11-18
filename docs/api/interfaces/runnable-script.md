@@ -24,7 +24,7 @@ Interface for migration script classes.
 
 Interface for migration script classes. Used by both regular migrations and the special `beforeMigrate` setup script.
 
-**Signature (v0.6.0+):**
+**Signature:**
 ```typescript
 interface IRunnableScript<DB extends IDB> {
   up(db: DB, info: IMigrationInfo, handler: IDatabaseMigrationHandler<DB>): Promise<string>;
@@ -32,8 +32,6 @@ interface IRunnableScript<DB extends IDB> {
 }
 ```
 
-{: .important }
-> **Breaking Change (v0.6.0):** Generic type parameter `<DB extends IDB>` is now **required** for full type safety. You must explicitly specify the type parameter in your implementations (e.g., `IRunnableScript<IDB>`).
 
 **Purpose:** Defines the contract for executable migration scripts.
 

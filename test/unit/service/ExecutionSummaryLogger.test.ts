@@ -41,7 +41,7 @@ describe('ExecutionSummaryLogger', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(testLogDir, file));
             }
-            fs.rmdirSync(testLogDir, { recursive: true });
+            fs.rmSync(testLogDir, { recursive: true });
         }
     });
 
@@ -52,7 +52,7 @@ describe('ExecutionSummaryLogger', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(testLogDir, file));
             }
-            fs.rmdirSync(testLogDir, { recursive: true });
+            fs.rmSync(testLogDir, { recursive: true });
         }
     });
 
@@ -155,7 +155,7 @@ describe('ExecutionSummaryLogger', () => {
             // File should be created
             expect(fs.existsSync(testLogDir)).to.be.true;
             const files = fs.readdirSync(testLogDir);
-            expect(files.length).to.equal(1);
+            expect(files).to.have.lengthOf(1);
             expect(files[0]).to.include('migration-failed');
             expect(files[0]).to.include('.json');
         });
@@ -173,7 +173,7 @@ describe('ExecutionSummaryLogger', () => {
             // Check file was created
             expect(fs.existsSync(testLogDir)).to.be.true;
             const files = fs.readdirSync(testLogDir);
-            expect(files.length).to.equal(1);
+            expect(files).to.have.lengthOf(1);
             expect(files[0]).to.include('.json');
 
             // Check file content
@@ -206,7 +206,7 @@ describe('ExecutionSummaryLogger', () => {
             // Check file was created
             expect(fs.existsSync(testLogDir)).to.be.true;
             const files = fs.readdirSync(testLogDir);
-            expect(files.length).to.equal(1);
+            expect(files).to.have.lengthOf(1);
             expect(files[0]).to.include('.txt');
 
             // Check file content
@@ -232,7 +232,7 @@ describe('ExecutionSummaryLogger', () => {
             // Check both files were created
             expect(fs.existsSync(testLogDir)).to.be.true;
             const files = fs.readdirSync(testLogDir);
-            expect(files.length).to.equal(2);
+            expect(files).to.have.lengthOf(2);
 
             const jsonFile = files.find(f => f.endsWith('.json'));
             const textFile = files.find(f => f.endsWith('.txt'));
@@ -361,7 +361,7 @@ describe('ExecutionSummaryLogger', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(defaultPath, file));
             }
-            fs.rmdirSync(defaultPath, { recursive: true });
+            fs.rmSync(defaultPath, { recursive: true });
         });
 
         it('should use default format (JSON) when not configured', async () => {
@@ -374,7 +374,7 @@ describe('ExecutionSummaryLogger', () => {
 
             // Check JSON file was created
             const files = fs.readdirSync(testLogDir);
-            expect(files.length).to.equal(1);
+            expect(files).to.have.lengthOf(1);
             expect(files[0]).to.include('.json');
         });
     });
@@ -396,7 +396,7 @@ describe('ExecutionSummaryLogger', () => {
 
             // Should only have 3 files (the most recent)
             const files = fs.readdirSync(testLogDir);
-            expect(files.length).to.equal(3);
+            expect(files).to.have.lengthOf(3);
         });
 
         it('should not rotate files when maxFiles is 0', async () => {
@@ -414,7 +414,7 @@ describe('ExecutionSummaryLogger', () => {
 
             // Should have all 5 files
             const files = fs.readdirSync(testLogDir);
-            expect(files.length).to.equal(5);
+            expect(files).to.have.lengthOf(5);
         });
 
         it('should ignore non-migration files during rotation', async () => {
@@ -447,8 +447,8 @@ describe('ExecutionSummaryLogger', () => {
             const migrationFiles = files.filter(f => f.startsWith('migration-') && (f.endsWith('.json') || f.endsWith('.txt')));
             const otherFiles = files.filter(f => !f.startsWith('migration-') || (!f.endsWith('.json') && !f.endsWith('.txt')));
 
-            expect(migrationFiles.length).to.equal(2); // Rotation kept only 2
-            expect(otherFiles.length).to.equal(3); // Other files untouched
+            expect(migrationFiles).to.have.lengthOf(2); // Rotation kept only 2
+            expect(otherFiles).to.have.lengthOf(3); // Other files untouched
         });
 
         it('should handle rotation errors gracefully when file deletion fails', async () => {
@@ -507,7 +507,7 @@ describe('ExecutionSummaryLogger', () => {
                     try {
                         const stats = fs.statSync(filePath);
                         if (stats.isDirectory()) {
-                            fs.rmdirSync(filePath);
+                            fs.rmSync(filePath, { recursive: true, force: true });
                         } else {
                             fs.unlinkSync(filePath);
                         }
@@ -515,7 +515,7 @@ describe('ExecutionSummaryLogger', () => {
                         // Ignore cleanup errors
                     }
                 }
-                fs.rmdirSync(testDir, { recursive: true });
+                fs.rmSync(testDir, { recursive: true });
             }
         });
     });
@@ -552,7 +552,7 @@ describe('ExecutionSummaryLogger', () => {
                 for (const file of files) {
                     fs.unlinkSync(path.join(testDir, file));
                 }
-                fs.rmdirSync(testDir, { recursive: true });
+                fs.rmSync(testDir, { recursive: true });
             }
         });
 

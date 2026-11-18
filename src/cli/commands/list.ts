@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 
@@ -9,7 +9,7 @@ import {IDB} from '../../interface';
  * Lists all migrations with their execution status.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor (returns Promise in v0.8.2+)
+ * @param createRunner - Factory function to create MigrationScriptRunner (returns Promise in v0.8.2+)
  *
  * @example
  * ```bash
@@ -26,7 +26,7 @@ import {IDB} from '../../interface';
  */
 export function addListCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>
+    createRunner: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     program
         .command('list')
@@ -34,7 +34,7 @@ export function addListCommand<DB extends IDB>(
         .option('-n, --number <count>', 'Number of migrations to display (0=all)', '0')
         .action(async (options: { number: string }) => {
             try {
-                const executor = await createExecutor();
+                const runner = await createRunner();
                 const count = parseInt(options.number, 10);
 
                 if (isNaN(count) || count < 0) {
@@ -43,7 +43,7 @@ export function addListCommand<DB extends IDB>(
                     return;
                 }
 
-                await executor.list(count);
+                await runner.list(count);
                 process.exit(EXIT_CODES.SUCCESS);
             } catch (error) {
                 const message = error instanceof Error ? (error.message || String(error)) : String(error);

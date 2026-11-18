@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 
@@ -12,7 +12,7 @@ import {IDB} from '../../interface';
  * - delete: Delete backup file
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor
+ * @param createRunner - Factory function to create MigrationScriptRunner
  *
  * @example
  * ```bash
@@ -31,7 +31,7 @@ import {IDB} from '../../interface';
  */
 export function addBackupCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>
+    createRunner: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     const backup = program
         .command('backup')
@@ -43,8 +43,8 @@ export function addBackupCommand<DB extends IDB>(
         .description('Create a database backup')
         .action(async () => {
             try {
-                const executor = await createExecutor();
-                const backupPath = await executor.createBackup();
+                const runner = await createRunner();
+                const backupPath = await runner.createBackup();
                 console.log(`✓ Backup created successfully: ${backupPath}`);
                 process.exit(EXIT_CODES.SUCCESS);
             } catch (error) {
@@ -60,8 +60,8 @@ export function addBackupCommand<DB extends IDB>(
         .description('Restore from backup file (uses most recent if path not provided)')
         .action(async (backupPath?: string) => {
             try {
-                const executor = await createExecutor();
-                await executor.restoreFromBackup(backupPath);
+                const runner = await createRunner();
+                await runner.restoreFromBackup(backupPath);
                 console.log(`✓ Database restored successfully${backupPath ? ` from ${backupPath}` : ' from most recent backup'}`);
                 process.exit(EXIT_CODES.SUCCESS);
             } catch (error) {
@@ -77,8 +77,8 @@ export function addBackupCommand<DB extends IDB>(
         .description('Delete backup file')
         .action(async () => {
             try {
-                const executor = await createExecutor();
-                executor.deleteBackup();
+                const runner = await createRunner();
+                runner.deleteBackup();
                 console.log(`✓ Backup deleted successfully`);
                 process.exit(EXIT_CODES.SUCCESS);
             } catch (error) {

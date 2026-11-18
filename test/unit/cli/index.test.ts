@@ -39,4 +39,14 @@ describe('CLI Module Exports', () => {
         expect(cliModule.addValidateCommand).to.be.a('function');
         expect(cliModule.addBackupCommand).to.be.a('function');
     });
+
+    it('exports setNestedValue for adapter configuration', () => {
+        const config: Record<string, unknown> = {};
+        const publicExports = Object.values(cliModule);
+
+        cliModule.setNestedValue(config, 'db.url', 'http://localhost');
+
+        expect(publicExports).to.include(cliModule.setNestedValue);
+        expect(config).to.deep.equal({db: {url: 'http://localhost'}});
+    });
 });

@@ -205,7 +205,7 @@ Explore detailed documentation for each category:
 - **[Validation Settings](validation-variables)** - Migration validation rules
 - **[Logging Configuration](logging-variables)** - File logging and audit trails
 - **[Backup & Restore](backup-variables)** - Backup file management
-- **[Transaction Management](transaction-variables)** - Transaction control and retry logic (v0.5.0+)
+- **[Transaction Management](transaction-variables)** - Transaction control and retry logic
 
 ---
 

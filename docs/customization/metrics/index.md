@@ -34,16 +34,21 @@ MSR provides a flexible metrics collection system that allows you to track and m
 
 ## Quick Start
 
-Add metrics collection to your executor in under 30 seconds:
+Add metrics collection to your runner in under 30 seconds:
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+  MigrationScriptRunner,
   ConsoleMetricsCollector,
   JsonMetricsCollector
 } from '@vlavrynovych/msr';
 
-const executor = new MigrationScriptExecutor({
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),           // Real-time console output
@@ -54,7 +59,7 @@ const executor = new MigrationScriptExecutor({
   config
 });
 
-await executor.up();
+await runner.up();
 ```
 
 **Console output:**
@@ -98,7 +103,7 @@ Send metrics through any `ILogger` implementation - FileLogger, CloudLogger, Com
 
 ```typescript
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 ```
 
@@ -236,7 +241,7 @@ metricsCollectors: [
 // Option 2: Production-ready
 metricsCollectors: [
   new LoggerMetricsCollector({
-    logger: new FileLogger('./logs/metrics.log')  // ✅ File, not console
+    logger: new FileLogger({ logPath: './logs/metrics.log' })  // ✅ File, not console
   })
 ]
 
@@ -272,7 +277,7 @@ metricsCollectors: [
 // Phase 2: Production
 const logger = process.env.NODE_ENV === 'production'
   ? new CompositeLogger([
-      new FileLogger('./logs/app.log'),
+      new FileLogger({ logPath: './logs/app.log' }),
       new CloudLogger({ service: 'datadog' })
     ])
   : new ConsoleLogger();
@@ -294,7 +299,7 @@ new ConsoleMetricsCollector()
 
 // Production code - same API, different logger
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 ```
 
@@ -307,7 +312,12 @@ new LoggerMetricsCollector({
 Send metrics to multiple destinations simultaneously:
 
 ```typescript
-const executor = new MigrationScriptExecutor({
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     // Development feedback
@@ -395,7 +405,7 @@ metricsCollectors: [
 
 ```typescript
 const logger = new CompositeLogger([
-  new FileLogger('./logs/app.log'),
+  new FileLogger({ logPath: './logs/app.log' }),
   new CloudLogger({ service: 'datadog' })
 ]);
 

@@ -78,15 +78,20 @@ Guide for implementing cloud logging services (AWS CloudWatch, Google Cloud Logg
 
 ## Log Level Control
 
-MSR v0.6.0+ includes **automatic log level filtering** through the `LevelAwareLogger` wrapper. When you provide a logger to `MigrationScriptExecutor`, it's automatically wrapped to filter messages based on your configured log level.
+MSR includes **automatic log level filtering** through the `LevelAwareLogger` wrapper. When you provide a logger to `MigrationScriptRunner`, it's automatically wrapped to filter messages based on your configured log level.
 
 ### Automatic Wrapping
 
 All loggers are automatically wrapped with level-aware filtering:
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Your logger is automatically wrapped with log level filtering
-const executor = new MigrationScriptExecutor({ handler }, {
+const runner = new ExampleRunner({ handler }, {
     logLevel: 'error'  // Only errors will be shown
 }, {
     logger: new ConsoleLogger()  // Automatically wrapped
@@ -135,10 +140,10 @@ export MSR_LOG_LEVEL=error
 
 ## Creating Custom Loggers
 
-All loggers implement the `ILogger` interface. See the [Custom Logging Guide](../customization/custom-logging.md) for detailed examples of creating your own logger implementations.
+All loggers implement the `ILogger` interface. See the [Custom Logging Guide](../custom-logging.md) for detailed examples of creating your own logger implementations.
 
 ## Next Steps
 
 - Choose a logger from the list above to learn more
-- Read the [Custom Logging Guide](../customization/custom-logging.md) for advanced usage
-- See [Getting Started](../guides/getting-started.md) for basic setup
+- Read the [Custom Logging Guide](../custom-logging.md) for advanced usage
+- See [Getting Started](../../getting-started.md) for basic setup

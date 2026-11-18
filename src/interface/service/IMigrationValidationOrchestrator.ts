@@ -13,7 +13,7 @@ import {IValidationResult, IValidationIssue} from "../validation";
  * - Enforcing strict validation mode
  * - Displaying validation errors and warnings
  *
- * Extracted from MigrationScriptExecutor for better separation of concerns.
+ * Extracted from MigrationScriptRunner for better separation of concerns.
  *
  * @template DB - Database interface type
  *

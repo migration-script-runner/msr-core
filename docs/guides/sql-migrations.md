@@ -419,7 +419,11 @@ Migrations execute in timestamp order:
 ### Example Configuration
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.folder = './migrations';
@@ -428,8 +432,8 @@ config.filePatterns = [
   /^V(\d{12})_.*\.up\.sql$/   // SQL migrations
 ];
 
-const executor = new MigrationScriptExecutor({ handler , config });
-const result = await executor.up();
+const runner = new ExampleRunner({ handler , config });
+const result = await runner.up();
 
 console.log(`Executed ${result.executed.length} migrations (TypeScript + SQL)`);
 ```
@@ -732,8 +736,12 @@ export class PostgresHandler implements IDatabaseMigrationHandler<IDB> {
 **src/migrate.ts:**
 ```typescript
 import { Pool } from 'pg';
-import { MigrationScriptExecutor, Config, RollbackStrategy } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config, RollbackStrategy } from '@migration-script-runner/core';
 import { PostgresHandler } from './database/handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 async function runMigrations() {
   const pool = new Pool({
@@ -755,8 +763,8 @@ async function runMigrations() {
       /^V(\d{12})_.*\.up\.sql$/
     ];
 
-    const executor = new MigrationScriptExecutor({ handler , config });
-    const result = await executor.up();
+    const runner = new ExampleRunner({ handler , config });
+    const result = await runner.up();
 
     if (result.success) {
       console.log(`✅ Executed ${result.executed.length} migrations`);

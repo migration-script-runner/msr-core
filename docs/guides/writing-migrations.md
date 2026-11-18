@@ -1083,4 +1083,4 @@ export default class SyncAcrossDatabases implements IRunnableScript<IDB> {
 
 - [API Reference](../api/) - Explore the full API
 - [Configuration Guide](../configuration) - Configure MSR
-- [Testing Documentation](../testing/) - Test your migrations
+- [Testing Migrations](recipes/testing-migrations) - Test your migrations

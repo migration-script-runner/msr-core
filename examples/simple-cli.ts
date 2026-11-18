@@ -28,14 +28,14 @@ const program = createCLI({
         tableName: 'demo_versions',
     },
 
-    createExecutor: (config: Config) => {
-        console.log('📋 Executor would be created with config:', config);
-        // In a real adapter, you'd return: new YourAdapter({handler, config})
-        throw new Error('Demo only - no executor implementation');
+    createRunner: (config: Config) => {
+        console.log('📋 Runner would be created with config:', config);
+        // In a real adapter, you'd return: new YourRunner({handler, config})
+        throw new Error('Demo only - no runner implementation');
     },
 
     // Preferred way to add custom commands (with full type safety)
-    extendCLI: (program, createExecutor) => {
+    extendCLI: (program, createRunner) => {
         program
             .command('demo:show-features')
             .description('Show what the CLI provides automatically')
@@ -57,7 +57,7 @@ const program = createCLI({
                 console.log('   ✓ Add custom commands with full type safety');
                 console.log('   ✓ Access your adapter methods (no type casting!)');
                 console.log('   ✓ Automatic config merging with CLI flags');
-                console.log('   ✓ createExecutor() already has flags applied');
+                console.log('   ✓ createRunner() already has flags applied');
                 console.log('');
                 console.log('📖 Try these commands:');
                 console.log('   npx ts-node examples/simple-cli.ts --help');
@@ -71,11 +71,11 @@ const program = createCLI({
             .description('Show merged config (demonstrates config merging)')
             .action(() => {
                 try {
-                    // createExecutor() has all config merged (defaults → file → env → options → flags)
-                    createExecutor();
+                    // createRunner() has all config merged (defaults → file → env → options → flags)
+                    createRunner();
                 } catch (error) {
                     // Expected error since this is a demo
-                    console.log('\n✓ Config was successfully merged and passed to createExecutor');
+                    console.log('\n✓ Config was successfully merged and passed to createRunner');
                     console.log('  (Error is expected - this is just a demo without real database)\n');
                 }
             });

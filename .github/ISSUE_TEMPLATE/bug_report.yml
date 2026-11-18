@@ -1,0 +1,43 @@
+name: Bug report
+description: Report a reproducible defect
+title: "Bug: "
+labels: ["🐛 Type: Bug"]
+assignees: ["vlavrynovych"]
+body:
+  - type: markdown
+    attributes:
+      value: "Please do not report security vulnerabilities here. See SECURITY.md for private reporting."
+  - type: input
+    id: version
+    attributes:
+      label: MSR Core version
+      placeholder: "e.g. 0.8.4"
+    validations:
+      required: true
+  - type: input
+    id: database
+    attributes:
+      label: Database and adapter
+      placeholder: "e.g. PostgreSQL 16 with adapter version"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include a minimal example when possible.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and logs
+      description: Remove secrets, credentials, and personal data before sharing logs.
+    validations:
+      required: true

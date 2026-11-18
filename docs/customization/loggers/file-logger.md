@@ -9,6 +9,14 @@ nav_order: 3
 
 The `FileLogger` writes all log messages to files with automatic log rotation based on file size. It's designed for production environments where persistent logging and audit trails are required.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 FileLogger provides enterprise-grade file logging with automatic rotation when files reach a specified size. Old log files are preserved as numbered backups, with configurable retention policies.

@@ -3,7 +3,7 @@ layout: default
 title: IMetricsCollector
 parent: Interfaces
 grand_parent: API Reference
-nav_order: 10
+nav_order: 9
 ---
 
 # IMetricsCollector
@@ -23,8 +23,6 @@ Interface for collecting metrics during migration execution.
 ## Overview
 
 `IMetricsCollector` defines the contract for metrics collection implementations. Collectors receive lifecycle events during migration execution and can send metrics to various destinations (console, files, monitoring services, etc.).
-
-**Added in:** v0.6.0
 
 **Use cases:**
 - Track migration performance
@@ -289,9 +287,13 @@ class SimpleMetricsCollector implements IMetricsCollector {
 ### With Dependency Injection
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new SimpleMetricsCollector()
@@ -299,13 +301,18 @@ const executor = new MigrationScriptExecutor({
   config 
 });
 
-await executor.up();
+await runner.up();
 ```
 
 ### Multiple Collectors
 
 ```typescript
-const executor = new MigrationScriptExecutor({
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({
   handler,
   metricsCollectors: [
     new ConsoleMetricsCollector(),      // Real-time feedback
@@ -348,7 +355,7 @@ Send metrics through any ILogger implementation.
 import { LoggerMetricsCollector, FileLogger } from '@migration-script-runner/core';
 
 new LoggerMetricsCollector({
-  logger: new FileLogger('./logs/metrics.log')
+  logger: new FileLogger({ logPath: './logs/metrics.log' })
 })
 ```
 

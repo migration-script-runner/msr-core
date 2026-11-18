@@ -411,7 +411,7 @@ export default class AddNameToUsers {
 
 ### 5. Transaction Configuration Validation
 
-**New in v0.5.0**
+
 
 Validates transaction configuration compatibility and warns about potential issues.
 
@@ -636,8 +636,8 @@ config.transaction.timeout = 30000;  // 30 seconds
 config.transaction.timeout = 10000;  // 10 seconds
 
 // Option 4: Run migrations in smaller batches
-await executor.up(202501220500);  // First batch
-await executor.up(202501220800);  // Second batch
+await runner.up(202501220500);  // First batch
+await runner.up(202501220800);  // Second batch
 ```
 
 ---
@@ -665,7 +665,7 @@ Built-in validation runs in this order:
    - MIGRATED_FILE_MISSING
    - MIGRATED_FILE_MODIFIED
    ↓
-6. Transaction Configuration Validation (v0.5.0+)
+6. Transaction Configuration Validation
    - Database transaction support check
    - Isolation level compatibility
    - Rollback strategy compatibility
@@ -808,13 +808,17 @@ Fix: Revert the changes to this file. Create a new migration for schema changes.
 Run validation without executing:
 
 ```typescript
-import { MigrationScriptExecutor, ValidationError } from '@migration-script-runner/core';
+import { MigrationScriptRunner, ValidationError } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler , config });
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler , config });
 
 try {
     // This will validate but not execute if you catch the error early
-    const result = await executor.migrate();
+    const result = await runner.migrate();
 } catch (error) {
     if (error instanceof ValidationError) {
         console.log('Validation failed (as expected for testing)');
@@ -971,5 +975,5 @@ git checkout -- migrations/
 | `MISSING_DOWN_METHOD` | ERROR/WARNING | No down() method (policy-based) |
 | `MIGRATED_FILE_MISSING` | ERROR | Executed migration file deleted |
 | `MIGRATED_FILE_MODIFIED` | ERROR | Executed migration file changed |
-| `IMPORT_FAILED` | ERROR | Database doesn't support transactions (v0.5.0+) |
-| `MISSING_DOWN_WITH_BOTH_STRATEGY` | WARNING | Transaction configuration warnings (v0.5.0+) |
+| `IMPORT_FAILED` | ERROR | Database doesn't support transactions |
+| `MISSING_DOWN_WITH_BOTH_STRATEGY` | WARNING | Transaction configuration warnings |

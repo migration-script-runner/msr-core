@@ -30,10 +30,10 @@ export interface MigrationErrorHandlerDependencies<DB extends IDB> {
 /**
  * Handles migration errors and coordinates error recovery.
  *
- * Extracted from MigrationScriptExecutor to separate error handling concerns.
+ * Extracted from MigrationScriptRunner to separate error handling concerns.
  * Provides consistent error logging, hook execution, and rollback coordination.
  *
- * **New in v0.7.0:** Part of MigrationScriptExecutor refactoring (#97)
+ * **New in v0.7.0:** Part of MigrationScriptRunner refactoring (#97)
  *
  * @template DB - Database interface type
  *

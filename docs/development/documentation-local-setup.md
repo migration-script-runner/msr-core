@@ -23,9 +23,7 @@ How to set up and run Jekyll locally for testing documentation changes.
 
 MSR documentation uses Jekyll with the Just the Docs theme and is automatically deployed to GitHub Pages. Before pushing documentation changes, you can test them locally to verify formatting, links, and layout.
 
-**Documentation URL:**
-- Production: https://migration-script-runner.github.io/msr-core
-- Custom domain: https://core.msr.lavr.site
+**Documentation URL:** https://core.migration-script-runner.dev
 
 ---
 
@@ -159,9 +157,9 @@ Open your browser to: **http://localhost:4000**
 
 **Key pages to check:**
 - Homepage: http://localhost:4000
-- Origin Story: http://localhost:4000/about/origin-story
-- Philosophy: http://localhost:4000/about/philosophy
 - API Docs: http://localhost:4000/api
+
+The shared MSR **[origin story](https://migration-script-runner.dev/origin-story)** and **[design philosophy](https://migration-script-runner.dev/design-philosophy)** are hosted on the official website.
 
 ### Live Reload
 
@@ -383,7 +381,6 @@ docs/
 ├── api/                  # API reference docs
 ├── guides/               # User guides
 ├── development/          # Contributor docs
-├── about/                # Origin story & philosophy
 ├── assets/
 │   └── css/
 │       └── custom.css    # Custom styling
@@ -401,7 +398,7 @@ Key settings in `_config.yml`:
 remote_theme: just-the-docs/just-the-docs
 
 # URLs
-url: "https://core.msr.lavr.site"
+url: "https://core.migration-script-runner.dev"
 baseurl: ""
 
 # Mermaid diagrams
@@ -522,4 +519,4 @@ cd docs && bundle update
 
 **Local URL**: http://localhost:4000
 
-**Production URL**: https://migration-script-runner.github.io/msr-core
+**Production URL**: https://core.migration-script-runner.dev

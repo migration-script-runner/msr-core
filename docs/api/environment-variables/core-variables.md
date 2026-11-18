@@ -115,7 +115,7 @@ export async function up(db: IDB): Promise<void> {
 
 **See Also:**
 - [Migration Settings](../../configuration/migration-settings#beforemigratename)
-- [Writing Migrations](../../guides/writing-migrations#before-migrate-hook)
+- [Writing Migrations](../../guides/writing-migrations#special-beforemigrate-setup-script)
 
 ---
 
@@ -144,8 +144,8 @@ config.dryRun = true;
 - Debug migration issues without affecting database
 
 **See Also:**
-- [Dry Run Mode](../../guides/dry-run)
-- [Testing Migrations](../../guides/testing-migrations)
+- [Dry Run Mode](../../configuration/migration-settings#dryrun)
+- [Testing Migrations](../../guides/recipes/testing-migrations)
 
 ---
 
@@ -207,7 +207,7 @@ config.showBanner = false;
 - Automated testing scenarios
 
 **See Also:**
-- [Migration Settings](../../configuration/migration-settings#showbanner)
+- [Migration Settings](../../configuration/config-reference#core-options)
 
 ---
 
@@ -281,8 +281,8 @@ export MSR_LOG_LEVEL=verbose  # Invalid - will warn and use 'info'
 ```
 
 **See Also:**
-- [LevelAwareLogger API](../core-classes#levelawarelogger)
-- [Custom Loggers](../../customization/custom-loggers)
+- [Logger filtering](../../customization/loggers)
+- [Custom Loggers](../../customization/loggers/)
 
 ---
 
@@ -327,7 +327,7 @@ migrations/
 
 **See Also:**
 - [Migration Settings](../../configuration/migration-settings#recursive)
-- [File Organization](../../guides/writing-migrations#file-organization)
+- [File Organization](../../guides/writing-migrations#migration-structure)
 
 ---
 
@@ -370,7 +370,7 @@ config.filePatterns = [/^V(\d+)_/, /^M(\d+)_/];
 
 **See Also:**
 - [Migration Settings](../../configuration/migration-settings#filepatterns)
-- [File Naming Conventions](../../guides/writing-migrations#naming-conventions)
+- [File Naming Conventions](../../guides/writing-migrations#naming-convention)
 
 ---
 
@@ -400,7 +400,7 @@ const config = ConfigLoader.loadFromFile('./config/custom-msr.config.js');
 
 **See Also:**
 - [Configuration Files](../../configuration/#configuration-files)
-- [ConfigLoader API](../core-classes#configloader)
+- [ConfigLoader API](../ConfigLoader)
 
 ---
 

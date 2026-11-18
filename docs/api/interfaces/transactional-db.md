@@ -12,16 +12,13 @@ nav_order: 5
 The `ITransactionalDB` interface extends the base `IDB` interface to add transaction management capabilities for SQL databases.
 {: .fs-6 .fw-300 }
 
-## Table of Contents
+## Table of contents
 {: .no_toc .text-delta }
 
-- [Overview](#overview)
-- [Interface Definition](#interface-definition)
-- [Methods](#methods)
-- [Type Guards](#type-guards)
-- [Implementation Examples](#implementation-examples)
-- [Usage with Migration Runner](#usage-with-migration-runner)
-- [Related Interfaces](#related-interfaces)
+1. TOC
+{:toc}
+
+---
 
 ## Overview
 
@@ -489,12 +486,16 @@ Once you implement `ITransactionalDB`, Migration Script Runner automatically det
 
 ```typescript
 import {
-  MigrationScriptExecutor,
+  MigrationScriptRunner,
   Config,
   TransactionMode
 } from '@migration-script-runner/core';
 import { PostgresDB } from './postgres-db';
 import { createHandler } from './handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Create database with transaction support
 const db = new PostgresDB(pool);
@@ -506,17 +507,17 @@ config.transaction.mode = TransactionMode.PER_MIGRATION;
 
 // Migration Script Runner automatically:
 // 1. Detects ITransactionalDB implementation
-// 2. Creates DefaultTransactionManager
+// 2. Creates DefaultTransactionProvider
 // 3. Wraps migrations in transactions
 // 4. Handles retries on deadlocks
 
-const executor = new MigrationScriptExecutor({ handler , config });
-await executor.up();
+const runner = new ExampleRunner({ handler , config });
+await runner.up();
 ```
 
 **What Happens Automatically:**
 1. ✅ Type guard checks if database implements `ITransactionalDB`
-2. ✅ Creates `DefaultTransactionManager` for retry logic
+2. ✅ Creates `DefaultTransactionProvider` for retry logic
 3. ✅ Wraps migrations in `beginTransaction()` / `commit()` / `rollback()`
 4. ✅ Sets isolation level if `setIsolationLevel()` is implemented
 5. ✅ Automatically retries on deadlocks and serialization failures

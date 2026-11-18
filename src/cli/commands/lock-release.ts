@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 import * as readline from 'node:readline';
@@ -10,7 +10,7 @@ import * as readline from 'node:readline';
  * Force-releases a stuck migration lock. Requires --force flag for safety.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor
+ * @param createRunner - Factory function to create MigrationScriptRunner
  * @param promptFunction - Optional function for user confirmation (for testing)
  *
  * @example
@@ -24,7 +24,7 @@ import * as readline from 'node:readline';
  */
 export function addLockReleaseCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>,
+    createRunner: () => Promise<MigrationScriptRunner<DB>>,
     promptFunction: (question: string) => Promise<boolean> = askForConfirmation
 ): void {
     program
@@ -43,8 +43,8 @@ export function addLockReleaseCommand<DB extends IDB>(
                     return;
                 }
 
-                const executor = await createExecutor();
-                const status = await executor.getLockStatus();
+                const runner = await createRunner();
+                const status = await runner.getLockStatus();
 
                 if (!status) {
                     console.log('\n✗ Locking service is not configured');
@@ -83,7 +83,7 @@ export function addLockReleaseCommand<DB extends IDB>(
                 }
 
                 // Release the lock
-                await executor.forceReleaseLock();
+                await runner.forceReleaseLock();
 
                 console.log('\n✓ Lock forcibly released');
                 console.log('You can now run migrations again.\n');

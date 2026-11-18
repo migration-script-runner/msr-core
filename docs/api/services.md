@@ -93,14 +93,14 @@ if (path) {
 
 ---
 
-### SchemaVersionService
+### SchemaVersionOrchestrator
 
 Service for managing the schema version tracking table.
 
 ```typescript
-import { SchemaVersionService } from '@migration-script-runner/core';
+import { SchemaVersionOrchestrator } from '@migration-script-runner/core';
 
-const service = new SchemaVersionService(config, handler);
+const service = new SchemaVersionOrchestrator(config, handler);
 await service.init();
 ```
 
@@ -152,7 +152,7 @@ Used internally by `downTo()` to remove migration records after successful rollb
 
 **Example:**
 ```typescript
-const service = new SchemaVersionService(config, handler);
+const service = new SchemaVersionOrchestrator(config, handler);
 await service.remove(202501220100);
 ```
 
@@ -161,14 +161,14 @@ await service.remove(202501220100);
 
 ---
 
-### BackupService
+### BackupOrchestrator
 
 Service for backup and restore operations.
 
 ```typescript
-import { BackupService } from '@migration-script-runner/core';
+import { BackupOrchestrator } from '@migration-script-runner/core';
 
-const service = new BackupService(config.backup, handler);
+const service = new BackupOrchestrator(config.backup, handler);
 const backupPath = await service.backup();
 ```
 

@@ -396,7 +396,7 @@ config.backup.existingBackupPath = './backups/backup-2024-01-15.bkp';
 
 **See Also:**
 - [Backup & Restore Guide](../../guides/backup-restore-workflows)
-- [Restore Operations](../../guides/backup-restore-workflows#restore-operations)
+- [Restore Operations](../../guides/backup-restore-workflows#disaster-recovery-workflow)
 
 ---
 
@@ -510,7 +510,7 @@ To restore from an existing backup:
 export MSR_BACKUP_EXISTING_BACKUP_PATH=./backups/backup-2024-01-15.bkp
 
 # Run restore operation (programmatically)
-# executor.restore()
+# runner.restore()
 ```
 
 **See Also:**

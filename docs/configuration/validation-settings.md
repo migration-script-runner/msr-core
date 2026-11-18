@@ -732,9 +732,14 @@ class ClassNameValidator implements IMigrationValidator {
 import {
     Config,
     DownMethodPolicy,
-    MigrationScriptExecutor
+    MigrationScriptRunner
 } from '@migration-script-runner/core';
 import {
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
     NamingValidator,
     DocumentationValidator,
     SqlSafetyValidator
@@ -762,8 +767,8 @@ if (process.env.NODE_ENV === 'production') {
 config.customValidators = validators;
 
 // Run migrations
-const executor = new MigrationScriptExecutor({ handler , config });
-await executor.migrate();
+const runner = new ExampleRunner({ handler , config });
+await runner.migrate();
 ```
 
 ---

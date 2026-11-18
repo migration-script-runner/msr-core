@@ -728,8 +728,8 @@ npx msr down 202501150100
 
 1. **Enable MSR Locking (v0.8.0+)** - Built-in database-level locking:
    ```typescript
-   // Implement ILockingService in your handler
-   handler.lockingService = new MyDatabaseLockingService(db);
+   // Implement ILockingProvider in your handler
+   handler.lockingProvider = new MyDatabaseLockingProvider(db);
 
    // Configure locking (optional - enabled by default)
    config.locking.enabled = true;

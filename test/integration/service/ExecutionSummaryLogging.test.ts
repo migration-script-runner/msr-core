@@ -1,8 +1,9 @@
+import { TestMigrationScriptRunner } from '../../helpers/TestMigrationScriptRunner';
 import { expect } from 'chai';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
-    MigrationScriptExecutor,
+    MigrationScriptRunner,
     Config,
     SilentLogger,
     IDatabaseMigrationHandler,
@@ -38,7 +39,7 @@ describe('Execution Summary Logging Integration', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(testLogDir, file));
             }
-            fs.rmdirSync(testLogDir, { recursive: true });
+            fs.rmSync(testLogDir, { recursive: true });
         }
 
         // Mock handler
@@ -102,14 +103,14 @@ describe('Execution Summary Logging Integration', () => {
             for (const file of files) {
                 fs.unlinkSync(path.join(testLogDir, file));
             }
-            fs.rmdirSync(testLogDir, { recursive: true });
+            fs.rmSync(testLogDir, { recursive: true });
         }
     });
 
     it('should create execution summary file for successful migration', async () => {
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
-        const result = await executor.up();
+        const result = await runner.up();
 
         // Verify migration succeeded
         expect(result.success).to.be.true;
@@ -117,7 +118,7 @@ describe('Execution Summary Logging Integration', () => {
         // Verify summary file was created
         expect(fs.existsSync(testLogDir)).to.be.true;
         const files = fs.readdirSync(testLogDir);
-        expect(files.length).to.equal(1);
+        expect(files).to.have.lengthOf(1);
         expect(files[0]).to.include('migration-success');
         expect(files[0]).to.include('.json');
 
@@ -134,9 +135,9 @@ describe('Execution Summary Logging Integration', () => {
 
     it('should not create summary file when logging is disabled', async () => {
         config.logging.enabled = false;
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
-        await executor.up();
+        await runner.up();
 
         // No summary file should be created
         expect(fs.existsSync(testLogDir)).to.be.false;
@@ -144,9 +145,9 @@ describe('Execution Summary Logging Integration', () => {
 
     it('should not create summary for successful runs when logSuccessful is false', async () => {
         config.logging.logSuccessful = false;
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
-        await executor.up();
+        await runner.up();
 
         // No summary file should be created
         expect(fs.existsSync(testLogDir)).to.be.false;
@@ -154,14 +155,14 @@ describe('Execution Summary Logging Integration', () => {
 
     it('should create summary in both JSON and TEXT formats', async () => {
         config.logging.format = SummaryFormat.BOTH;
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
-        await executor.up();
+        await runner.up();
 
         // Verify both files were created
         expect(fs.existsSync(testLogDir)).to.be.true;
         const files = fs.readdirSync(testLogDir);
-        expect(files.length).to.equal(2);
+        expect(files).to.have.lengthOf(2);
 
         const jsonFile = files.find(f => f.endsWith('.json'));
         const textFile = files.find(f => f.endsWith('.txt'));
@@ -183,11 +184,11 @@ describe('Execution Summary Logging Integration', () => {
             }
         };
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger(),
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger(),
             hooks: customHooks
 , config: config });
 
-        await executor.up();
+        await runner.up();
 
         // Verify custom hooks were called
         expect(onStartCalled).to.be.true;
@@ -196,13 +197,13 @@ describe('Execution Summary Logging Integration', () => {
         // Verify summary file was still created
         expect(fs.existsSync(testLogDir)).to.be.true;
         const files = fs.readdirSync(testLogDir);
-        expect(files.length).to.equal(1);
+        expect(files).to.have.lengthOf(1);
     });
 
     it('should include migration details in summary', async () => {
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
-        await executor.up();
+        await runner.up();
 
         // Verify summary has migration details
         const files = fs.readdirSync(testLogDir);
@@ -219,11 +220,11 @@ describe('Execution Summary Logging Integration', () => {
     it('should work without hooks when logging disabled and no user hooks', async () => {
         config.logging.enabled = false;
         // Don't provide hooks in dependencies - this makes this.hooks undefined
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
         // This should work fine even with this.hooks being undefined
         // All the optional chaining (?.) branches should handle undefined gracefully
-        const result = await executor.up();
+        const result = await runner.up();
 
         // Should complete successfully
         expect(result.success).to.be.true;
@@ -235,9 +236,9 @@ describe('Execution Summary Logging Integration', () => {
         config.transaction.isolation = IsolationLevel.SERIALIZABLE;
         config.transaction.retries = 5;
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
-        await executor.up();
+        await runner.up();
 
         // Verify summary includes transaction configuration
         const files = fs.readdirSync(testLogDir);
@@ -251,16 +252,16 @@ describe('Execution Summary Logging Integration', () => {
         expect(summary.config.transactionRetries).to.equal(5);
 
         // Note: Transaction metrics tracking requires a proper transactional DB implementation
-        // which is tested separately in the MigrationScriptExecutor transaction tests
+        // which is tested separately in the MigrationScriptRunner transaction tests
 });
 
     it('should NOT include transaction metrics when transactions are disabled', async () => {
         // Ensure transactions are disabled
         config.transaction.mode = TransactionMode.NONE;
 
-        const executor = new MigrationScriptExecutor<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
+        const runner = new TestMigrationScriptRunner<IDB>({ handler: handler, logger: new SilentLogger() , config: config });
 
-        await executor.up();
+        await runner.up();
 
         // Verify summary does NOT include transaction metrics
         const files = fs.readdirSync(testLogDir);

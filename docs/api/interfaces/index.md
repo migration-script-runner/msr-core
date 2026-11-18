@@ -14,6 +14,14 @@ Core interfaces for implementing database handlers and extending MSR.
 
 ---
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 MSR provides a set of well-defined interfaces that you implement to integrate with your database and customize behavior. These interfaces follow the **dependency inversion principle**, allowing you to bring your own database client, backup solution, and custom logic.
@@ -26,7 +34,7 @@ MSR provides a set of well-defined interfaces that you implement to integrate wi
 
 - **[IDatabaseMigrationHandler](database-handler)** - Main interface you implement for your database
 - **[IDB](db)** - Base database connection interface (all databases)
-- **ISqlDB** - Extended interface for SQL databases (v0.4.0+)
+- **ISqlDB** - Extended interface for SQL databases
 - **[ITransactionalDB](transactional-db)** - Transaction support interface
 
 ### Schema Tracking
@@ -40,21 +48,26 @@ MSR provides a set of well-defined interfaces that you implement to integrate wi
 - **[IRunnableScript](runnable-script)** - Migration script implementation
 - **IMigrationResult** - Migration operation results
 
-### Transaction Management
+### Adapter providers
 
-- **[ITransactionManager](transaction-manager)** - Transaction lifecycle management
+- **[ILockingProvider](locking-provider)** - Database-specific migration lock operations
+- **[ITransactionProvider](transaction-provider)** - Database transaction capability
+
+### Core orchestrators
+
+- **[Orchestration contracts](orchestrators)** - Backup, schema version, and locking orchestration
 
 ### Rollback & Backup
 
 - **IRollbackService** - Rollback strategy implementation
 - **IBackup** - Backup and restore operations
 
-### File Loading (v0.4.0+)
+### File Loading
 
 - **IMigrationScriptLoader** - Custom file type loader
 - **ILoaderRegistry** - Loader management
 
-### Observability (v0.6.0+)
+### Observability
 
 - **[IMetricsCollector](metrics-collector)** - Metrics collection for monitoring and performance tracking
 
@@ -137,7 +150,7 @@ class MyHandler implements IDatabaseMigrationHandler<IDB> {
 }
 ```
 
-### With SQL Support (v0.4.0+)
+### With SQL Support
 
 For SQL migration files, implement `ISqlDB`:
 
@@ -184,48 +197,3 @@ class MyHandler implements IDatabaseMigrationHandler<IDB> {
 ```
 
 ---
-
-## Changes in v0.6.0
-
-{: .important }
-> Version 0.6.0 adds generic type parameters and new metrics interfaces. See the [v0.5.x → v0.6.0 Migration Guide](../../version-migration/v0.5-to-v0.6) for upgrade instructions.
-
-**Summary of Changes:**
-
-### Generic Type Parameters (BREAKING CHANGE) - [#114](https://github.com/migration-script-runner/msr-core/issues/114)
-All interfaces now require generic type parameters for database-specific type safety:
-
-- `IDatabaseMigrationHandler` → `IDatabaseMigrationHandler<DB extends IDB>`
-- `IRunnableScript` → `IRunnableScript<DB extends IDB>`
-- `ISchemaVersion` → `ISchemaVersion<DB extends IDB>`
-- `IBackup` → `IBackup<DB extends IDB>`
-- `ITransactionManager` → `ITransactionManager<DB extends IDB>`
-
-**Benefits:** Full IDE autocomplete, compile-time validation, no more `as any` casting
-
-**Breaking Change:** You must explicitly specify the type parameter (e.g., `IDatabaseMigrationHandler<IDB>`) in your implementations
-
-### New Interfaces - [#80](https://github.com/migration-script-runner/msr-core/issues/80)
-- `IMetricsCollector` - Metrics collection for observability and performance tracking
-
-### Constructor Signature Change (Breaking)
-- `MigrationScriptExecutor` constructor now requires dependency injection pattern: `new MigrationScriptExecutor({ handler }, config?)`
-
----
-
-## Breaking Changes (v0.4.0)
-
-{: .important }
-> Version 0.4.0 includes several interface changes. See the [v0.3.x → v0.4.0 Migration Guide](../../version-migration/v0.3-to-v0.4) for upgrade instructions.
-
-**Summary:**
-- `IDB.checkConnection()` now required
-- `ISqlDB` interface added for SQL migrations
-- `ISchemaVersion.migrations` → `migrationRecords`
-- `IMigrationScript.getAll()` → `getAllExecuted()`
-- `IBackup.restore(data)` → `restore(backupData)`
-- `IMigrationService` method renames
-- New loader interfaces: `IMigrationScriptLoader`, `ILoaderRegistry`
-
----
-

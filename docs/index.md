@@ -112,23 +112,6 @@ A database-agnostic migration framework for TypeScript and JavaScript projects.
 
 ---
 
-## What's New in v0.8.0
-
-🎉 Latest release brings production-ready locking and enhanced type safety:
-
-- **🔒 Migration Locking** - Database-level locking prevents concurrent migrations in multi-instance deployments
-- **🛡️ Lock Ownership Verification** - Two-phase locking with ownership verification prevents race conditions
-- **🖥️ Lock CLI Commands** - New `lock:status` and `lock:release` commands for managing locks in production
-- **🔧 Handler Generic Type** - Type-safe handler access in adapters with optional second generic parameter (no more casting!)
-- **🐛 Down Migration Fix** - Fixed TypeError when rolling back migrations (proper filesystem script matching)
-- **📦 npm Provenance** - Enhanced supply chain security with build provenance attestations
-- **✅ 100% Backwards Compatible** - Zero breaking changes from v0.7.x, all features are opt-in
-
-**[→ View v0.7.x → v0.8.0 migration guide](version-migration/v0.7-to-v0.8)** | **[→ See full changelog](features#feature-highlights-by-version)**
-{: .fs-5 }
-
----
-
 ## Quick Start
 
 ### Installation
@@ -143,13 +126,15 @@ npm install @migration-script-runner/core
 import { IDatabaseMigrationHandler, IDB, ISchemaVersion } from '@migration-script-runner/core';
 
 // Define your database type for full type safety (v0.6.0+)
-interface IMyDatabase extends IDB {
+export interface IMyDatabase extends IDB {
   query(sql: string, params?: unknown[]): Promise<unknown[]>;
 }
 
 export class MyDatabaseHandler implements IDatabaseMigrationHandler<IMyDatabase> {
-  db: IMyDatabase;  // ✅ Typed database connection
-  schemaVersion: ISchemaVersion<IMyDatabase>;
+  constructor(
+    readonly db: IMyDatabase,
+    readonly schemaVersion: ISchemaVersion<IMyDatabase>
+  ) {}
 
   getName(): string {
     return 'My Database Handler';
@@ -159,9 +144,11 @@ export class MyDatabaseHandler implements IDatabaseMigrationHandler<IMyDatabase>
     return '1.0.0';
   }
 
-  // Implement schema version tracking and optionally backup
+  // The adapter supplies the database connection and schema-version store.
 }
 ```
+
+The adapter constructs `MyDatabaseHandler` with its database connection and schema-version implementation. For asynchronous database setup, the adapter can expose a `createMyDatabaseHandler(config)` factory that opens the connection and returns an initialized handler; the runner below calls this factory.
 
 ### 2. Create Migration Script
 
@@ -176,6 +163,7 @@ interface IMyDatabase extends IDB {
 export default class CreateUsers implements IRunnableScript<IMyDatabase> {
   async up(db: IMyDatabase, info: IMigrationInfo): Promise<string> {
     // ✅ Full autocomplete for db.query() - no casting needed!
+    // Example SQL uses MySQL syntax; adapt it to your database engine.
     await db.query(`
       CREATE TABLE users (
         id INT PRIMARY KEY AUTO_INCREMENT,
@@ -193,20 +181,52 @@ export default class CreateUsers implements IRunnableScript<IMyDatabase> {
 }
 ```
 
-### 3. Run Migrations
+### 3. Create a Database Runner
+
+`MigrationScriptRunner` is abstract, so an adapter defines a concrete runner. Its public `getInstance` method can use Core's protected `createInstance` helper to create the handler and runner. See [Async Adapter Initialization](api/migration-script-runner#async-adapter-initialization) for the factory contract.
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
-import { MyDatabaseHandler, IMyDatabase } from './database-handler';
+import {
+  IRunnerDependencies,
+  IRunnerOptions,
+  MigrationScriptRunner
+} from '@migration-script-runner/core';
+import {
+  createMyDatabaseHandler,
+  IMyDatabase,
+  MyDatabaseHandler
+} from './database-handler';
+
+export class MyDatabaseRunner extends MigrationScriptRunner<IMyDatabase, MyDatabaseHandler> {
+  constructor(dependencies: IRunnerDependencies<IMyDatabase, MyDatabaseHandler>) {
+    super(dependencies);
+  }
+
+  static async getInstance(options: IRunnerOptions<IMyDatabase>): Promise<MyDatabaseRunner> {
+    return MigrationScriptRunner.createInstance(
+      MyDatabaseRunner,
+      options,
+      (config) => createMyDatabaseHandler(config)
+    );
+  }
+}
+```
+
+### 4. Run Migrations
+
+Use the adapter's public factory to initialize the database handler and runner:
+
+```typescript
+import { Config } from '@migration-script-runner/core';
+import { MyDatabaseRunner } from './database-runner';
 
 const config = new Config();
 config.folder = './migrations';
 
-const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor<IMyDatabase>({ handler , config });
+const runner = await MyDatabaseRunner.getInstance({ config });
 
 // Library usage - returns result object
-const result = await executor.up();
+const result = await runner.up();
 
 if (result.success) {
   console.log(`✅ Executed ${result.executed.length} migrations`);
@@ -215,6 +235,8 @@ if (result.success) {
   process.exit(1);
 }
 ```
+
+`getInstance` is defined by `MyDatabaseRunner`, not inherited as a public Core factory. If the handler is already initialized, you can construct the runner directly with `{ handler, config }` instead.
 
 ---
 
@@ -244,6 +266,7 @@ if (result.success) {
 
 ### Project
 
+- **[AI Agent Integration Guide](guides/ai-agent-integration)** - Help a coding agent integrate MSR into an existing application
 - **[Version Migration](version-migration/)** - Upgrade guides for migrating between MSR versions
 - **[Development](development/)** - Contributing, testing, and development workflow
 
@@ -275,43 +298,6 @@ Choose the right rollback strategy for your needs:
 - **BOTH** - Try down() first, fallback to backup
 - **NONE** - No rollback (for append-only systems)
 
----
-
-## Project Status
-
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/migration-script-runner/msr-core/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/migration-script-runner/msr-core/tree/master)
-[![Coverage Status](https://coveralls.io/repos/github/migration-script-runner/msr-core/badge.svg?branch=master)](https://coveralls.io/github/migration-script-runner/msr-core?branch=master)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=vlavrynovych_msr&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=vlavrynovych_msr)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=vlavrynovych_msr&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=vlavrynovych_msr)
-[![GitHub issues](https://img.shields.io/github/issues/migration-script-runner/msr-core.svg)](https://github.com/migration-script-runner/msr-core/issues)
-[![License](https://img.shields.io/badge/license-MIT%20%2B%20CC%20%2B%20Attribution-blue.svg)](license)
-[![NPM Version](https://img.shields.io/npm/v/@migration-script-runner/core.svg?style=flat)](https://npmjs.org/package/@migration-script-runner/core)
-[![NPM Downloads](https://img.shields.io/npm/dm/@migration-script-runner/core.svg?style=flat)](https://npmjs.org/package/@migration-script-runner/core)
-
----
-
-## Community & Support
-
-- **📚 Documentation**: [Full documentation site](https://migration-script-runner.github.io/msr-core/)
-- **🐛 Issues**: [GitHub Issues](https://github.com/migration-script-runner/msr-core/issues)
-- **📦 npm**: [@migration-script-runner/core](https://www.npmjs.com/package/@migration-script-runner/core)
-- **💬 Discussions**: [GitHub Discussions](https://github.com/migration-script-runner/msr-core/discussions)
-
----
-
-## License
-
-This project is licensed under the **MIT License with Commons Clause and Attribution Requirements**.
-
-**Quick Summary:**
-- ✅ **Free to use** in your applications and products
-- ✅ **Free to modify** and contribute
-- ❌ **Cannot sell** MSR or adapters as standalone products
-- 🔒 **Attribution required** for database adapters and extensions
-
-[Read the full license documentation](license) for detailed examples and FAQ.
-
----
 
 {: .text-center }
 ![Made in Ukraine](https://img.shields.io/badge/in%20Ukraine-dodgerblue?label=Proudly%20made&labelColor=%23FFFF00)

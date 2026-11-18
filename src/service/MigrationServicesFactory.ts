@@ -1,4 +1,4 @@
-import {IMigrationExecutorDependencies} from "../interface/IMigrationExecutorDependencies";
+import {IRunnerDependencies} from "../interface/IRunnerDependencies";
 import {IConfigLoader, IDB} from "../interface";
 import {Config} from "../model";
 import {IDatabaseMigrationHandler} from "../interface/IDatabaseMigrationHandler";
@@ -16,20 +16,19 @@ import {MetricsCollectorHook} from "../hooks/MetricsCollectorHook";
 import {ExecutionSummaryHook} from "../hooks/ExecutionSummaryHook";
 import {CompositeHooks} from "../hooks/CompositeHooks";
 import {LoaderRegistry} from "../loader/LoaderRegistry";
-import {BackupService} from "./BackupService";
-import {SchemaVersionService} from "./SchemaVersionService";
-import {ISchemaVersion} from "../interface/dao/ISchemaVersion";
+import {BackupOrchestrator} from "./BackupOrchestrator";
+import {SchemaVersionOrchestrator} from "./SchemaVersionOrchestrator";
 import {MigrationRenderer} from "./MigrationRenderer";
 import {MigrationService} from "./MigrationService";
 import {MigrationScriptSelector} from "./MigrationScriptSelector";
 import {MigrationScanner} from "./MigrationScanner";
 import {MigrationValidationService} from "./MigrationValidationService";
 import {RollbackService} from "./RollbackService";
-import {ITransactionManager} from "../interface/service/ITransactionManager";
+import {ITransactionProvider} from "../interface/service/ITransactionProvider";
 import {TransactionMode} from "../model/TransactionMode";
 import {isImperativeTransactional, isCallbackTransactional} from "../interface/dao/ITransactionalDB";
-import {DefaultTransactionManager} from "./DefaultTransactionManager";
-import {CallbackTransactionManager} from "./CallbackTransactionManager";
+import {DefaultTransactionProvider} from "./DefaultTransactionProvider";
+import {CallbackTransactionProvider} from "./CallbackTransactionProvider";
 import {MigrationRunner} from "./MigrationRunner";
 import {MigrationErrorHandler} from "./MigrationErrorHandler";
 import {MigrationRollbackManager} from "./MigrationRollbackManager";
@@ -42,7 +41,7 @@ import {MigrationWorkflowOrchestrator} from "./MigrationWorkflowOrchestrator";
  * Result of creating migration services via factory.
  *
  * Contains all initialized service facades and infrastructure components
- * needed by MigrationScriptExecutor.
+ * needed by MigrationScriptRunner.
  *
  * @template DB - Database interface type
  *
@@ -77,7 +76,7 @@ export interface MigrationServicesFacades<DB extends IDB, TConfig extends Config
 /**
  * Factory function for creating all migration services.
  *
- * Extracts all initialization logic from MigrationScriptExecutor constructor
+ * Extracts all initialization logic from MigrationScriptRunner constructor
  * into a separate factory function for better separation of concerns.
  *
  * @template DB - Database interface type
@@ -91,7 +90,7 @@ export function createMigrationServices<
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config
 >(
-    dependencies: IMigrationExecutorDependencies<DB, THandler, TConfig>
+    dependencies: IRunnerDependencies<DB, THandler, TConfig>
 ): MigrationServicesFacades<DB, TConfig> {
 
     const handler = dependencies.handler;
@@ -139,7 +138,7 @@ export function createMigrationServices<
  * @private
  */
 function createHooksComposite<DB extends IDB>(
-    dependencies: IMigrationExecutorDependencies<DB>,
+    dependencies: IRunnerDependencies<DB>,
     config: Config,
     logger: ILogger,
     handler: IDatabaseMigrationHandler<DB>
@@ -171,19 +170,19 @@ function createHooksComposite<DB extends IDB>(
  * @private
  */
 function createCoreServices<DB extends IDB>(
-    dependencies: IMigrationExecutorDependencies<DB>,
+    dependencies: IRunnerDependencies<DB>,
     handler: IDatabaseMigrationHandler<DB>,
     config: Config,
     logger: ILogger,
     hooks?: IMigrationHooks<DB>
 ): CoreServices<DB> {
     // Create backup service
-    const backup = dependencies.backupService
-        ?? new BackupService<DB>(handler, config, logger);
+    const backup = dependencies.backupOrchestrator
+        ?? new BackupOrchestrator<DB>(handler, config, logger);
 
     // Create schema version service
-    const schemaVersion = dependencies.schemaVersionService
-        ?? new SchemaVersionService<DB, ISchemaVersion<DB>>(handler.schemaVersion);
+    const schemaVersion = dependencies.schemaVersionOrchestrator
+        ?? new SchemaVersionOrchestrator<DB>(handler.schemaVersion);
 
     // Create migration service
     const migration = dependencies.migrationService
@@ -220,7 +219,7 @@ function createExecutionServices<DB extends IDB>(
     hooks?: IMigrationHooks<DB>
 ): ExecutionServices<DB> {
     // Create transaction manager
-    const transactionManager = createTransactionManager(handler, config, logger);
+    const transactionProvider = createTransactionProvider(handler, config, logger);
 
     // Create selector (always new instance)
     const selector = new MigrationScriptSelector<DB>();
@@ -231,11 +230,11 @@ function createExecutionServices<DB extends IDB>(
         core.schemaVersion,
         config,
         logger,
-        transactionManager,
+        transactionProvider,
         hooks
     );
 
-    return new ExecutionServices<DB>(selector, runner, transactionManager);
+    return new ExecutionServices<DB>(selector, runner, transactionProvider);
 }
 
 /**
@@ -244,7 +243,7 @@ function createExecutionServices<DB extends IDB>(
  * @private
  */
 function createOutputServices<DB extends IDB>(
-    dependencies: IMigrationExecutorDependencies<DB>,
+    dependencies: IRunnerDependencies<DB>,
     handler: IDatabaseMigrationHandler<DB>,
     config: Config,
     logger: ILogger
@@ -278,7 +277,7 @@ function createOrchestrationServices<DB extends IDB>(
         rollbackService: core.rollback
     });
 
-    // Create hook executor
+    // Create hook runner
     const hookExecutor = new MigrationHookExecutor<DB>({
         runner: execution.runner,
         hooks: hooks
@@ -291,7 +290,7 @@ function createOrchestrationServices<DB extends IDB>(
         config: config,
         loaderRegistry: loaderRegistry,
         migrationScanner: core.scanner,
-        schemaVersionService: core.schemaVersion,
+        schemaVersionOrchestrator: core.schemaVersion,
         handler: handler
     });
 
@@ -305,7 +304,7 @@ function createOrchestrationServices<DB extends IDB>(
     // Create rollback manager
     const rollbackManager = new MigrationRollbackManager<DB>({
         handler: handler,
-        schemaVersionService: core.schemaVersion,
+        schemaVersionOrchestrator: core.schemaVersion,
         migrationScanner: core.scanner,
         selector: execution.selector,
         logger: output.logger,
@@ -321,14 +320,14 @@ function createOrchestrationServices<DB extends IDB>(
         migrationScanner: core.scanner,
         validationOrchestrator: validationOrchestrator,
         reportingOrchestrator: reportingOrchestrator,
-        backupService: core.backup,
+        backupOrchestrator: core.backup,
         hookExecutor: hookExecutor,
         errorHandler: errorHandler,
         rollbackService: core.rollback,
-        schemaVersionService: core.schemaVersion,
+        schemaVersionOrchestrator: core.schemaVersion,
         loaderRegistry: loaderRegistry,
         selector: execution.selector,
-        transactionManager: execution.transactionManager,
+        transactionProvider: execution.transactionProvider,
         config: config,
         logger: output.logger,
         hooks: hooks,
@@ -350,31 +349,31 @@ function createOrchestrationServices<DB extends IDB>(
  * Create transaction manager if transactions are enabled.
  *
  * Auto-creates appropriate transaction manager based on database interface:
- * - Imperative (SQL): Creates DefaultTransactionManager for ITransactionalDB
- * - Callback (NoSQL): Creates CallbackTransactionManager for ICallbackTransactionalDB
+ * - Imperative (SQL): Creates DefaultTransactionProvider for ITransactionalDB
+ * - Callback (NoSQL): Creates CallbackTransactionProvider for ICallbackTransactionalDB
  *
  * @private
  */
-function createTransactionManager<DB extends IDB>(
+function createTransactionProvider<DB extends IDB>(
     handler: IDatabaseMigrationHandler<DB>,
     config: Config,
     logger: ILogger
-): ITransactionManager<DB> | undefined {
+): ITransactionProvider<DB> | undefined {
     // If transaction mode is NONE, don't create transaction manager
     if (config.transaction.mode === TransactionMode.NONE) {
         return undefined;
     }
 
     // If handler provides custom transaction manager, use it
-    if (handler.transactionManager) {
+    if (handler.transactionProvider) {
         logger.debug('Using custom transaction manager from handler');
-        return handler.transactionManager;
+        return handler.transactionProvider;
     }
 
     // Check for imperative transaction support (SQL-style)
     if (isImperativeTransactional(handler.db)) {
-        logger.debug('Auto-creating DefaultTransactionManager (db implements ITransactionalDB)');
-        return new DefaultTransactionManager<DB>(
+        logger.debug('Auto-creating DefaultTransactionProvider (db implements ITransactionalDB)');
+        return new DefaultTransactionProvider<DB>(
             handler.db,
             config.transaction,
             logger
@@ -383,8 +382,8 @@ function createTransactionManager<DB extends IDB>(
 
     // Check for callback transaction support (NoSQL-style)
     if (isCallbackTransactional(handler.db)) {
-        logger.debug('Auto-creating CallbackTransactionManager (db implements ICallbackTransactionalDB)');
-        return new CallbackTransactionManager<DB>(
+        logger.debug('Auto-creating CallbackTransactionProvider (db implements ICallbackTransactionalDB)');
+        return new CallbackTransactionProvider<DB>(
             handler.db,
             config.transaction,
             logger
@@ -395,7 +394,7 @@ function createTransactionManager<DB extends IDB>(
     logger.warn(
         'Transaction mode is configured but database does not support transactions. ' +
         'Either implement ITransactionalDB (SQL) or ICallbackTransactionalDB (NoSQL), ' +
-        'or provide a custom transactionManager in the handler.'
+        'or provide a custom transactionProvider in the handler.'
     );
     return undefined;
 }

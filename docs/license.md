@@ -76,10 +76,14 @@ This three-part license combines:
 
 ```typescript
 // Your commercial web application
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
 
-const executor = new MigrationScriptExecutor({ handler , config });
-await executor.migrate();
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+
+const runner = new ExampleRunner({ handler , config });
+await runner.migrate();
 
 // ✅ This is completely free
 // ✅ No attribution required
@@ -127,7 +131,7 @@ gh pr create
 
 ```typescript
 // @yourname/postgres-adapter (FREE, open source)
-export class PostgresAdapter implements IDatabaseMigrationHandler<IDB> {
+export class PostgresHandler implements IDatabaseMigrationHandler<IDB> {
   // Your PostgreSQL implementation
 }
 
@@ -160,7 +164,7 @@ export class PostgresAdapter implements IDatabaseMigrationHandler<IDB> {
 // ❌ Selling this as a product is prohibited
 // "Premium PostgreSQL Adapter for MSR" - $29
 
-export class PostgresAdapter implements IDatabaseMigrationHandler<IDB> {
+export class PostgresHandler implements IDatabaseMigrationHandler<IDB> {
   // Cannot sell this as a standalone product
 }
 ```
@@ -249,9 +253,14 @@ https://github.com/migration-script-runner/msr-core
 **Answer:** ✅ **YES!** Use it freely. No attribution required.
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Your app.ts
-const executor = new MigrationScriptExecutor({ handler , config });
-await executor.migrate();
+const runner = new ExampleRunner({ handler , config });
+await runner.migrate();
 
 // Sell your SaaS product - completely allowed
 ```

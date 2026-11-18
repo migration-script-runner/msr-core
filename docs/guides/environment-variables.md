@@ -91,13 +91,17 @@ if (process.env[ENV.MSR_LOGGING_ENABLED] === 'true') {
 **1. No configuration needed** - works out of the box:
 
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor({ handler });
+const runner = new ExampleRunner({ handler });
 
-await executor.up();
+await runner.up();
 ```
 
 **2. Use environment variables** for deployment:
@@ -116,8 +120,13 @@ npm start
 **3. Override when needed**:
 
 ```typescript
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 // Env vars are loaded automatically, but you can override
-const executor = new MigrationScriptExecutor({ handler }, {
+const runner = new ExampleRunner({ handler }, {
     dryRun: true  // Override for this specific run
 });
 ```
@@ -158,7 +167,12 @@ MSR_LOG_LEVEL=info
 That's it! MSR will automatically load these values:
 
 ```typescript
-const executor = new MigrationScriptExecutor({ handler });
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
+const runner = new ExampleRunner({ handler });
 // Configuration loaded from .env automatically
 ```
 
@@ -674,11 +688,15 @@ MSR_BACKUP_DELETE_BACKUP=true
 **Usage with dotenv:**
 ```typescript
 import 'dotenv/config';
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Environment variables loaded automatically
-const executor = new MigrationScriptExecutor({ handler });
-await executor.up();
+const runner = new ExampleRunner({ handler });
+await runner.up();
 ```
 
 ---
@@ -723,7 +741,11 @@ MSR_BACKUP_DELETE_BACKUP=true
 For advanced use cases, use `ConfigLoader` directly:
 
 ```typescript
-import { ConfigLoader, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { ConfigLoader, MigrationScriptRunner } from '@migration-script-runner/core';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 // Load with waterfall approach
 const config = ConfigLoader.load();
@@ -737,7 +759,7 @@ const config = ConfigLoader.load({
 // Load from specific directory
 const config = ConfigLoader.load({}, '/app');
 
-const executor = new MigrationScriptExecutor({ handler , config });
+const runner = new ExampleRunner({ handler , config });
 ```
 
 See [ConfigLoader API Reference](../api/ConfigLoader) for detailed documentation.
@@ -1194,15 +1216,19 @@ MSR_BACKUP_FOLDER=/var/backups/database
 
 **Application code:**
 ```typescript
-import { MigrationScriptExecutor } from '@migration-script-runner/core';
+import { MigrationScriptRunner } from '@migration-script-runner/core';
 import { DatabaseHandler } from './database';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const handler = new DatabaseHandler();
 
 // Automatically loads: defaults → file → env vars
-const executor = new MigrationScriptExecutor({ handler });
+const runner = new ExampleRunner({ handler });
 
-await executor.migrate();
+await runner.migrate();
 ```
 
 ---
@@ -1220,5 +1246,5 @@ await executor.migrate();
 
 - [Environment Variables API Reference](../api/environment-variables/) - Complete reference for all variables organized by category
 - [ConfigLoader API](../api/ConfigLoader) - Advanced usage
-- [Docker Deployment](../deployment/docker) - Container setup
-- [CI/CD Integration](../deployment/ci-cd) - Pipeline configuration
+- [Docker Deployment](./docker-kubernetes) - Container setup
+- [CI/CD Integration](./ci-cd-integration) - Pipeline configuration

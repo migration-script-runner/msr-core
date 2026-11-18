@@ -10,7 +10,7 @@ import {IMigrationResult} from "../IMigrationResult";
  * - Handling version-specific migrations
  * - Coordinating hooks, reporting, and error handling
  *
- * Extracted from MigrationScriptExecutor for better separation of concerns.
+ * Extracted from MigrationScriptRunner for better separation of concerns.
  *
  * @template DB - Database interface type
  *
@@ -20,14 +20,14 @@ import {IMigrationResult} from "../IMigrationResult";
  *     migrationScanner,
  *     validationOrchestrator,
  *     reportingOrchestrator,
- *     backupService,
+ *     backupOrchestrator,
  *     hookExecutor,
  *     errorHandler,
  *     rollbackService,
- *     schemaVersionService,
+ *     schemaVersionOrchestrator,
  *     loaderRegistry,
  *     selector,
- *     transactionManager,
+ *     transactionProvider,
  *     config,
  *     logger,
  *     hooks

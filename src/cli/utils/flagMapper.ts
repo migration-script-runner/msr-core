@@ -3,12 +3,18 @@ import {ConsoleLogger} from '../../logger/ConsoleLogger';
 import {FileLogger} from '../../logger/FileLogger';
 import {SilentLogger} from '../../logger/SilentLogger';
 import {ILogger} from '../../interface/ILogger';
+import {BackupMode} from '../../model/BackupMode';
+import {setNestedValue} from './nestedValueParser';
+
+export const LOGGER_TYPES = ['console', 'file', 'silent'] as const;
+export const LOG_LEVELS = ['error', 'warn', 'info', 'debug'] as const;
+export const OUTPUT_FORMATS = ['table', 'json'] as const;
 
 /**
  * Common CLI flags that map to Config properties.
  *
  * Supports both standard MSR flags and custom adapter-specific flags
- * via index signature.
+ * via index signature. `backupMode` accepts one of the {@link BackupMode} values.
  */
 export interface CLIFlags {
     configFile?: string;
@@ -17,10 +23,12 @@ export interface CLIFlags {
     displayLimit?: number;
     dryRun?: boolean;
     noLock?: boolean;
-    logger?: 'console' | 'file' | 'silent';
-    logLevel?: 'error' | 'warn' | 'info' | 'debug';
+    /** Backup behavior selected by the global `--backup-mode` CLI option. */
+    backupMode?: BackupMode;
+    logger?: typeof LOGGER_TYPES[number];
+    logLevel?: typeof LOG_LEVELS[number];
     logFile?: string;
-    format?: 'table' | 'json';
+    format?: typeof OUTPUT_FORMATS[number];
 
     /**
      * Allow dynamic custom flags from adapters.
@@ -42,7 +50,7 @@ export interface CLIFlags {
  * Maps CLI flags to Config object.
  *
  * Takes CLI flag values and updates the provided Config object accordingly.
- * Handles standard MSR flags and special cases like logger creation.
+ * Handles standard MSR flags, including backup mode, and special cases like logger creation.
  *
  * Custom adapter-specific flags should be handled by the mapCustomFlags callback in CLIOptions.
  *
@@ -56,13 +64,21 @@ export interface CLIFlags {
  * const logger = mapFlagsToConfig(config, {
  *   folder: './migrations',
  *   displayLimit: 20,
+ *   backupMode: BackupMode.MANUAL,
  *   logger: 'console',
  *   logLevel: 'info'
  * });
  * ```
  */
-export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | undefined {
-    // Map simple config properties
+function mapNestedFlags(config: Config, flags: CLIFlags): void {
+    for (const [key, value] of Object.entries(flags)) {
+        if (key.includes('.') && value !== undefined) {
+            setNestedValue(config, key, value);
+        }
+    }
+}
+
+function mapStandardConfigFlags(config: Config, flags: CLIFlags): void {
     if (flags.folder !== undefined) {
         config.folder = flags.folder;
     }
@@ -83,6 +99,16 @@ export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | und
         config.locking.enabled = !flags.noLock;
     }
 
+    if (flags.backupMode !== undefined) {
+        config.backupMode = flags.backupMode;
+    }
+
+    if (flags.logLevel !== undefined) {
+        config.logLevel = flags.logLevel;
+    }
+}
+
+function createLogger(flags: CLIFlags): ILogger | undefined {
     // Handle logger creation
     let logger: ILogger | undefined;
 
@@ -104,4 +130,10 @@ export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | und
     }
 
     return logger;
+}
+
+export function mapFlagsToConfig(config: Config, flags: CLIFlags): ILogger | undefined {
+    mapNestedFlags(config, flags);
+    mapStandardConfigFlags(config, flags);
+    return createLogger(flags);
 }

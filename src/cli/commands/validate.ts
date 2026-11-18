@@ -1,5 +1,5 @@
 import {Command} from 'commander';
-import {MigrationScriptExecutor} from '../../service/MigrationScriptExecutor';
+import {MigrationScriptRunner} from '../../service/MigrationScriptRunner';
 import {EXIT_CODES} from '../utils/exitCodes';
 import {IDB} from '../../interface';
 import {ValidationIssueType} from '../../model/ValidationIssueType';
@@ -11,7 +11,7 @@ import {ValidationIssueType} from '../../model/ValidationIssueType';
  * Checks pending migrations structure and executed migrations integrity.
  *
  * @param program - Commander program instance
- * @param createExecutor - Factory function to create MigrationScriptExecutor
+ * @param createRunner - Factory function to create MigrationScriptRunner
  *
  * @example
  * ```bash
@@ -24,15 +24,15 @@ import {ValidationIssueType} from '../../model/ValidationIssueType';
  */
 export function addValidateCommand<DB extends IDB>(
     program: Command,
-    createExecutor: () => Promise<MigrationScriptExecutor<DB>>
+    createRunner: () => Promise<MigrationScriptRunner<DB>>
 ): void {
     program
         .command('validate')
         .description('Validate migration scripts without executing them')
         .action(async () => {
             try {
-                const executor = await createExecutor();
-                const results = await executor.validate();
+                const runner = await createRunner();
+                const results = await runner.validate();
 
                 const pendingCount = results.pending.length;
                 const migratedCount = results.migrated.length;

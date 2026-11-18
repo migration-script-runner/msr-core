@@ -31,7 +31,7 @@ npx ts-node examples/simple-cli.ts backup --help
 
 ### [cli-example.ts](./cli-example.ts)
 
-A more complete example with a mock database handler (needs TypeScript fixes).
+A more complete example with a mock database handler using the current runner API.
 
 ## Using Examples in Your Project
 
@@ -41,12 +41,12 @@ These examples show patterns you can copy into your own adapter implementation. 
 
 ```typescript
 import {createCLI} from '@migration-script-runner/core';
-import {YourAdapter} from './YourAdapter';
+import {YourRunner} from './YourRunner';
 
 const program = createCLI({
   name: 'your-cli',
   version: '1.0.0',
-  createExecutor: (config) => new YourAdapter({config}),
+  createRunner: (config) => new YourRunner({config}),
 });
 
 program.parse(process.argv);

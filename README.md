@@ -2,6 +2,7 @@
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/migration-script-runner/msr-core/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/migration-script-runner/msr-core/tree/master)
 [![Test](https://github.com/migration-script-runner/msr-core/actions/workflows/test.yml/badge.svg)](https://github.com/migration-script-runner/msr-core/actions/workflows/test.yml)
+[![Security audit](https://github.com/migration-script-runner/msr-core/actions/workflows/security.yml/badge.svg)](https://github.com/migration-script-runner/msr-core/actions/workflows/security.yml)
 [![Coverage Status](https://coveralls.io/repos/github/migration-script-runner/msr-core/badge.svg?branch=master)](https://coveralls.io/github/migration-script-runner/msr-core?branch=master)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=vlavrynovych_msr&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=vlavrynovych_msr)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=vlavrynovych_msr&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=vlavrynovych_msr)
@@ -15,35 +16,70 @@
 [npm-url]: https://npmjs.org/package/@migration-script-runner/core
 [npm-downloads-image]: https://img.shields.io/npm/dm/@migration-script-runner/core.svg?style=flat
 
+---
+
+[🌐 Official Website](https://migration-script-runner.dev/) · [🔥 MSR Firebase](https://github.com/migration-script-runner/msr-firebase) · [📖 MSR Core Documentation](https://core.migration-script-runner.dev/) · [🤖 AI Agent Integration Guide](https://core.migration-script-runner.dev/guides/ai-agent-integration) · [📦 npm](https://www.npmjs.com/package/@migration-script-runner/core)
+
 **A database-agnostic migration framework for TypeScript and JavaScript projects.**
 
 MSR provides a lightweight, flexible framework for managing database migrations without locking you into a specific ORM or database system. Bring your own database implementation and let MSR handle the migration workflow, versioning, validation, and execution.
 
+## Contents
+
+- [The MSR Ecosystem](#msr-ecosystem)
+- [What's New in v1.0.0](#whats-new-v100)
+- [Previous Releases](#previous-releases)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Why MSR Exists](#why-msr-exists)
+- [Why MSR?](#why-msr)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
+
+<a id="msr-ecosystem"></a>
+
+## The MSR Ecosystem
+
+**One core. Built for different databases.**
+
+MSR Core powers the Migration Script Runner family with versioned migrations, checksum validation, locking for distributed deployments, backup and rollback strategies, and a shared CLI. Each implementation adds the behavior its database needs.
+
+- **[MSR Firebase →](https://github.com/migration-script-runner/msr-firebase)** — Bring the MSR workflow to Firebase Realtime Database, with Firebase-specific backup, restore, and locking.
+- **MSR PostgreSQL** — In development. The MSR foundation, adapted for PostgreSQL.
+
+Find shared pages, public documentation, and resources for MSR projects on the **[official website →](https://migration-script-runner.dev/)**.
+
 ---
 
-## 🎉 What's New in v0.8.0
+<a id="whats-new-v100"></a>
 
-**Production-ready locking, enhanced type safety, and critical bug fixes:**
+## 🎉 What's New in v1.0.0
 
-- **🔒 Migration Locking** - Prevent concurrent migrations with database-level locking mechanism for multi-instance deployments
-- **🛡️ Lock Ownership Verification** - Two-phase locking with ownership verification prevents race conditions and ensures safe execution
-- **🖥️ Lock CLI Commands** - New `lock:status` and `lock:release` commands for managing locks in production environments
-- **🔧 Handler Generic Type** - Type-safe handler access in adapters with optional second generic parameter (no more casting!)
-- **🐛 Down Migration Fix** - Fixed TypeError when rolling back migrations (migration records now properly matched with filesystem scripts)
-- **📦 npm Provenance** - Enhanced supply chain security with build provenance attestations
-- **✨ 100% Backwards Compatible** - Zero breaking changes from v0.7.x, all features are opt-in
+**A new foundation for database adapters, with a consistent runner API and a more capable CLI:**
 
-**✅ NO BREAKING CHANGES in v0.8.0:** Fully backwards compatible with v0.7.x. Locking is disabled by default and can be enabled when ready. Handler generic type is optional with sensible defaults. See the [v0.7.x → v0.8.0 Migration Guide](https://migration-script-runner.github.io/msr-core/version-migration/v0.7-to-v0.8) for upgrade instructions and new features.
+- **🏗️ Runner API (breaking)** - `MigrationScriptExecutor` is replaced by the abstract `MigrationScriptRunner`. Adapters provide concrete runners, named `<Database>Runner`, and update their options and dependency types to `IRunnerOptions` and `IRunnerDependencies`.
+- **🧭 Consistent adapter architecture (breaking)** - Provider and orchestrator APIs now have explicit names, including `ILockingProvider`, `ITransactionProvider`, `BackupOrchestrator`, and `SchemaVersionOrchestrator`. The CLI factory is now `createRunner`, and lock ownership uses `runnerId` / `runner_id`.
+- **🖥️ More expressive CLI** - The built-in `--backup-mode` flag supports `full`, `create_only`, `restore_only`, and `manual`. Adapter flags can use dot notation, such as `--mongo.uri`, to populate nested configuration.
+- **✅ Reliable CLI choices** - Unsupported values for `--backup-mode`, `--logger`, `--log-level`, and `--format` are rejected. The selected logger, log level, and JSON output format are applied to the runner.
+- **🔐 Security and maintenance** - Updated `auto-envparse` to v3 and refreshed `figlet`, `lodash`, and `moment`; added vulnerability reporting and CI auditing; and resolved the release SonarCloud findings.
+- **📚 Adapter and contributor guidance** - Expanded adapter/API documentation, migration examples, and repository contribution and workflow guidance.
 
-**[→ View locking documentation](https://migration-script-runner.github.io/msr-core/configuration/locking-settings)**
+This release includes breaking API changes. Follow the [v0.8.x → v1.0.0 Migration Guide](https://core.migration-script-runner.dev/version-migration/v0.8-to-v1.0) before upgrading. See [GitHub Releases](https://github.com/migration-script-runner/msr-core/releases) for release history.
 
 ---
+
+<a id="previous-releases"></a>
 
 ## 📜 Previous Releases
 
-For information about previous releases, see the [Version Migration Guide](https://migration-script-runner.github.io/msr-core/version-migration/).
+For information about previous releases, see the [Version Migration Guide](https://core.migration-script-runner.dev/version-migration/).
 
 ---
+
+<a id="features"></a>
 
 ## ✨ Features
 
@@ -67,6 +103,8 @@ For information about previous releases, see the [Version Migration Guide](https
 
 ---
 
+<a id="installation"></a>
+
 ## 📦 Installation
 
 ```bash
@@ -80,6 +118,8 @@ yarn add @migration-script-runner/core
 ```
 
 ---
+
+<a id="quick-start"></a>
 
 ## 🚀 Quick Start
 
@@ -145,18 +185,22 @@ CREATE TABLE users (
 ### 3. Run Migrations
 
 ```typescript
-import { MigrationScriptExecutor, Config } from '@migration-script-runner/core';
+import { MigrationScriptRunner, Config } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const config = new Config();
 config.folder = './migrations';
 config.logLevel = 'info';  // v0.6.0: 'error' | 'warn' | 'info' | 'debug'
 
 const handler = new MyDatabaseHandler();
-const executor = new MigrationScriptExecutor<IMyDatabase>({ handler, config });
+const runner = new ExampleRunner<IMyDatabase>({ handler, config });
 
 // Library usage - returns structured result
-const result = await executor.up();
+const result = await runner.up();
 
 if (result.success) {
   console.log(`✅ Executed ${result.executed.length} migrations`);
@@ -185,16 +229,20 @@ logLevel: debug  # error | warn | info | debug
 
 ```typescript
 // cli.ts
-import { createCLI, MigrationScriptExecutor } from '@migration-script-runner/core';
+import { createCLI, MigrationScriptRunner } from '@migration-script-runner/core';
 import { MyDatabaseHandler } from './database-handler';
+import { IDB } from '@migration-script-runner/core';
+
+class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+
 
 const program = createCLI({
   name: 'my-db-migrate',
   version: '1.0.0',
   description: 'Database migration CLI',
-  createExecutor: (config) => {
+  createRunner: (config) => {
     const handler = new MyDatabaseHandler();
-    return new MigrationScriptExecutor({ handler, config });
+    return new ExampleRunner({ handler, config });
   }
 });
 
@@ -232,48 +280,72 @@ npx my-db-migrate migrate --no-lock
 npx my-db-migrate migrate --config-file .env.production
 ```
 
-**[→ Full CLI Documentation](https://migration-script-runner.github.io/msr-core/guides/cli-adapter-development)**
+**Nested adapter options:** An adapter registers dot-notation options with `addCustomOptions`:
+
+```typescript
+addCustomOptions: (program) => {
+  program
+    .option('--db.url <url>', 'Database URL')
+    .option('--db.timeout <ms>', 'Connection timeout');
+}
+```
+
+Once registered, use them with the adapter's CLI:
+
+```bash
+npx my-db-migrate migrate \
+  --db.url https://localhost:5432 \
+  --db.timeout 5000
+```
+
+The adapter receives these values as `config.db.url` and `config.db.timeout` (`5000` is converted to a number).
+See the [adapter development guide](https://core.migration-script-runner.dev/guides/cli-options-and-flags#nested-configuration-flags) for details.
+
+**[→ Full CLI Documentation](https://core.migration-script-runner.dev/guides/cli-adapter-development)**
 
 ---
+
+<a id="documentation"></a>
 
 ## 📚 Documentation
 
-**[📖 Full Documentation](https://migration-script-runner.github.io/msr-core/)** - Complete guides, API reference, and examples
+**[📖 Full Documentation](https://core.migration-script-runner.dev/)** - Complete guides, API reference, and examples
 
 ### Getting Started
-- **[Getting Started Guide](https://migration-script-runner.github.io/msr-core/getting-started)** - Complete setup walkthrough
-- **[Writing Migrations](https://migration-script-runner.github.io/msr-core/guides/writing-migrations)** - Best practices and patterns
-- **[SQL Migrations](https://migration-script-runner.github.io/msr-core/guides/sql-migrations)** - Using .sql migration files
-- **[Version Control](https://migration-script-runner.github.io/msr-core/guides/version-control)** - Target specific versions
+- **[Getting Started Guide](https://core.migration-script-runner.dev/getting-started)** - Complete setup walkthrough
+- **[Writing Migrations](https://core.migration-script-runner.dev/guides/writing-migrations)** - Best practices and patterns
+- **[SQL Migrations](https://core.migration-script-runner.dev/guides/sql-migrations)** - Using .sql migration files
+- **[Version Control](https://core.migration-script-runner.dev/guides/version-control)** - Target specific versions
 
 ### Configuration & Customization
-- **[Configuration](https://migration-script-runner.github.io/msr-core/configuration/)** - Migration settings, validation, rollback strategies
-- **[Custom Loggers](https://migration-script-runner.github.io/msr-core/customization/loggers/)** - Console, file, or cloud logging
-- **[Metrics Collection](https://migration-script-runner.github.io/msr-core/customization/metrics/)** - Built-in collectors for observability and performance monitoring
-- **[Render Strategies](https://migration-script-runner.github.io/msr-core/customization/render-strategies/)** - ASCII tables, JSON, or custom formats
-- **[Validation](https://migration-script-runner.github.io/msr-core/customization/validation/)** - Custom validation rules
+- **[Configuration](https://core.migration-script-runner.dev/configuration/)** - Migration settings, validation, rollback strategies
+- **[Custom Loggers](https://core.migration-script-runner.dev/customization/loggers/)** - Console, file, or cloud logging
+- **[Metrics Collection](https://core.migration-script-runner.dev/customization/metrics/)** - Built-in collectors for observability and performance monitoring
+- **[Render Strategies](https://core.migration-script-runner.dev/customization/render-strategies/)** - ASCII tables, JSON, or custom formats
+- **[Validation](https://core.migration-script-runner.dev/customization/validation/)** - Custom validation rules
 
 ### Reference
-- **[API Reference](https://migration-script-runner.github.io/msr-core/api/)** - Complete API documentation
-- **[Recipes](https://migration-script-runner.github.io/msr-core/guides/recipes/)** - Common patterns (PostgreSQL, MongoDB, testing)
-- **[Comparison](https://migration-script-runner.github.io/msr-core/comparison)** - Compare with other migration tools
+- **[API Reference](https://core.migration-script-runner.dev/api/)** - Complete API documentation
+- **[Recipes](https://core.migration-script-runner.dev/guides/recipes/)** - Common patterns (PostgreSQL, MongoDB, testing)
+- **[Comparison](https://core.migration-script-runner.dev/comparison)** - Compare with other migration tools
 
 ### Upgrading
-- **[Version Migration](https://migration-script-runner.github.io/msr-core/version-migration/)** - Upgrade guides between versions
+- **[Version Migration](https://core.migration-script-runner.dev/version-migration/)** - Upgrade guides between versions
 
 ---
+
+<a id="why-msr-exists"></a>
 
 ## 🌱 Why MSR Exists
 
-MSR was born from a real problem: In 2017, while building a mobile app with Firebase, a small team needed to backup and restore production data multiple times a week. Manual processes meant constant risk of corrupting critical data before the app even launched. The solution? A JavaScript tool that automated migrations with automatic backups and intelligent rollback.
+MSR grew from a practical need to make database migrations safer and more flexible. The official website shares the story behind the project and the principles that guide its design.
 
-Six years and many projects later, that prototype became MSR - completely rewritten in TypeScript with a database-agnostic architecture. The core insight: **migration tools should be as flexible as your stack**. Whether you're migrating Firebase collections or PostgreSQL tables, using SQL files or TypeScript logic, MSR adapts to your needs instead of forcing you into rigid patterns.
-
-Today, MSR powers migrations across multiple database platforms with features traditional tools don't offer: built-in backup/restore, polyglot migrations (SQL + TypeScript + JavaScript), custom validators, transaction control, and deep customization. It's designed for real-world scenarios where you need both the simplicity of SQL migrations and the power of programmatic logic.
-
-**[Read the full origin story →](https://migration-script-runner.github.io/msr-core/about/origin-story)**
+- **[Read the MSR origin story →](https://migration-script-runner.dev/origin-story)**
+- **[Explore the design philosophy →](https://migration-script-runner.dev/design-philosophy)**
 
 ---
+
+<a id="why-msr"></a>
 
 ## 🎯 Why MSR?
 
@@ -298,13 +370,19 @@ Today, MSR powers migrations across multiple database platforms with features tr
 
 ---
 
+<a id="contributing"></a>
+
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](https://migration-script-runner.github.io/msr-core/development/contributing) for guidelines on code style, testing requirements, and pull request process.
+Contributions are welcome! Please read our [Contributing Guide](https://core.migration-script-runner.dev/development/contributing) for guidelines on code style, testing requirements, and pull request process.
 
-See our [GitHub Issues](https://github.com/migration-script-runner/msr-core/issues) for tasks that need help.
+See our [GitHub Issues](https://github.com/migration-script-runner/msr-core/issues) for tasks that need help. Read the [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md) before reporting community or security concerns.
+
+See the [Changelog](CHANGELOG.md) for release history and the [Compatibility Guide](https://core.migration-script-runner.dev/compatibility) for supported environments.
 
 ---
+
+<a id="license"></a>
 
 ## 📄 License
 
@@ -316,13 +394,15 @@ This project is licensed under the **MIT License with Commons Clause and Attribu
 - ❌ Cannot sell MSR or database adapters as standalone products
 - 🔒 Database adapters require attribution
 
-See the [LICENSE](LICENSE) file or read the [License Documentation](https://migration-script-runner.github.io/msr-core/license) for detailed examples and FAQ.
+See the [LICENSE](LICENSE) file or read the [License Documentation](https://core.migration-script-runner.dev/license) for detailed examples and FAQ.
 
 ---
 
+<a id="support"></a>
+
 ## 📞 Support
 
-- **📚 Documentation:** https://migration-script-runner.github.io/msr-core/
+- **📚 Documentation:** https://migration-script-runner.dev/
 - **🐛 Issues:** https://github.com/migration-script-runner/msr-core/issues
 - **💬 Discussions:** https://github.com/migration-script-runner/msr-core/discussions
 - **📦 npm:** https://www.npmjs.com/package/@migration-script-runner/core

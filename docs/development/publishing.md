@@ -78,6 +78,7 @@ This command:
 **Update these files:**
 
 1. **CHANGELOG.md**
+
    ```markdown
    ## [0.4.0] - 2025-01-28
 
@@ -101,7 +102,7 @@ This command:
    - Update examples if API changed
 
 3. **Migration Guide** (if breaking changes)
-   - Create `do../version-migration/v0.X-to-v0.Y.md`
+   - Create `docs/version-migration/v0.X-to-v0.Y.md`
    - BEFORE/AFTER code examples
    - Step-by-step migration instructions
 
@@ -147,6 +148,7 @@ git push origin master --tags
 ### 6. Post-Publication
 
 1. **Create GitHub Release**
+
    ```bash
    # Create release from tag
    gh release create v0.4.0 --generate-notes
@@ -232,6 +234,7 @@ v1.0.0
 ### How to Handle Breaking Changes
 
 1. **Document in CHANGELOG**
+
    ```markdown
    ### Breaking Changes
    - **migrate() return type**: Changed from void to IMigrationResult
@@ -239,7 +242,7 @@ v1.0.0
    ```
 
 2. **Create Migration Guide**
-   - File: `do../version-migration/v0.X-to-v0.Y.md`
+   - File: `docs/version-migration/v0.X-to-v0.Y.md`
    - Include BEFORE/AFTER examples
    - Step-by-step instructions
    - Explain rationale for change

@@ -21,7 +21,7 @@ MSR is designed to be highly customizable. This section covers how to extend the
 
 ## Customization Areas
 
-### 🖥️ [CLI Factory](../guides/cli-adapter-development) (v0.7.0+)
+### 🖥️ [CLI Factory](../guides/cli-adapter-development)
 Create command-line interfaces for database adapters:
 - Built-in commands (migrate, list, down, validate, backup)
 - Configuration waterfall with CLI flags

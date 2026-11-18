@@ -45,7 +45,7 @@ Core interfaces for implementing database handlers and custom components:
 - **ISchemaVersion** - Schema version tracking
 - **IDB** - Database connection interface
 - **IMigrationInfo** - Migration metadata
-- **IMetricsCollector** - Metrics collection interface (v0.6.0+)
+- **IMetricsCollector** - Metrics collection interface
 - And more...
 
 ### [Services](services)

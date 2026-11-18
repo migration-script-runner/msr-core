@@ -9,6 +9,14 @@ nav_order: 1
 
 The `ConsoleLogger` is the default logger implementation that outputs all messages to the console using Node.js's built-in `console.*` methods.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 ConsoleLogger is perfect for development and debugging scenarios where you want immediate, interactive feedback. It requires no configuration and works out of the box.

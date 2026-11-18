@@ -25,6 +25,12 @@ Complete guide to SQL migration files (v0.4.0+):
 - Mixing TypeScript and SQL migrations
 - Database-specific SQL features
 
+### [Migrating from Flyway](migrating-from-flyway)
+Plan a careful migration from an existing Flyway project:
+- Inventory Flyway migration history and behavior
+- Map file formats, identifiers, and the MSR schema-version contract
+- Test the cutover on existing and clean database copies
+
 ### [Version Control](version-control)
 Controlled migrations and rollbacks:
 - up() for specific versions
@@ -50,6 +56,13 @@ Build a command-line interface for a database adapter, then follow the topic pag
 ---
 
 ## Practical Examples
+
+### [AI Agent Integration Guide](ai-agent-integration)
+Repository-aware steps for integrating MSR Core into an existing application:
+- Inspect the host project's database, migration setup, and conventions
+- Choose an existing adapter, the programmatic API, or a CLI integration
+- Find the right API, configuration, migration, and deployment references
+- Verify changes without unexpectedly running migrations against a live database
 
 ### [Recipes](recipes/)
 Complete, copy-paste-ready implementations for common scenarios:

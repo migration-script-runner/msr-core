@@ -9,6 +9,14 @@ nav_order: 3
 
 The `SilentRenderStrategy` suppresses all rendering output, making it ideal for testing, library usage, and scenarios where visual output is not desired.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 SilentRenderStrategy produces zero output, ensuring completely silent operation. This is perfect for unit tests, automated systems, and library integrations where rendering output would clutter logs or interfere with other output.

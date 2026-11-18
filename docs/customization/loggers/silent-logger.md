@@ -9,6 +9,14 @@ nav_order: 2
 
 The `SilentLogger` suppresses all log output completely. It's designed for testing environments and scenarios where logging is not desired or would interfere with output.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 SilentLogger implements the `ILogger` interface but discards all log messages. This is particularly useful in unit tests where you want to test the migration logic without cluttering test output with log messages.

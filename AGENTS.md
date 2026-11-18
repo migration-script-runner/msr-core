@@ -1,5 +1,7 @@
 ## Instructions
 
+When asked to integrate MSR Core into a different application, use the [AI Agent Integration Guide](docs/guides/ai-agent-integration.md) to navigate the user-facing documentation. First follow the host application's own instructions and inspect its existing database and migration setup.
+
 ### Work Pattern (MANDATORY)
 
 Every code change MUST follow this three-step pattern:
@@ -289,6 +291,10 @@ These additions reflect the current repository configuration. Keep them aligned 
 ### GitHub project management
 
 Before any GitHub issue, pull request, milestone, label, GitHub Release, tag, or npm publication operation, read [`docs/development/github-project-workflow.md`](docs/development/github-project-workflow.md) and follow it. Its procedures are mandatory. Search and inspect existing remote state before writing, then verify every authorized change. Do not perform a remote mutation unless the user explicitly requests it.
+
+- For GitHub Release titles and notes, follow [`.agents/skills/msr-github-release-notes/SKILL.md`](.agents/skills/msr-github-release-notes/SKILL.md). For `CHANGELOG.md`, migration guides, and documentation navigation, use [`.agents/skills/msr-release-changelog/SKILL.md`](.agents/skills/msr-release-changelog/SKILL.md).
+
+- Run `gh` only from the main project checkout root, never from a sandbox copy or worktree. Before using it, confirm `pwd` and `git rev-parse --show-toplevel` identify the user's main project directory. If that checkout is unavailable, do not fall back to another checkout.
 
 - For task PR creation or updates, use the project skill [`.agents/skills/msr-github-pr/SKILL.md`](.agents/skills/msr-github-pr/SKILL.md) and its helper script. It applies the repository title, target branch, assignee, labels, milestone, and Development-link rules. The command requires an already-pushed, clean task branch; it never commits or pushes.
 - Link the related issue through GitHub's **Development** relationship. Do not put `Closes #<issue>` in the PR description. The script creates and verifies the manual link through GitHub GraphQL's `addCloseIssueReferences` mutation.

@@ -33,21 +33,22 @@ All rendering is handled by the `MigrationRenderer` class which accepts a render
 
 ## The IRenderStrategy Interface
 
-The `IRenderStrategy` interface defines five rendering methods:
+The `IRenderStrategy` interface defines five rendering methods. Its database type and `renderMigrated` parameters match the current Core API:
 
 ```typescript
-interface IRenderStrategy {
+import { Config, IDB, IMigrationInfo, IScripts, MigrationScript } from '@migration-script-runner/core';
+
+interface IRenderStrategy<DB extends IDB> {
   renderMigrated(
-    scripts: IScripts,
-    handler: IDatabaseMigrationHandler,
-    limit?: number
+    scripts: IScripts<DB>,
+    config: Config
   ): void;
 
-  renderPending(scripts: MigrationScript[]): void;
+  renderPending(scripts: MigrationScript<DB>[]): void;
 
   renderExecuted(scripts: IMigrationInfo[]): void;
 
-  renderIgnored(scripts: MigrationScript[]): void;
+  renderIgnored(scripts: MigrationScript<DB>[]): void;
 
   renderBanner(version: string, handlerName: string): void;
 }
@@ -57,67 +58,81 @@ interface IRenderStrategy {
 
 ## Built-in Render Strategies
 
-MSR provides three built-in render strategy implementations. For detailed documentation on each, see the [Render Strategy Documentation](/msr-core/rendering).
+MSR provides three built-in render strategy implementations. For detailed documentation on each, see the [Render Strategy Documentation](/customization/render-strategies).
 
 ### Quick Overview
 
-- **[AsciiTableRenderStrategy](/msr-core/rendering/ascii-table-strategy)** - Default strategy with beautiful ASCII tables. Perfect for development and CLI tools.
-- **[JsonRenderStrategy](/msr-core/rendering/json-strategy)** - Structured JSON output. Best for CI/CD pipelines and log aggregation.
-- **[SilentRenderStrategy](/msr-core/rendering/silent-strategy)** - Suppresses all output. Ideal for testing and library usage.
+- **[AsciiTableRenderStrategy](/customization/render-strategies/ascii-table-strategy)** - Default strategy with beautiful ASCII tables. Perfect for development and CLI tools.
+- **[JsonRenderStrategy](/customization/render-strategies/json-strategy)** - Structured JSON output. Best for CI/CD pipelines and log aggregation.
+- **[SilentRenderStrategy](/customization/render-strategies/silent-strategy)** - Suppresses all output. Ideal for testing and library usage.
 
 ### AsciiTableRenderStrategy (Default)
 
 ```typescript
-import { MigrationScriptRunner, AsciiTableRenderStrategy } from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
+import { Config, IDB, IDatabaseMigrationHandler, MigrationScriptRunner, AsciiTableRenderStrategy } from '@migration-script-runner/core';
 
-class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
 
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config); // Adapter-provided factory
 
-const runner = new ExampleRunner({ handler,
-    renderStrategy: new AsciiTableRenderStrategy()
+const runner = new ExampleRunner({
+  handler,
+  config,
+  renderStrategy: new AsciiTableRenderStrategy()
 });
 ```
 
-[→ Full AsciiTableRenderStrategy Documentation](/msr-core/rendering/ascii-table-strategy)
+[→ Full AsciiTableRenderStrategy Documentation](/customization/render-strategies/ascii-table-strategy)
 
 ### JsonRenderStrategy
 
 ```typescript
-import { MigrationScriptRunner, JsonRenderStrategy } from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
+import { Config, IDB, IDatabaseMigrationHandler, JsonRenderStrategy, MigrationScriptRunner } from '@migration-script-runner/core';
 
-class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
 
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config); // Adapter-provided factory
 
 // Pretty-printed JSON
-const runner = new ExampleRunner({ handler,
-    renderStrategy: new JsonRenderStrategy(true)
+const runner = new ExampleRunner({
+  handler,
+  config,
+  renderStrategy: new JsonRenderStrategy(true)
 });
 
 // Compact JSON
-const runner = new ExampleRunner({ handler,
-    renderStrategy: new JsonRenderStrategy(false)
+const compactRunner = new ExampleRunner({
+  handler,
+  config,
+  renderStrategy: new JsonRenderStrategy(false)
 });
 ```
 
-[→ Full JsonRenderStrategy Documentation](/msr-core/rendering/json-strategy)
+[→ Full JsonRenderStrategy Documentation](/customization/render-strategies/json-strategy)
 
 ### SilentRenderStrategy
 
 ```typescript
-import { MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
+import { Config, IDB, IDatabaseMigrationHandler, MigrationScriptRunner, SilentRenderStrategy } from '@migration-script-runner/core';
 
-class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
+class ExampleRunner extends MigrationScriptRunner<IDB> {}
 
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config); // Adapter-provided factory
 
-const runner = new ExampleRunner({ handler,
-    renderStrategy: new SilentRenderStrategy()
+const runner = new ExampleRunner({
+  handler,
+  config,
+  renderStrategy: new SilentRenderStrategy()
 });
 ```
 
-[→ Full SilentRenderStrategy Documentation](/msr-core/rendering/silent-strategy)
+[→ Full SilentRenderStrategy Documentation](/customization/render-strategies/silent-strategy)
 
 ---
 
@@ -128,17 +143,25 @@ You can create custom render strategies by implementing the `IRenderStrategy` in
 ### Example: XML Render Strategy
 
 ```typescript
-import { IRenderStrategy, IScripts, IMigrationInfo, MigrationScript, IDatabaseMigrationHandler, ILogger } from '@migration-script-runner/core';
+import {
+  Config,
+  IDB,
+  IMigrationInfo,
+  IRenderStrategy,
+  IScripts,
+  ILogger,
+  MigrationScript
+} from '@migration-script-runner/core';
 
-export class XmlRenderStrategy implements IRenderStrategy {
+export class XmlRenderStrategy<DB extends IDB> implements IRenderStrategy<DB> {
     constructor(private logger: ILogger) {}
 
-    renderMigrated(scripts: IScripts, handler: IDatabaseMigrationHandler, limit = 0): void {
+    renderMigrated(scripts: IScripts<DB>, config: Config): void {
         if (!scripts.migrated.length) return;
 
         let migrated = scripts.migrated;
-        if (limit > 0) {
-            migrated = migrated.slice(-limit);
+        if (config.displayLimit > 0) {
+            migrated = migrated.slice(-config.displayLimit);
         }
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -156,7 +179,7 @@ ${migrated.map(m => `  <migration>
         this.logger.log(xml);
     }
 
-    renderPending(scripts: MigrationScript[]): void {
+    renderPending(scripts: MigrationScript<DB>[]): void {
         if (!scripts.length) return;
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -187,7 +210,7 @@ ${scripts.map(s => `  <migration>
         this.logger.log(xml);
     }
 
-    renderIgnored(scripts: MigrationScript[]): void {
+    renderIgnored(scripts: MigrationScript<DB>[]): void {
         if (!scripts.length) return;
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>

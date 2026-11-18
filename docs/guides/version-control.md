@@ -492,5 +492,5 @@ For complete API details, see:
 ## Next Steps
 
 - [Writing Migrations](writing-migrations) - Best practices for creating migrations
-- [Migration Hooks](hooks) - Add custom logic during version control operations
+- [Migration Hooks](../customization/hooks) - Add custom logic during version control operations
 - [Configuration](../configuration) - Configure rollback strategies and backup settings

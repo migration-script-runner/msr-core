@@ -89,8 +89,6 @@ If you need checksum validation for setup logic, create a regular migration file
 
 **Type:** `boolean`
 **Default:** `true`
-**Introduced:** v0.3.0
-
 Enable or disable checksum integrity checking for executed migrations.
 
 ```typescript
@@ -112,8 +110,6 @@ config.validateMigratedFiles = false;
 
 **Type:** `'md5' | 'sha1' | 'sha256' | 'sha512'`
 **Default:** `'sha256'`
-**Introduced:** v0.3.0
-
 The hashing algorithm used to calculate file checksums.
 
 ```typescript
@@ -144,8 +140,6 @@ config.checksumAlgorithm = 'sha512';
 
 **Type:** `boolean`
 **Default:** `true`
-**Introduced:** v0.3.0
-
 Controls whether executed migration files must still exist in the filesystem.
 
 ```typescript
@@ -552,5 +546,5 @@ For high-security environments, consider:
 ## Next Steps
 
 - **Understand validation** → [Built-in Validation Guide](built-in-validation)
-- **Configure your project** → [Configuration Reference](../configuration)
-- **Handle errors** → [Error Handling Guide](../guides/error-handling)
+- **Configure your project** → [Configuration Reference](../../configuration)
+- **Handle errors** → [CLI and test troubleshooting](../../guides/cli-testing-troubleshooting)

@@ -81,7 +81,7 @@ npm run test:report
 ```
 
 {: .note }
-> **Pre-Commit Hooks (v0.7.0+):** When you run `git commit`, these checks run automatically via Husky. If they fail, the commit is blocked. See [Pre-Commit Hooks](setup#pre-commit-hooks-v070) for more details.
+> **Pre-Commit Hooks (v0.7.0+):** When you run `git commit`, these checks run automatically via Husky. If they fail, the commit is blocked. See [Pre-Commit Hooks](setup#pre-commit-hook) for more details.
 
 ---
 
@@ -149,7 +149,7 @@ gem install bundler jekyll
 cd docs
 bundle exec jekyll serve
 
-# View at http://localhost:4000/msr-core/
+# View at http://localhost:4000/
 ```
 
 **Documentation structure:**
@@ -158,7 +158,7 @@ bundle exec jekyll serve
 - `docs/configuration.md` - Configuration reference
 - `docs/api/` - API documentation
 - `docs/guides/` - User guides
-- `do../version-migration/` - Migration guides
+- `docs/version-migration/` - Migration guides
 
 ---
 
@@ -166,6 +166,6 @@ bundle exec jekyll serve
 
 - **Issues:** https://github.com/migration-script-runner/msr-core/issues
 - **Discussions:** https://github.com/migration-script-runner/msr-core/discussions
-- **Email:** volodyalavrynovych@gmail.com
+- **Support:** Open a question or issue in [GitHub Issues](https://github.com/migration-script-runner/msr-core/issues).
 
 Thank you for contributing! 🎉

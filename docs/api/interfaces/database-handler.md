@@ -27,7 +27,7 @@ Interface that must be implemented for your specific database.
 {: .note }
 > **Design Origin**: The handler pattern emerged from MSR's 2017 Firebase prototype, where an `EntityService` provided clean helper methods like `updateAll(callback)` and `findAllBy(propertyName, value)`. Instead of raw database SDK calls in every migration, this service layer made migrations declarative and maintainable. This pattern proved so valuable it became core to MSR's architecture - allowing you to inject your own services, repositories, and business logic into migrations. Read more in the [origin story](https://migration-script-runner.dev/origin-story).
 
-**Signature (v0.8.0+):**
+**Signature:**
 ```typescript
 interface IDatabaseMigrationHandler<DB extends IDB> {
   getName(): string;
@@ -36,19 +36,10 @@ interface IDatabaseMigrationHandler<DB extends IDB> {
   schemaVersion: ISchemaVersion<DB>;
   backup?: IBackup<DB>;  // Optional - only needed for BACKUP or BOTH strategies
   transactionProvider?: ITransactionProvider<DB>;  // Optional - auto-created if db supports transactions
-  lockingProvider?: ILockingProvider<DB>;  // Optional (v0.8.0) - enables concurrent migration prevention
+  lockingProvider?: ILockingProvider<DB>;  // Optional; enables concurrent migration prevention
 }
 ```
 
-{: .important }
-> **Breaking Change (v0.6.0):** Generic type parameter `<DB extends IDB>` is now **required** for full type safety. You must explicitly specify the type parameter in your implementations (e.g., `IDatabaseMigrationHandler<IDB>`). See [v0.6.0 migration guide](../../version-migration/v0.5-to-v0.6) for detailed examples.
-
-{: .important }
-> **Breaking Changes (v0.3.0):**
-> - The `cfg: Config` property has been removed from this interface. Config is now passed separately to service constructors.
-> - The `backup` property is now **optional**. Only implement it if using BACKUP or BOTH rollback strategies.
->
-> See the [migration guide](../../version-migration/v0.2-to-v0.3) for details.
 
 ---
 
@@ -121,19 +112,19 @@ backup?: IBackup
 
 **Optional:** Only required for BACKUP or BOTH rollback strategies. Can be omitted when using DOWN or NONE strategies.
 
-Handles database backup and restore operations. See [`IBackup` interface](backup) for details.
+Handles database backup and restore operations. See [`IBackup` interface](index#with-backup-support) for details.
 
 ---
 
 ### lockingProvider
 
-Locking interface for preventing concurrent migrations (optional, v0.8.0).
+Locking interface for preventing concurrent migrations (optional).
 
 ```typescript
 lockingProvider?: ILockingProvider<DB>
 ```
 
-**Optional (v0.8.0):** Provides database-level locking to prevent multiple processes from running migrations simultaneously. When not provided, locking is disabled.
+Provides database-level locking to prevent multiple processes from running migrations simultaneously. When not provided, locking is disabled.
 
 **Use Cases:**
 - **Multi-instance deployments** - Multiple application servers running migrations
@@ -237,7 +228,7 @@ class PostgresHandler implements IDatabaseMigrationHandler<PostgresDB> {
 }
 ```
 
-See [Locking Configuration](../configuration/locking-settings) for configuration options and [Lock Commands](../guides/lock-commands) for CLI usage.
+See [Locking Configuration](../../configuration/locking-settings) for configuration options and [Lock Commands](../../guides/lock-commands) for CLI usage.
 
 ---
 

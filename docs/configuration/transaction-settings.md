@@ -12,16 +12,13 @@ nav_order: 5
 Configure transaction management for migration execution. Transaction settings control how migrations are wrapped in database transactions and how they behave on failure.
 {: .fs-6 .fw-300 }
 
-## Table of Contents
+## Table of contents
 {: .no_toc .text-delta }
 
-- [Overview](#overview)
-- [Transaction Configuration](#transaction-configuration)
-- [Transaction Modes](#transaction-modes)
-- [Isolation Levels](#isolation-levels)
-- [Retry Configuration](#retry-configuration)
-- [Configuration Examples](#configuration-examples)
-- [Environment Variables](#environment-variables)
+1. TOC
+{:toc}
+
+---
 
 ## Overview
 

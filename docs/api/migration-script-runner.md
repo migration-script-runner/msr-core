@@ -49,8 +49,11 @@ interface AppHandler extends IDatabaseMigrationHandler<AppDatabase> {
 
 class AppRunner extends MigrationScriptRunner<AppDatabase, AppHandler> {}
 
+declare function createDatabaseHandler(config: Config): AppHandler;
+
 const config = new Config();
 config.folder = './migrations';
+const handler = createDatabaseHandler(config); // Adapter-provided factory
 const runner = new AppRunner({ handler, config });
 const result = await runner.migrate();
 ```
@@ -68,6 +71,8 @@ The class is abstract, so construct a concrete subclass. `dependencies.handler` 
 ```typescript
 class PostgresRunner extends MigrationScriptRunner<PostgresDB, PostgresHandler> {}
 
+declare function createPostgresHandler(): PostgresHandler;
+const postgresHandler = createPostgresHandler(); // Adapter-provided factory
 const runner = new PostgresRunner({
   handler: postgresHandler,
   config: new Config()
@@ -93,8 +98,6 @@ const backupPath = await runner.createBackup();
 console.log(`Backup created at ${backupPath}`);
 ```
 
-**Available by:** v0.8.0.
-
 ### `deleteBackup()`
 
 Delete the current backup when the configured backup behavior permits cleanup.
@@ -110,8 +113,6 @@ Delete the current backup when the configured backup behavior permits cleanup.
 ```typescript
 runner.deleteBackup();
 ```
-
-**Available by:** v0.8.0.
 
 ### `down(targetVersion)`
 
@@ -134,8 +135,6 @@ if (result.success) {
 }
 ```
 
-**Available by:** v0.8.0.
-
 ### `forceReleaseLock()`
 
 Force-release the current migration lock. This is an administrative recovery operation: only call it after confirming that no migration is still running.
@@ -155,8 +154,6 @@ if (status?.isLocked && confirmedStaleLock) {
 }
 ```
 
-**Available by:** v0.8.0.
-
 ### `getHandler()`
 
 Return the handler supplied to the constructor. Its type is preserved as `THandler`, so adapters can expose database-specific operations without casts.
@@ -171,8 +168,6 @@ Return the handler supplied to the constructor. Its type is preserved as `THandl
 const handler = runner.getHandler();
 console.log(handler.getName());
 ```
-
-**Available since:** v0.8.1.
 
 ### `getLockStatus()`
 
@@ -193,8 +188,6 @@ if (status?.isLocked) {
 }
 ```
 
-**Available by:** v0.8.0.
-
 ### `list(number?)`
 
 Display migration history. Pass a positive number to limit the displayed history; `0` (the default) displays all migrations.
@@ -213,8 +206,6 @@ Display migration history. Pass a positive number to limit the displayed history
 await runner.list();    // all migrations
 await runner.list(10);  // last 10 migrations
 ```
-
-**Available by:** v0.8.0.
 
 ### `migrate(targetVersion?)`
 
@@ -236,8 +227,6 @@ const result = await runner.migrate();
 const targeted = await runner.migrate(202501220100);
 ```
 
-**Available by:** v0.8.0.
-
 ### `restoreFromBackup(backupPath?)`
 
 Restore the database from a backup. If no path is provided, the configured backup service selects its most recent backup.
@@ -256,8 +245,6 @@ Restore the database from a backup. If no path is provided, the configured backu
 await runner.restoreFromBackup('./backups/pre-deploy.bkp');
 ```
 
-**Available by:** v0.8.0.
-
 ### `up(targetVersion?)`
 
 Run pending migrations, optionally stopping at a target timestamp.
@@ -275,8 +262,6 @@ Run pending migrations, optionally stopping at a target timestamp.
 ```typescript
 const result = await runner.up();
 ```
-
-**Available by:** v0.8.0.
 
 ### `validate()`
 
@@ -301,8 +286,6 @@ validate(): Promise<{
 const results = await runner.validate();
 console.log(`Pending checked: ${results.pending.length}`);
 ```
-
-**Available by:** v0.8.0.
 
 ## Async adapter initialization
 
@@ -334,7 +317,7 @@ static async getInstance(options: IRunnerOptions<AppDatabase>): Promise<AppRunne
 }
 ```
 
-The helper is available since v0.8.2. The adapter's `getInstance()` method is its public API.
+The adapter's `getInstance()` method is the public API.
 
 ## Related references
 

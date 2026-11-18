@@ -204,7 +204,7 @@ class MetricsHooks implements IMigrationHooks {
 
 ---
 
-### Transaction Metrics (v0.5.0+)
+### Transaction Metrics
 
 Track transaction-specific metrics when using transaction modes:
 
@@ -890,7 +890,7 @@ async onComplete(result: IMigrationResult): Promise<void> {
 
 ## API Reference
 
-See [IMigrationHooks API Documentation](../api/interfaces/IMigrationHooks) for complete interface details.
+See [IMigrationHooks API Documentation](#available-lifecycle-hooks) for complete interface details.
 
 ---
 

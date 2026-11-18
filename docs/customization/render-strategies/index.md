@@ -8,9 +8,6 @@ has_children: true
 
 # Render Strategy Implementations
 
-New in v0.3.0
-{: .label .label-green }
-
 MSR uses the Strategy Pattern to provide multiple output formats for migration information, from beautiful terminal tables to structured JSON for CI/CD integration.
 
 ## Available Render Strategies
@@ -120,10 +117,10 @@ const runner = new ExampleRunner({ handler,
 
 ## Creating Custom Render Strategies
 
-All render strategies implement the `IRenderStrategy` interface. See the [Custom Rendering Guide](../customization/custom-rendering.md) for detailed examples of creating your own render strategy implementations.
+All render strategies implement the `IRenderStrategy` interface. See the [Custom Rendering Guide](../custom-rendering.md) for detailed examples of creating your own render strategy implementations.
 
 ## Next Steps
 
 - Choose a render strategy from the list above to learn more
-- Read the [Custom Rendering Guide](../customization/custom-rendering.md) for advanced usage
-- See [Getting Started](../getting-started.md) for basic setup
+- Read the [Custom Rendering Guide](../custom-rendering.md) for advanced usage
+- See [Getting Started](../../getting-started.md) for basic setup

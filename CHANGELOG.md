@@ -2,22 +2,26 @@
 
 Notable changes to MSR Core are recorded here. The project uses [Semantic Versioning](https://semver.org/). Dates below follow Git tags where available. Early `0.1.x` entries are reconstructed from version changes and commits because tags begin at `v0.1.7`.
 
-## [Unreleased]
+## [1.0.0]
+
+> Release notes for v1.0.0. The package metadata is currently `1.0.0-beta.1`; no stable release date is recorded here because the final tag has not been published.
 
 ### Added
-- A common `--backup-mode` CLI flag with documentation and tests ([#153](https://github.com/migration-script-runner/msr-core/issues/153)).
-- Repository guidance and GitHub workflow documentation ([#167](https://github.com/migration-script-runner/msr-core/issues/167)).
+- Added the common `--backup-mode` CLI option with validated values (`full`, `create_only`, `restore_only`, and `manual`) ([#153](https://github.com/migration-script-runner/msr-core/issues/153), [#173](https://github.com/migration-script-runner/msr-core/issues/173)).
+- Added dot-notation support for adapter-specific CLI options, mapping flags such as `--mongo.uri` into nested configuration ([#162](https://github.com/migration-script-runner/msr-core/issues/162)).
+- Added repository guidance, GitHub workflow documentation, security reporting guidance, contributor templates, compatibility policy, and CI security auditing ([#163](https://github.com/migration-script-runner/msr-core/issues/163), [#167](https://github.com/migration-script-runner/msr-core/issues/167)).
+- Added an automated workflow that retrieves SonarCloud findings and opens a guarded Codex remediation PR ([#178](https://github.com/migration-script-runner/msr-core/issues/178)).
 
 ### Changed
-- Updated `auto-envparse` to v3 ([#164](https://github.com/migration-script-runner/msr-core/issues/164)).
-- **Breaking:** Renamed the public runner class and related option/dependency types to `MigrationScriptRunner`, `IRunnerOptions`, and `IRunnerDependencies`; see the [v0.8.x → v1.0.0 migration guide](docs/version-migration/v0.8-to-v1.0.md) ([#155](https://github.com/migration-script-runner/msr-core/issues/155)).
-- **Breaking:** Standardized provider and orchestrator API names, including `ILockingProvider`, `ITransactionProvider`, `BackupOrchestrator`, and `SchemaVersionOrchestrator`; renamed handler and runner option properties, the CLI factory to `createRunner`, and lock owner identifiers to `runnerId` / `runner_id`. See the [v0.8.x → v1.0.0 migration guide](docs/version-migration/v0.8-to-v1.0.md) ([#156](https://github.com/migration-script-runner/msr-core/issues/156)).
-- Updated `figlet`, `lodash`, and `moment` to versions without the production dependency advisories present in the previous lockfile ([#163](https://github.com/migration-script-runner/msr-core/issues/163)).
+- **Breaking:** Made `MigrationScriptRunner` an abstract base class for adapters ([#150](https://github.com/migration-script-runner/msr-core/issues/150)).
+- **Breaking:** Replaced `MigrationScriptExecutor` and its option/dependency types with `MigrationScriptRunner`, `IRunnerOptions`, and `IRunnerDependencies` ([#155](https://github.com/migration-script-runner/msr-core/issues/155)).
+- **Breaking:** Standardized provider and orchestrator API names, handler and runner option properties, the CLI factory (`createRunner`), adapter class naming (`<Database>Runner`), and lock owner identifiers (`runnerId` / `runner_id`) ([#156](https://github.com/migration-script-runner/msr-core/issues/156)).
+- Updated `auto-envparse` to v3 and refreshed `figlet`, `lodash`, and `moment` to address dependency advisories ([#163](https://github.com/migration-script-runner/msr-core/issues/163), [#164](https://github.com/migration-script-runner/msr-core/issues/164)).
+- Expanded adapter, API, CLI, and release migration documentation and examples ([#154](https://github.com/migration-script-runner/msr-core/issues/154), [#174](https://github.com/migration-script-runner/msr-core/issues/174)).
 
-### Security and community
-- Added vulnerability reporting guidance, contributor templates, compatibility policy, and CI security auditing for the upcoming release ([#163](https://github.com/migration-script-runner/msr-core/issues/163)).
-
-The target stable version remains `1.0.0`; this branch prepares package version `1.0.0-beta.1` for beta validation. Neither the beta nor the final release has been tagged or published. Additional v1.0.0 API changes will be recorded here as they are implemented.
+### Fixed
+- Validated supported values for `--backup-mode`, `--logger`, `--log-level`, and `--format`; the CLI now applies selected logger, log level, and JSON output to adapter runners ([#173](https://github.com/migration-script-runner/msr-core/issues/173)).
+- Resolved 66 actionable findings from the v1.0.0 SonarCloud review with corresponding code and test improvements ([#175](https://github.com/migration-script-runner/msr-core/issues/175)).
 
 ## [0.8.4] - 2025-12-20
 ### Added

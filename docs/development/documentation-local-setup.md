@@ -23,9 +23,7 @@ How to set up and run Jekyll locally for testing documentation changes.
 
 MSR documentation uses Jekyll with the Just the Docs theme and is automatically deployed to GitHub Pages. Before pushing documentation changes, you can test them locally to verify formatting, links, and layout.
 
-**Documentation URL:**
-- Production: https://migration-script-runner.github.io/msr-core
-- Custom domain: https://core.msr.lavr.site
+**Documentation URL:** https://core.migration-script-runner.dev
 
 ---
 
@@ -400,7 +398,7 @@ Key settings in `_config.yml`:
 remote_theme: just-the-docs/just-the-docs
 
 # URLs
-url: "https://core.msr.lavr.site"
+url: "https://core.migration-script-runner.dev"
 baseurl: ""
 
 # Mermaid diagrams
@@ -521,4 +519,4 @@ cd docs && bundle update
 
 **Local URL**: http://localhost:4000
 
-**Production URL**: https://migration-script-runner.github.io/msr-core
+**Production URL**: https://core.migration-script-runner.dev

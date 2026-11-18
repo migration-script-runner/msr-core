@@ -271,7 +271,7 @@ v1.0.0
 
 **Process:**
 1. Checkout repository
-2. Setup Node.js 20
+2. Setup Node.js 22
 3. Install dependencies (`npm ci`)
 4. Run build and tests (via `prepublishOnly` hook)
 5. Publish to npm with provenance signature

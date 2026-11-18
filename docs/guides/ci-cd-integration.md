@@ -63,7 +63,7 @@ on:
     branches: [main]
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   deploy:
@@ -151,7 +151,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -218,7 +218,7 @@ stages:
   - deploy
 
 variables:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
 
 build:
   stage: build
@@ -277,7 +277,7 @@ stages:
   - deploy
 
 .migrate_template: &migrate
-  image: node:20
+  image: node:22
   script:
     - npm ci --production
     - npx msr migrate 2>&1 | tee migration.log
@@ -342,7 +342,7 @@ pipeline {
     agent any
 
     environment {
-        NODE_VERSION = '20'
+        NODE_VERSION = '22'
         DATABASE_URL = credentials('production-database-url')
     }
 
@@ -418,7 +418,7 @@ pipeline {
 pipeline {
     agent {
         docker {
-            image 'node:20'
+            image 'node:22'
         }
     }
 
@@ -459,7 +459,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  nodeVersion: '20.x'
+  nodeVersion: '22.x'
 
 stages:
   - stage: Build
@@ -534,7 +534,7 @@ version: 2.1
 runners:
   node-runner:
     docker:
-      - image: cimg/node:20.0
+      - image: cimg/node:22
     working_directory: ~/project
 
 jobs:

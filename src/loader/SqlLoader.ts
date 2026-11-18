@@ -166,7 +166,8 @@ class SqlScript<DB extends IDB> implements IRunnableScript<DB> {
             throw new Error(
                 `${this.scriptName}: SQL migration failed\n` +
                 `Error: ${(error as Error).message}\n` +
-                `SQL Preview:\n${sqlPreview}`
+                `SQL Preview:\n${sqlPreview}`,
+                {cause: error}
             );
         }
     }
@@ -212,7 +213,8 @@ class SqlScript<DB extends IDB> implements IRunnableScript<DB> {
             throw new Error(
                 `${this.scriptName}: SQL rollback failed\n` +
                 `Error: ${(error as Error).message}\n` +
-                `SQL Preview:\n${sqlPreview}`
+                `SQL Preview:\n${sqlPreview}`,
+                {cause: error}
             );
         }
     }

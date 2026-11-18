@@ -23,7 +23,7 @@ Guide for contributors and maintainers.
 
 ### Prerequisites
 
-- Node.js 20 or higher (see [Compatibility](../compatibility))
+- Node.js 22 or higher (see [Compatibility](../compatibility))
 - npm bundled with the supported Node.js installation
 - Git
 

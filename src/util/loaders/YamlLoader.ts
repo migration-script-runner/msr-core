@@ -130,7 +130,7 @@ export class YamlLoader implements IConfigFileLoader {
 
             // Format error message with fallback for non-Error exceptions
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            throw new Error(`Failed to load configuration from ${filePath}: ${errorMessage}`);
+            throw new Error(`Failed to load configuration from ${filePath}: ${errorMessage}`, {cause: error});
         }
     }
 }

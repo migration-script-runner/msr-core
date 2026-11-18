@@ -8,7 +8,7 @@ nav_order: 8
 
 ## Node.js
 
-`package.json` requires Node.js `>=20.0.0`. The GitHub Actions test matrix currently verifies Node.js 20.x and 22.x; CircleCI uses 20.18. Other Node.js versions that satisfy the engine range are not currently covered by CI. Use Node.js 20 for local development (`.nvmrc`). Any change to the minimum supported version should update `package.json`, CI, this page, and the release notes together. Support for a Node.js line will be removed only with a documented release and a version change consistent with the project's SemVer policy.
+`package.json` requires Node.js `>=22.0.0`. The GitHub Actions test matrix verifies Node.js 22.x and 26.x; CircleCI uses Node.js 22. Other Node.js versions that satisfy the engine range are not currently covered by CI. Use Node.js 22 for local development (`.nvmrc`). Any change to the minimum supported version should update `package.json`, CI, this page, and the release notes together. Support for a Node.js line will be removed only with a documented release and a version change consistent with the project's SemVer policy.
 
 ## TypeScript and JavaScript
 

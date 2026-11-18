@@ -69,7 +69,8 @@ export class JsJsonLoader implements IConfigFileLoader {
             throw new Error(
                 `Failed to load configuration from ${filePath}: ${
                     error instanceof Error ? error.message : 'Unknown error'
-                }`
+                }`,
+                {cause: error}
             );
         }
     }

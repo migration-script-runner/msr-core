@@ -16,7 +16,9 @@ Notable changes to MSR Core are recorded here. The project uses [Semantic Versio
 - **Breaking:** Made `MigrationScriptRunner` an abstract base class for adapters ([#150](https://github.com/migration-script-runner/msr-core/issues/150)).
 - **Breaking:** Replaced `MigrationScriptExecutor` and its option/dependency types with `MigrationScriptRunner`, `IRunnerOptions`, and `IRunnerDependencies` ([#155](https://github.com/migration-script-runner/msr-core/issues/155)).
 - **Breaking:** Standardized provider and orchestrator API names, handler and runner option properties, the CLI factory (`createRunner`), adapter class naming (`<Database>Runner`), and lock owner identifiers (`runnerId` / `runner_id`) ([#156](https://github.com/migration-script-runner/msr-core/issues/156)).
+- **Breaking:** Raised the minimum supported Node.js version from 20 to 22 and aligned CI, publishing, and runtime examples ([#192](https://github.com/migration-script-runner/msr-core/issues/192)).
 - Updated `auto-envparse` to v3 and refreshed `figlet`, `lodash`, and `moment` to address dependency advisories ([#163](https://github.com/migration-script-runner/msr-core/issues/163), [#164](https://github.com/migration-script-runner/msr-core/issues/164)).
+- Refreshed the Node.js 22-compatible development toolchain, upgraded the Stryker packages together, and declared `uuid` as a direct runtime dependency ([#192](https://github.com/migration-script-runner/msr-core/issues/192)).
 - Expanded adapter, API, CLI, and release migration documentation and examples ([#154](https://github.com/migration-script-runner/msr-core/issues/154), [#174](https://github.com/migration-script-runner/msr-core/issues/174)).
 
 ### Fixed

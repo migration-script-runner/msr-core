@@ -23,7 +23,7 @@ Set up your development environment for contributing to MSR.
 
 ### Required Software
 
-- **Node.js**: 20.x or higher (see `engines` in `package.json`)
+- **Node.js**: 22.x or higher (see `engines` in `package.json`)
 - **npm**: Use the npm version bundled with your supported Node.js installation
 - **Git**: 2.x or higher
 
@@ -414,6 +414,6 @@ sudo chown -R $(whoami) ~/.npm
 
 ## Continuous Integration
 
-The GitHub Actions test workflow currently runs on pushes to `master`, `develop`, and `release/*`, and on pull requests targeting `master` or `develop`. It tests on Node.js 20.x and 22.x, installs with `npm ci`, creates `backups/`, runs lint and tests, and generates a coverage report. A task PR targeting `release/*` is covered by the push workflow when commits reach that branch; the pull request event filter currently names only `master` and `develop`.
+The GitHub Actions test workflow currently runs on pushes to `master`, `develop`, and `release/*`, and on pull requests targeting `master` or `develop`. It tests on Node.js 22.x and 26.x, installs with `npm ci`, creates `backups/`, runs lint and tests, and generates a coverage report. A task PR targeting `release/*` is covered by the push workflow when commits reach that branch; the pull request event filter currently names only `master` and `develop`.
 
-CircleCI currently uses Node.js 20.18, runs `npm run test:report`, and uploads the coverage report to Coveralls. Neither CI workflow enforces the local 100% coverage threshold.
+CircleCI currently uses Node.js 22, runs `npm run test:report`, and uploads the coverage report to Coveralls. Neither CI workflow enforces the local 100% coverage threshold.

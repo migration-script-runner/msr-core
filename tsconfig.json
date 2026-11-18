@@ -3,7 +3,8 @@
   "compilerOptions": {
     "target": "es2019",
     "lib": [
-      "es6"
+      "es6",
+      "es2022.error"
     ],
     "module": "commonjs",
     "sourceMap": true,

@@ -20,7 +20,7 @@ Install MSR Core, connect a database adapter, and run your first migration.
 
 ## Before you begin
 
-- Node.js 20 or later.
+- Node.js 22 or later.
 - npm.
 - A database and an MSR adapter for it. MSR Core does not include a database driver.
 

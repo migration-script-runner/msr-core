@@ -34,7 +34,7 @@ Containers and orchestration platforms require special consideration for databas
 ### Basic Dockerfile
 
 ```dockerfile
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 WORKDIR /app
 
 # Install dependencies
@@ -124,7 +124,7 @@ docker-compose up -d
 #### Pattern 2: Multi-Stage Build with Scripts
 
 ```dockerfile
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 

@@ -22,7 +22,7 @@ Environment variables for configuring transaction management, isolation levels, 
 
 ## Overview
 
-Transaction environment variables (introduced in v0.5.0) provide fine-grained control over transaction behavior during migration execution, including automatic retry logic for transient failures.
+Transaction environment variables provide fine-grained control over transaction behavior during migration execution, including automatic retry logic for transient failures.
 
 **Key Features:**
 - Configurable transaction scope (per-migration, per-batch, none)

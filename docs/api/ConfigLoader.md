@@ -27,9 +27,9 @@ Utility class for loading configuration using environment variables and config f
 - Built-in defaults
 - Constructor overrides
 
-**New in v0.7.0:** Generic class design with instance methods that can be extended by database adapters for custom environment variable handling
+Generic class design with instance methods that can be extended by database adapters for custom environment variable handling
 
-**New in v0.6.0:** YAML, TOML, and XML configuration file support with optional peer dependencies
+YAML, TOML, and XML configuration file support with optional peer dependencies
 
 **Import:**
 ```typescript
@@ -65,8 +65,6 @@ const tableName = process.env[ENV.MSR_TABLE_NAME];
 
 ## Generic Type Parameter
 
-**New in v0.7.0:**
-
 ```typescript
 class ConfigLoader<C extends Config = Config> implements IConfigLoader<C>
 ```
@@ -95,7 +93,7 @@ class PostgreSqlConfigLoader extends ConfigLoader<PostgreSqlConfig> {
 
 ## Instance Methods
 
-**New in v0.7.0:** `load()` and `applyEnvironmentVariables()` are now instance methods that can be overridden by adapters extending `ConfigLoader`.
+`load()` and `applyEnvironmentVariables()` are now instance methods that can be overridden by adapters extending `ConfigLoader`.
 
 ### load()
 
@@ -128,7 +126,7 @@ interface ConfigLoaderOptions {
 **Priority Order:**
 1. Built-in defaults (lowest)
 2. Config file
-3. .env files (v0.7.0+) - Loaded from `config.envFileSources`
+3. .env files - Loaded from `config.envFileSources`
 4. Environment variables
 5. Constructor overrides (highest)
 
@@ -182,7 +180,7 @@ const runner = new ExampleRunner({
 
 ### applyEnvironmentVariables()
 
-**New in v0.7.0:** Instance method that can be overridden by adapters.
+Instance method that can be overridden by adapters.
 
 Apply environment variables to configuration object.
 
@@ -223,7 +221,7 @@ class PostgreSqlConfigLoader extends ConfigLoader {
 
 ### autoApplyEnvironmentVariables()
 
-**New in v0.7.0:** Automatic environment variable parsing using reflection and type inference.
+Automatic environment variable parsing using reflection and type inference.
 
 Automatically discover and apply environment variables for any config object based on its structure. This eliminates the need for manual env var handling in adapters.
 
@@ -248,7 +246,7 @@ protected autoApplyEnvironmentVariables(
 - **Type Coercion**: Automatically converts env var strings to correct types
 - **Naming Convention**: Converts `camelCase` properties to `SNAKE_CASE` env vars
 - **Nested Support**: Handles nested objects with dot-notation (`PREFIX_PROP_NESTED`)
-- **.env File Support** (v0.7.0+): Automatically loads from files specified in `config.envFileSources`
+- **.env File Support**: Automatically loads from files specified in `config.envFileSources`
 - **Override System**: Allows custom parsing logic for special cases
 
 **How It Works:**
@@ -763,7 +761,7 @@ class PostgreSQLConfigValidator {
 
 ---
 
-## Plugin Architecture (v0.6.0+)
+## Plugin Architecture
 
 ConfigLoader uses a plugin-based architecture for loading different file formats:
 
@@ -1032,7 +1030,7 @@ await runner.migrate();
 ### Development with .env File
 
 {: .note }
-> **Auto-loading in v0.7.0+:** MSR automatically loads `.env` files without requiring `dotenv` package. By default, it looks for `.env.local`, `.env`, and `env` files in priority order.
+> MSR automatically loads `.env` files without requiring `dotenv` package. By default, it looks for `.env.local`, `.env`, and `env` files in priority order.
 
 ```bash
 # .env.local (for local development, add to .gitignore)
@@ -1050,7 +1048,7 @@ import { IDB } from '@migration-script-runner/core';
 class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
 
 
-// v0.7.0+: Automatically loads from .env files
+// Automatically loads from .env files
 const runner = new ExampleRunner({ handler });
 await runner.up();
 

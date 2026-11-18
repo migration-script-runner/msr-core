@@ -9,6 +9,14 @@ nav_order: 2
 
 The `JsonRenderStrategy` renders migration information as structured JSON, perfect for CI/CD pipelines, log aggregators, and automated tools that need to parse migration output programmatically.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 JsonRenderStrategy provides machine-readable output in JSON format with support for both pretty-printed (indented) and compact modes. This makes it ideal for integrating migrations into automated workflows, monitoring systems, and log analysis tools.

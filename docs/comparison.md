@@ -8,6 +8,14 @@ nav_order: 9
 
 Migration Script Runner takes a unique approach to database migrations, combining the best ideas from across the ecosystem with some innovations of our own.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Our Philosophy
 
 MSR is designed for **production safety, developer experience, and flexibility**. We believe migration tools should:
@@ -22,7 +30,7 @@ MSR is designed for **production safety, developer experience, and flexibility**
 
 | Feature | MSR | Typical Tools |
 |---------|-----|---------------|
-| **Concurrent Execution Protection** | ✅ Database-level locking (v0.8.0) | Only 2 out of 10 tools |
+| **Concurrent Execution Protection** | ✅ Optional adapter-provided migration locking | Varies by tool |
 | **Hybrid Migrations** | ✅ Both TypeScript & SQL | Usually one or the other |
 | **Generic Type Safety** | ✅ Database-specific types (v0.6.0) | Limited or none |
 | **Metrics Collection** | ✅ Built-in collectors (v0.6.0) | Usually custom |
@@ -30,11 +38,13 @@ MSR is designed for **production safety, developer experience, and flexibility**
 | **Transaction Management** | ✅ Configurable modes with retry (v0.5.0) | Basic or none |
 | **Environment Variables** | ✅ Full 12-factor config (v0.5.0) | Limited |
 | **.env File Support** | ✅ Multi-source with priority (v0.7.0) | Varies |
-| **Dry Run Mode** | ✅ Built-in, free | Often paid/enterprise only |
+| **Dry Run Mode** | ✅ Built-in | Varies by tool and edition |
 | **Execution Summaries** | ✅ Detailed success/failure logs | Basic output only |
 | **Lifecycle Hooks** | ✅ Process, script, backup, transaction (v0.5.0) | Rare |
 | **Flexible Rendering** | ✅ Table, JSON, Silent modes | Fixed format |
 | **TypeScript-First** | ✅ Full type safety | Varies |
+
+MSR includes several production-oriented capabilities that overlap with needs often described as “enterprise”: optional adapter-provided migration locking, pre-migration validation and checksum checks, dry runs, configurable transactions and retries, backup integration, rollback strategies, and metrics. These are documented in the [Features](features) page. They do **not** make MSR equivalent to Flyway Teams or Enterprise: MSR has no paid enterprise tier or built-in deployment governance suite such as Flyway's deployment rules, schema drift detection, or state-based deployment tooling. Flyway's official [feature summary](https://documentation.red-gate.com/flyway/learn-more-about-flyway/feature-summary) distinguishes features by Community, Teams, and Enterprise editions.
 
 ### Core Capabilities
 
@@ -42,7 +52,7 @@ MSR is designed for **production safety, developer experience, and flexibility**
 |------------|-----------|
 | Up/Down Migrations | ✅ |
 | SQL Migrations | ✅ v0.4.0 |
-| Concurrent Execution Protection | ✅ v0.8.0 - Database-level locking with CLI management |
+| Concurrent Execution Protection | ✅ Optional adapter-provided locking with CLI management |
 | Generic Type Safety | ✅ v0.6.0 - Database-specific types with `<DB extends IDB>` |
 | Metrics Collection | ✅ v0.6.0 - Console, Logger, JSON, CSV collectors |
 | Multi-Format Config | ✅ v0.6.0 - YAML, TOML, XML, JSON, JS |
@@ -80,7 +90,7 @@ MSR is designed for **production safety, developer experience, and flexibility**
 ### Other Ecosystems
 
 **Flyway** (Java) - SQL-first migrations
-- Strengths: Simple, SQL-focused, enterprise features
+- Strengths: SQL-focused migrations, with additional deployment and governance capabilities in its Teams and Enterprise editions
 - Best for: Java projects, teams that prefer SQL
 
 **Liquibase** (Java) - Change tracking with multiple formats
@@ -99,6 +109,10 @@ MSR is designed for **production safety, developer experience, and flexibility**
 - Strengths: Simple, no magic, multiple sources
 - Best for: Go projects
 
+**Supabase CLI** (PostgreSQL platform) - Local development and database deployment tooling
+- Strengths: SQL migrations, schema diff and declarative schema workflows, migration history management, and preview branches integrated with Supabase
+- Best for: Applications built on Supabase that want database changes and related backend configuration managed through the Supabase CLI
+
 ## When to Choose MSR
 
 MSR is a great fit when you:
@@ -116,13 +130,16 @@ MSR is a great fit when you:
 
 ## When to Choose Something Else
 
+MSR supports SQL-only projects: write forward migrations as `.up.sql` files and add optional `.down.sql` files for rollback. Pure SQL by itself is not a reason to choose another tool; see the [SQL Migrations Guide](guides/sql-migrations).
+
 Consider other tools if you:
 
 - Already heavily invested in an ORM (TypeORM, Sequelize) and want tight integration
 - Need automatic migration generation from schema changes
-- Prefer pure SQL with no code (Flyway, Liquibase)
+- Need a migration tool native to a Java/JVM application or your existing database deployment platform
 - Want a schema-first approach (Prisma)
-- Need enterprise governance features (Liquibase Enterprise)
+- Need an enterprise deployment-governance suite, such as Flyway's deployment rules and drift detection or Liquibase's commercial capabilities
+- Build on Supabase and want migrations integrated with Supabase's local stack, hosted projects, schema-diff workflow, and preview branches
 
 ## Detailed Comparison Table
 
@@ -160,6 +177,22 @@ Comprehensive comparison of MSR with popular migration tools in the JavaScript/T
 - ⚠️ Partial support / Requires custom code
 - ❌ Not supported / None
 
+### Supabase CLI
+
+Supabase CLI and MSR Core can both manage database migrations, but they target different scopes. Supabase CLI is part of the Supabase development and deployment platform and focuses on PostgreSQL projects. MSR Core is a database-agnostic migration library and CLI framework that connects through database adapters.
+
+| Area | MSR Core | Supabase CLI |
+|------|----------|--------------|
+| **Scope** | Database-agnostic core with adapter-provided database behavior | Supabase platform tooling for PostgreSQL projects, including hosted and self-hosted setups |
+| **Migration formats** | TypeScript, JavaScript, and SQL | Versioned SQL migration files |
+| **Schema-to-migration workflow** | Write migration scripts directly | Generate SQL migrations from schema differences; also supports declarative schema workflows |
+| **Apply and track migrations** | Run through the library or CLI; adapter stores migration history | Apply pending migrations with the CLI and compare local and remote migration history |
+| **Rollback and recovery** | Configurable `DOWN`, `BACKUP`, `BOTH`, or `NONE` strategy, subject to adapter capabilities | CLI provides migration down/reset and history-repair commands; history repair changes metadata and does not reverse SQL changes |
+| **Preview environments** | Not provided by Core; use external deployment infrastructure | Supabase Branching can create preview environments for pull requests |
+| **Best fit** | TypeScript/JavaScript applications needing a reusable migration engine across database adapters | Applications already using Supabase and its database, local development, and deployment workflows |
+
+See the official Supabase documentation for [database migrations](https://supabase.com/docs/guides/deployment/database-migrations), [declarative database schemas](https://supabase.com/docs/guides/local-development/declarative-database-schemas), and [branching](https://supabase.com/docs/guides/deployment/branching).
+
 ## Comparison with Cross-Platform Tools
 
 Comparing MSR with popular migration tools from other ecosystems:
@@ -171,8 +204,8 @@ Comparing MSR with popular migration tools from other ecosystems:
 | **Concurrent Protection** | ✅ Database locks | ✅ Database locks | ✅ Database locks | ❌ None | ❌ None | ⚠️ Via custom locks |
 | **Transaction Support** | ✅ Configurable + retry | ✅ Automatic | ✅ Automatic | ✅ Automatic | ✅ Automatic | ⚠️ Manual |
 | **Rollback** | ✅ Multiple strategies | ✅ Undo migrations | ✅ Rollback tags | ✅ Down migrations | ✅ Down migrations | ✅ Down migrations |
-| **Dry Run** | ✅ Built-in | ⚠️ Paid (Teams+) | ⚠️ Paid (Pro) | ❌ None | ❌ None | ❌ None |
-| **Enterprise Features** | ❌ None | ✅ Teams/Enterprise | ✅ Pro/Enterprise | ❌ None | ❌ None | ❌ None |
+| **Dry Run** | ✅ Built-in | ⚠️ Teams+ | ⚠️ Paid (Pro) | ❌ None | ❌ None | ❌ None |
+| **Commercial governance suite** | ❌ No enterprise tier; includes operational safety features described above | ✅ Teams/Enterprise | ✅ Pro/Enterprise | ❌ None | ❌ None | ❌ None |
 | **Environment Config** | ✅ 12-factor + .env | ✅ Config files | ✅ Config files | ⚠️ Manual | ✅ Rails config | ⚠️ Manual |
 | **Type Safety** | ✅ Full TypeScript | ❌ SQL only | ❌ SQL/XML only | ⚠️ Python types | ❌ DSL only | ⚠️ Go types |
 | **Best For** | Node.js projects | Java/JVM, SQL-first teams | Enterprise, complex requirements | Python/SQLAlchemy | Rails applications | Go projects, simplicity |
@@ -182,4 +215,4 @@ Comparing MSR with popular migration tools from other ecosystems:
 ---
 
 {: .note }
-This comparison is based on publicly available information and our research as of December 2025. Tool capabilities change over time, so please verify current features with official documentation.
+The Supabase and Flyway descriptions were checked against their official documentation in November 2026. The other vendor comparisons reflect research from December 2025. Capabilities and commercial editions change over time; verify details with each vendor's current documentation before making a decision.

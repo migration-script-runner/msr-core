@@ -396,7 +396,7 @@ config.backup.existingBackupPath = './backups/backup-2024-01-15.bkp';
 
 **See Also:**
 - [Backup & Restore Guide](../../guides/backup-restore-workflows)
-- [Restore Operations](../../guides/backup-restore-workflows#restore-operations)
+- [Restore Operations](../../guides/backup-restore-workflows#disaster-recovery-workflow)
 
 ---
 

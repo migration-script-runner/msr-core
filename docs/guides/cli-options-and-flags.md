@@ -1,16 +1,16 @@
 ---
 layout: page
-title: CLI options and built-in commands
+title: Adapter CLI options and flags
 permalink: /guides/cli-options-and-flags/
 parent: CLI Adapter Development
 grand_parent: Guides
 nav_order: 1
 ---
 
-# CLI options and built-in commands
+# Adapter CLI options and flags
 {: .no_toc }
 
-Configure the common CLI options, built-in commands, and adapter-specific flags.
+Register adapter-specific flags and map them into your database configuration. For built-in commands and shared options, see the [CLI Reference](../api/cli-reference).
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -21,17 +21,17 @@ Configure the common CLI options, built-in commands, and adapter-specific flags.
 
 ---
 
-## CLI Options
+## CLI options
 
 The `createCLI()` function accepts a `CLIOptions` object:
 
-### Required Options
+### Required options
 
 #### `createRunner`
 
 Factory function that receives the final merged configuration and CLI-selected dependencies, then returns a `MigrationScriptRunner` instance (your adapter).
 
-**Type**: `(config: Config, cliOptions: {logger?: ILogger; renderStrategy?: IRenderStrategy<DB>}) => MigrationScriptRunner<DB>`
+**Type**: `(config: TConfig, cliOptions: {logger?: ILogger; renderStrategy?: IRenderStrategy<DB>}) => TRunner | Promise<TRunner>`
 
 **Example**:
 ```typescript
@@ -49,17 +49,9 @@ createRunner: (config, {logger, renderStrategy}) => {
 
 `--log-level` is applied to `config.logLevel`. `cliOptions.logger` contains the logger selected with `--logger`. `cliOptions.renderStrategy` contains a `JsonRenderStrategy` when `--format json` is selected; otherwise it is `undefined` and the runner's default table renderer applies. Forward these options to the runner so the CLI flags take effect.
 
-{: .important-title }
-> Configuration Waterfall
->
-> The `config` parameter contains the final merged configuration with this priority:
-> 1. Built-in defaults
-> 2. Config file (if `--config-file` flag provided)
-> 3. Environment variables (`MSR_*`)
-> 4. `options.config` (if provided)
-> 5. CLI flags (highest priority)
+Configuration precedence is documented in the [CLI Reference](../api/cli-reference#configuration-precedence).
 
-### Optional Options
+### Optional options
 
 #### `name`
 
@@ -108,16 +100,21 @@ const customLoader = new ConfigLoader<Config>();
 // Customize loader as needed
 
 const program = createCLI({
-  createRunner: (config) => new MyRunner({config}),
+  createRunner: (config) => {
+    const handler = createDatabaseHandler(config); // adapter-specific factory
+    return new MyRunner({handler, config});
+  },
   configLoader: customLoader,
 });
 ```
 
-#### `extendCLI` (Recommended for custom commands)
+The examples use `createDatabaseHandler`, `createPostgresHandler`, `createMongoHandler`, and `createFirebaseHandler` as adapter-provided factories. Each creates the database-specific handler from the merged config; these helpers are not part of MSR Core.
+
+#### `extendCLI` for custom commands
 
 Optional callback to add custom commands with full type safety. Called after base commands are registered.
 
-**Type**: `(program: Command, createRunner: () => TRunner) => void`
+**Type**: `(program: Command, createRunner: () => Promise<TRunner>) => void`
 
 **Benefits**:
 - ✅ Full TypeScript type inference - no casting needed
@@ -127,7 +124,7 @@ Optional callback to add custom commands with full type safety. Called after bas
 
 **Example**:
 ```typescript
-// v0.8.0+: Type-safe handler access with second generic parameter
+// PostgresHandler is adapter-specific and exposes its connection config.
 class PostgresRunner extends MigrationScriptRunner<IPostgresDB, PostgresHandler> {
   async vacuum(): Promise<void> {
     // ✓ this.handler is typed as PostgresHandler (full IDE autocomplete!)
@@ -144,7 +141,10 @@ class PostgresRunner extends MigrationScriptRunner<IPostgresDB, PostgresHandler>
 }
 
 const program = createCLI({
-  createRunner: (config) => new PostgresRunner({handler, config}),
+  createRunner: (config) => {
+    const handler = createPostgresHandler(config); // adapter-specific factory
+    return new PostgresRunner({handler, config});
+  },
 
   extendCLI: (program, createRunner) => {
     program
@@ -176,7 +176,7 @@ const program = createCLI({
 {: .note }
 > The `createRunner` function passed to `extendCLI` returns your adapter with the exact type you specified, enabling full IntelliSense and compile-time checking.
 
-#### `addCustomOptions` & `extendFlags` (NEW in v0.8.3)
+#### Adapter-specific options with `addCustomOptions` and `extendFlags`
 
 Add adapter-specific CLI options that integrate seamlessly with the config waterfall.
 
@@ -192,7 +192,6 @@ Add adapter-specific CLI options that integrate seamlessly with the config water
 
 **Benefits**:
 - ✅ Single command execution - no environment variable setup needed
-- ✅ Highest priority in config waterfall (overrides file, env, and options.config)
 - ✅ Follows familiar Commander.js patterns
 - ✅ Appears in `--help` output automatically
 - ✅ Perfect for CI/CD pipelines and quick testing
@@ -271,7 +270,10 @@ const program = createCLI({
     }
   },
 
-  createRunner: (config) => new MongoRunner({ config })
+  createRunner: (config) => {
+    const handler = createMongoHandler(config); // adapter-specific factory
+    return new MongoRunner({ handler, config });
+  }
 });
 ```
 
@@ -304,7 +306,10 @@ const program = createCLI({
       setNestedValue(config, 'firebase.databaseUrl', flags.legacyDatabaseUrl);
     }
   },
-  createRunner: (config) => new FirebaseRunner({config})
+  createRunner: (config) => {
+    const handler = createFirebaseHandler(config); // adapter-specific factory
+    return new FirebaseRunner({handler, config});
+  }
 });
 ```
 
@@ -368,151 +373,12 @@ Commander.js automatically converts kebab-case flags to camelCase:
 - `--connection-timeout` becomes `flags.connectionTimeout`
 - `--firebase.databaseUrl` remains the `flags['firebase.databaseUrl']` key
 
-**Config Waterfall Priority**:
-```
-1. Built-in defaults (lowest)
-2. Config file (if --config-file flag provided)
-3. Environment variables (MSR_*)
-4. options.config (if provided)
-5. Standard CLI flags (--folder, --table-name, etc.)
-6. Custom CLI flags via extendFlags (highest priority)
-```
 
 {: .tip }
 > **Best Practice**: Use `addCustomOptions` for database-specific parameters and `extendCLI` for database-specific commands. This keeps your CLI clean and follows the single responsibility principle.
 
 {: .warning }
 > **Type Safety**: The `flags` parameter in `extendFlags` has type `CLIFlags` which uses an index signature. You may need to cast values when assigning to strongly-typed config properties (e.g., `flags.timeout as string`).
-
----
-
-## Built-in Commands
-
-The CLI automatically includes these commands:
-
-### `migrate [targetVersion]`
-
-Runs pending migrations up to an optional target version.
-
-**Aliases**: `up`
-
-```bash
-# Run all pending migrations
-msr migrate
-
-# Migrate to specific version
-msr migrate 202501220100
-
-# With options
-msr migrate --dry-run --logger console --log-level debug
-```
-
-### `list`
-
-Lists all migrations with their execution status.
-
-```bash
-# List all migrations
-msr list
-
-# List only last 10 migrations
-msr list --number 10
-msr list -n 10
-```
-
-### `down <targetVersion>`
-
-Rolls back migrations to a specific target version.
-
-**Aliases**: `rollback`
-
-```bash
-# Roll back to version
-msr down 202501220100
-
-# With options
-msr down 202501220100 --dry-run
-```
-
-### `validate`
-
-Validates all migration scripts without executing them.
-
-```bash
-# Validate all migrations
-msr validate
-
-# With logging
-msr validate --logger console --log-level debug
-```
-
-### `backup`
-
-Backup and restore operations (subcommands).
-
-#### `backup create`
-
-Creates a database backup.
-
-```bash
-msr backup create
-```
-
-#### `backup restore [backupPath]`
-
-Restores from a backup file. Uses most recent backup if path not provided.
-
-```bash
-# Restore from specific backup
-msr backup restore ./backups/backup-2025-01-22.bkp
-
-# Restore from most recent backup
-msr backup restore
-```
-
-#### `backup delete`
-
-Deletes backup file.
-
-```bash
-msr backup delete
-```
-
----
-
-## Common CLI Flags
-
-All commands support these common flags. Descriptions for options with a finite set
-of values list those values in the CLI help output, and the CLI rejects values outside those choices.
-
-| Flag | Short | Description | Type | Example |
-|------|-------|-------------|------|---------|
-| `--config-file` | `-c` | Configuration file path | string | `--config-file ./config.json` |
-| `--folder` | | Migrations folder | string | `--folder ./db/migrations` |
-| `--table-name` | | Schema version table name | string | `--table-name _versions` |
-| `--display-limit` | | Max migrations to display | number | `--display-limit 50` |
-| `--dry-run` | | Simulate without executing | boolean | `--dry-run` |
-| `--backup-mode` | | Backup/restore behavior | `full\|create_only\|restore_only\|manual` | `--backup-mode manual` |
-| `--logger` | | Logger type | console\|file\|silent | `--logger file` |
-| `--log-level` | | Log level | error\|warn\|info\|debug | `--log-level debug` |
-| `--log-file` | | Log file path (required with --logger file) | string | `--log-file ./logs/msr.log` |
-| `--format` | | Output format | table\|json | `--format json` |
-
-### Configuration Priority
-
-CLI flags have the highest priority in the configuration waterfall:
-
-```
-Built-in defaults
-    ↓
-Config file (if --config-file provided)
-    ↓
-Environment variables (MSR_*)
-    ↓
-options.config (from createCLI)
-    ↓
-CLI flags (highest priority)
-```
 
 ---
 

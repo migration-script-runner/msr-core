@@ -36,8 +36,8 @@ Each recipe includes:
 
 ### Advanced Patterns
 
-- **[Multi-Database Migrations](multi-database)** - Coordinate migrations across multiple databases
-- **[Custom Validation](custom-validation)** - Extend the validation system with custom rules
+- **[Multi-Database Migrations](../cli-vs-api)** - Coordinate migrations across multiple databases
+- **[Custom Validation](../../customization/validation/custom-validation)** - Extend the validation system with custom rules
 
 ---
 
@@ -75,12 +75,12 @@ Each recipe includes:
 
 Have a useful migration pattern to share? We welcome recipe contributions!
 
-See the [Contributing Guide](../development/contributing) for how to submit recipes.
+See the [Contributing Guide](../../development/contributing) for how to submit recipes.
 
 ---
 
 ## Next Steps
 
-- [Guides](../guides/) - Learn core MSR concepts
-- [API Reference](../api/) - Detailed API documentation
-- [Extending MSR](../customization/) - Extend MSR with custom loggers, renderers, and more
+- [Guides](../) - Learn core MSR concepts
+- [API Reference](../../api/) - Detailed API documentation
+- [Extending MSR](../../customization/) - Extend MSR with custom loggers, renderers, and more

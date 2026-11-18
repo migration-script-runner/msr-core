@@ -12,17 +12,13 @@ nav_order: 6
 The `ITransactionProvider` interface provides transaction orchestration with automatic retry logic for transient failures. It wraps database transaction operations with resilience patterns.
 {: .fs-6 .fw-300 }
 
-## Table of Contents
+## Table of contents
 {: .no_toc .text-delta }
 
-- [Overview](#overview)
-- [Interface Definition](#interface-definition)
-- [Methods](#methods)
-- [Default Implementation](#default-implementation)
-- [Custom Implementations](#custom-implementations)
-- [Retry Logic](#retry-logic)
-- [Transaction Hooks](#transaction-hooks)
-- [Usage Examples](#usage-examples)
+1. TOC
+{:toc}
+
+---
 
 ## Overview
 

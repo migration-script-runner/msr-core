@@ -19,137 +19,86 @@ The main classes for executing and managing migrations.
 
 ---
 
-### MigrationScriptRunner
+## MigrationScriptRunner
 
 The abstract base class for executing database migrations. Create a database-specific subclass before constructing a runner; `MigrationScriptRunner` cannot be instantiated directly.
 
 For the constructor and complete method reference, see [MigrationScriptRunner API](migration-script-runner).
 
-**Generic Type Parameters:**
-- **v0.6.0:** Database type parameter (`DB extends IDB`) provides database-specific type safety
-- **v0.8.0:** Handler type parameter (`THandler extends IDatabaseMigrationHandler<DB>`) provides type-safe handler access in adapters
-- **v0.8.2:** Config type parameter (`TConfig extends Config`) enables custom configuration types for adapter-specific settings
+**Generic type parameters:**
+- `DB extends IDB` — database-specific type.
+- `THandler extends IDatabaseMigrationHandler<DB>` — concrete handler type; defaults to the handler interface.
+- `TConfig extends Config` — adapter-specific configuration type; defaults to `Config`.
 
 ```typescript
-import { MigrationScriptRunner, IDatabaseMigrationHandler, Config, IDB } from '@migration-script-runner/core';
+import {
+  Config,
+  IDB,
+  IDatabaseMigrationHandler,
+  MigrationScriptRunner
+} from '@migration-script-runner/core';
 
-class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
-
-
-// Define your database type
 interface IMyDatabase extends IDB {
-  query(sql: string): Promise<any>;
+  query(sql: string): Promise<unknown[]>;
 }
 
-// Basic usage - handler type inferred
-const handler = new MyDatabaseHandler();  // implements IDatabaseMigrationHandler<IMyDatabase>
-const config = new Config();
-const runner = new ExampleRunner<IMyDatabase>({ handler , config });
+type MyHandler = IDatabaseMigrationHandler<IMyDatabase> & {
+  customProperty: string;
+};
 
-// v0.8.0: Type-safe adapter with handler generic (for custom adapters)
-class MyRunner extends MigrationScriptRunner<IMyDatabase, MyDatabaseHandler> {
-  // this.handler is now typed as MyDatabaseHandler (no casting needed!)
-  getConnectionInfo() {
-    return this.handler.customProperty;  // Full IDE autocomplete
-  }
-}
-
-// v0.8.2: Type-safe adapter with custom config
 class AppConfig extends Config {
   databaseUrl?: string;
   connectionPoolSize?: number;
 }
 
-class MyAdvancedRunner extends MigrationScriptRunner<IMyDatabase, MyDatabaseHandler, AppConfig> {
-  // this.config is now typed as AppConfig (not base Config!)
-  initializeConnection() {
-    const url = this.config.databaseUrl;  // Full IDE autocomplete for custom properties
-    const poolSize = this.config.connectionPoolSize ?? 10;
-    // ... initialize connection
+class MyRunner extends MigrationScriptRunner<IMyDatabase, MyHandler, AppConfig> {
+  getConnectionInfo(): string {
+    return this.handler.customProperty;
   }
+
+  getDatabaseUrl(): string | undefined {
+    return this.config.databaseUrl;
+  }
+}
+
+function createRunner(handler: MyHandler, config: AppConfig): MyRunner {
+  return new MyRunner({ handler, config });
 }
 ```
 
-#### Constructor
+### Constructor
 
-**Signature (v0.8.2+):**
+The constructor accepts one dependency object. The database handler is required; configuration and service overrides are optional.
+
 ```typescript
-constructor<
-    DB extends IDB,
-    THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
-    TConfig extends Config = Config
->(
-    dependencies: IRunnerDependencies<DB, THandler, TConfig>
-)
+constructor(dependencies: IRunnerDependencies<DB, THandler, TConfig>)
 ```
 
-**Signature (v0.8.0 - v0.8.1):**
-```typescript
-constructor<
-    DB extends IDB,
-    THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>
->(
-    dependencies: IRunnerDependencies<DB, THandler>
-)
-```
+**Dependencies:**
+- `handler`: Required database migration handler implementing `IDatabaseMigrationHandler<DB>`.
+- `config`: Optional `TConfig`; if omitted, the configured loader resolves defaults, config files, and environment variables.
+- `configLoader`: Optional custom configuration loader.
+- `logger`: Optional logger; defaults to the console logger with configured log-level filtering.
+- `backupOrchestrator`, `rollbackService`, `schemaVersionOrchestrator`, `migrationRenderer`, `migrationService`, `migrationScanner`, `validationService`: Optional replacements for the corresponding internal services.
+- `renderStrategy`: Optional output strategy; defaults to the ASCII table strategy unless a custom migration renderer is supplied.
+- `hooks`: Optional migration lifecycle hooks.
+- `metricsCollectors`: Optional metrics collectors; defaults to an empty list.
+- `loaderRegistry`: Optional custom registry; defaults to the built-in migration loaders.
 
-**Signature (v0.7.0 - v0.7.x):**
-```typescript
-constructor<DB extends IDB>(
-    dependencies: IRunnerDependencies<DB>
-)
-```
+### Public API
 
-**Old Signature (v0.6.x - REMOVED):**
-```typescript
-constructor<DB extends IDB>(
-    dependencies: IRunnerDependencies<DB>,
-    config?: Config
-)
-```
+The `MigrationScriptRunner` provides high-level methods for migration operations. Services are not exposed as public properties; use documented public methods instead (e.g., `createBackup()`, `restoreFromBackup()`, `validate()`).
 
-**Parameters (v0.8.2+):**
-- `dependencies`: Object containing required and optional dependencies
-  - `handler` (required): Database migration handler implementing `IDatabaseMigrationHandler<DB>`
-  - `config?`: Configuration object typed as `TConfig` (defaults to `ConfigLoader.load()` if not provided) - **MOVED from second parameter in v0.7.0, typed with TConfig in v0.8.2**
-  - `configLoader?`: Custom config loader implementing `IConfigLoader<TConfig>` (defaults to `ConfigLoader<TConfig>`) - **NEW in v0.7.0, made generic in v0.8.2**
-  - `logger?`: Custom logger implementation (defaults to `ConsoleLogger`). **Note:** Automatically wrapped with `LevelAwareLogger` for log level filtering based on `config.logLevel`
-  - `backupOrchestrator?`: Custom backup service implementing `IBackupOrchestrator` (defaults to `BackupOrchestrator<DB>`)
-  - `rollbackService?`: Custom rollback service implementing `IRollbackService<DB>` (defaults to `RollbackService<DB>`)
-  - `schemaVersionOrchestrator?`: Custom schema version service implementing `ISchemaVersionOrchestrator<DB>` (defaults to `SchemaVersionOrchestrator<DB>`)
-  - `migrationRenderer?`: Custom migration renderer implementing `IMigrationRenderer<DB>` (defaults to `MigrationRenderer<DB>`)
-  - `migrationService?`: Custom migration service implementing `IMigrationService<DB>` (defaults to `MigrationService<DB>`)
-  - `migrationScanner?`: Custom migration scanner implementing `IMigrationScanner<DB>` (defaults to `MigrationScanner<DB>`)
-  - `validationService?`: Custom validation service implementing `IMigrationValidationService<DB>` (defaults to `MigrationValidationService<DB>`)
-  - `renderStrategy?`: Custom render strategy implementing `IRenderStrategy<DB>` (defaults to `AsciiTableRenderStrategy<DB>`)
-  - `hooks?`: Lifecycle hooks for migration events implementing `IMigrationHooks<DB>` (defaults to `undefined`)
-  - `metricsCollectors?`: Array of metrics collectors implementing `IMetricsCollector[]` (defaults to `[]`)
-  - `loaderRegistry?`: Custom loader registry implementing `ILoaderRegistry<DB>` (defaults to `LoaderRegistry.createDefault()`)
+### Methods
 
-{: .new }
-> **Non-Breaking Enhancement (v0.8.2):** Added `TConfig extends Config` generic parameter for custom configuration types. Fully backward compatible - defaults to base `Config` class. Enables adapters to define database-specific config properties (e.g., connection strings, pool sizes) with full type safety. See [CLI Adapter Development Guide](../guides/cli-adapter-development#custom-configuration-types) for examples.
+The method examples below use a `runner` instance returned by `createRunner(handler, config)` in the preceding example.
 
-{: .important }
-> **Breaking Change (v0.7.0):** Constructor now takes single parameter. Config moved from second parameter into `dependencies.config`. This improves adapter ergonomics and enables extensible configuration loading via `configLoader`.
-
-{: .important }
-> **Breaking Change (v0.6.0):** Constructor signature changed to use dependency injection pattern with `{ handler }` object syntax. Handler is now required in dependencies object as first parameter. Config is now optional (auto-loads if not provided). Generic type parameter `<DB extends IDB>` provides database-specific type safety.
-
-#### Public API
-
-The `MigrationScriptRunner` provides high-level methods for migration operations. Services are not exposed as public properties - use the documented public methods instead (e.g., `createBackup()`, `restoreFromBackup()`, `validate()`).
-
-#### Methods
-
-##### getHandler()
+#### getHandler()
 
 Get the database migration handler instance.
 
-{: .new }
-> **NEW in v0.8.1:** Provides external access to the handler for CLI operations and custom commands.
-
 ```typescript
-runner.getHandler(): THandler
+getHandler(): THandler
 ```
 
 **Returns:** `THandler` - The database migration handler instance, fully typed according to the THandler generic parameter
@@ -168,11 +117,13 @@ runner.getHandler(): THandler
 
 **Example (Basic Handler Access):**
 ```typescript
-import { MigrationScriptRunner } from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
+import { Config, IDatabaseMigrationHandler, IDB, MigrationScriptRunner } from '@migration-script-runner/core';
 
 class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
 
+const config = new Config();
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
+const handler = createDatabaseHandler(config);
 const runner = new ExampleRunner({ handler, config });
 const h = runner.getHandler();
 
@@ -182,15 +133,17 @@ console.log(`Version: ${h.getVersion()}`);
 
 **Example (CLI Custom Commands):**
 ```typescript
-import { createCLI } from '@migration-script-runner/core';
-import { MigrationScriptRunner } from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
+import { Config, createCLI, IDatabaseMigrationHandler, IDB, MigrationScriptRunner } from '@migration-script-runner/core';
 
 class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
 
+declare function createDatabaseHandler(config: Config): IDatabaseMigrationHandler<IDB>;
 
 const program = createCLI({
-  createRunner: (config) => new ExampleRunner({ handler, config }),
+  createRunner: (config) => {
+    const handler = createDatabaseHandler(config);
+    return new ExampleRunner({ handler, config });
+  },
   extendCLI: (program, createRunner) => {
     program
       .command('vacuum')
@@ -243,17 +196,11 @@ const info = handler.getConnectionInfo();  // ✓ Full type safety!
 console.log(`Connected to ${info.host}:${info.port}`);
 ```
 
-{: .note }
-> Prior to v0.8.1, adapters needed custom `getHandler()` methods to expose the handler. This is now provided by the base class, removing the need for adapter-specific workarounds.
-
 ---
 
-##### createInstance() (Static Factory Method)
+#### createInstance() (Static Factory Method)
 
 Factory method for creating runner instances with async handler initialization.
-
-{: .new }
-> **NEW in v0.8.2:** Standardized pattern for database adapters requiring asynchronous initialization.
 
 ```typescript
 protected static async createInstance<
@@ -327,20 +274,21 @@ export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
 ```
 
 **Learn More:**
-- [Async Adapter Initialization Guide](../guides/cli-async-initialization#async-adapter-initialization-v082)
-- [Design Patterns: Async Adapter Factory](../development/architecture/design-patterns#async-adapter-initialization-factory-v082)
+- [Async Adapter Initialization Guide](../guides/cli-async-initialization)
+- [Design Patterns: Async Adapter Factory](../development/architecture/design-patterns)
 
 ---
 
-##### migrate()
+#### migrate()
 
 Execute all pending migrations and return a structured result.
+`migrate(targetVersion?)` is an alias for [`up(targetVersion?)`](#up).
 
 ```typescript
-await runner.migrate(): Promise<IMigrationResult>
+migrate(targetVersion?: number): Promise<IMigrationResult<DB>>
 ```
 
-**Returns:** `Promise<IMigrationResult>` containing:
+**Returns:** `Promise<IMigrationResult<DB>>` containing:
 - `success`: `boolean` - Whether all migrations completed successfully
 - `executed`: `MigrationScript[]` - Migrations executed during this run
 - `migrated`: `MigrationScript[]` - Previously executed migrations from database history
@@ -371,17 +319,14 @@ const result = await runner.migrate();
 process.exit(result.success ? 0 : 1);
 ```
 
-{: .note }
-> **Breaking Change (v0.3.0):** The `migrate()` method now returns a `Promise<IMigrationResult>` instead of `Promise<void>`. It no longer calls `process.exit()` internally, making MSR safe to use as a library in long-running applications like web servers.
-
 ---
 
-##### list()
+#### list()
 
 Display all migrations with their execution status.
 
 ```typescript
-await runner.list(number?: number): Promise<void>
+list(number?: number): Promise<void>
 ```
 
 **Parameters:**
@@ -411,22 +356,18 @@ await runner.list(10);
 
 ---
 
-##### up()
+#### up()
 
 Execute all pending migrations or migrate to a specific target version.
 
 ```typescript
-// Execute all pending migrations
-await runner.up(): Promise<IMigrationResult>
-
-// Execute migrations up to a specific target version
-await runner.up(targetVersion: number): Promise<IMigrationResult>
+up(targetVersion?: number): Promise<IMigrationResult<DB>>
 ```
 
 **Parameters:**
 - `targetVersion` (optional): The target version timestamp to migrate to (inclusive). If omitted, executes all pending migrations.
 
-**Returns:** `Promise<IMigrationResult>` containing:
+**Returns:** `Promise<IMigrationResult<DB>>` containing:
 - `success`: `boolean` - Whether all migrations completed successfully
 - `executed`: `MigrationScript[]` - Migrations executed during this run
 - `migrated`: `MigrationScript[]` - Previously executed migrations from database history
@@ -441,9 +382,6 @@ await runner.up(targetVersion: number): Promise<IMigrationResult>
 - Executes beforeMigrate script if configured
 - Saves migration state immediately after each execution
 - Triggers rollback on failure according to configured strategy
-
-{: .important }
-> **v0.4.0 API Change:** This replaces `migrate()` and `migrateTo(targetVersion)`. The `migrate()` method still works as an alias.
 
 **Example (Execute All Migrations):**
 ```typescript
@@ -487,12 +425,12 @@ const result2 = await runner.up(202501220500);
 
 ---
 
-##### validate()
+#### validate()
 
 Validate pending and executed migrations without running them.
 
 ```typescript
-await runner.validate(): Promise<{pending: IValidationResult[], migrated: IValidationIssue[]}>
+validate(): Promise<{ pending: IValidationResult<DB>[], migrated: IValidationIssue[] }>
 ```
 
 **Returns:** Object containing:
@@ -521,12 +459,12 @@ try {
 
 ---
 
-##### createBackup()
+#### createBackup()
 
 Manually create a database backup.
 
 ```typescript
-await runner.createBackup(): Promise<string>
+createBackup(): Promise<string>
 ```
 
 **Returns:** `Promise<string>` - Absolute path to the created backup file
@@ -570,12 +508,12 @@ const postUpdateBackup = await runner.createBackup();
 
 ---
 
-##### restoreFromBackup()
+#### restoreFromBackup()
 
 Restore database from a backup file.
 
 ```typescript
-await runner.restoreFromBackup(backupPath?: string): Promise<void>
+restoreFromBackup(backupPath?: string): Promise<void>
 ```
 
 **Parameters:**
@@ -613,12 +551,12 @@ try {
 
 ---
 
-##### deleteBackup()
+#### deleteBackup()
 
 Delete the backup file from disk.
 
 ```typescript
-runner.deleteBackup(): void
+deleteBackup(): void
 ```
 
 **Behavior:**
@@ -649,12 +587,12 @@ try {
 
 ---
 
-##### down()
+#### down()
 
 Roll back migrations to a specific target version.
 
 ```typescript
-await runner.down(targetVersion: number): Promise<IMigrationResult>
+down(targetVersion: number): Promise<IMigrationResult<DB>>
 ```
 
 **Parameters:**
@@ -677,9 +615,6 @@ await runner.down(targetVersion: number): Promise<IMigrationResult>
 **Requirements:**
 - All migrations to be rolled back **must** implement the `down()` method
 - down() methods must be idempotent (safe to run multiple times)
-
-{: .important }
-> **v0.4.0 API Change:** This replaces `downTo(targetVersion)`. Method renamed to `down()` for clarity and consistency with `up()`.
 
 **Example (Rollback to Specific Version):**
 ```typescript
@@ -728,4 +663,44 @@ console.log(`Rolled back ${downResult.executed.length} migrations`);
 > If a migration is missing a down() method, `down()` will throw an error and stop. All migrations must implement down() if you plan to use rollback functionality.
 
 ---
+
+#### getLockStatus()
+
+Read the current migration lock status. Returns `null` when locking is not configured or when the provider reports no lock.
+
+```typescript
+getLockStatus(): Promise<ILockStatus | null>
+```
+
+```typescript
+const status = await runner.getLockStatus();
+if (status?.isLocked) {
+  console.log(`Lock held by ${status.lockedBy}`);
+}
+```
+
+See [Lock Commands](../guides/lock-commands) for CLI and recovery guidance.
+
+---
+
+#### forceReleaseLock()
+
+Force-release the migration lock. This operation does not verify that the process holding the lock has stopped; confirm that it is stale before calling it.
+
+```typescript
+forceReleaseLock(): Promise<void>
+```
+
+```typescript
+async function releaseConfirmedStaleLock(
+  runner: MigrationScriptRunner<IDB>,
+  confirmedStaleLock: boolean
+): Promise<void> {
+  if (confirmedStaleLock) {
+    await runner.forceReleaseLock();
+  }
+}
+```
+
+The method rejects if the handler has no locking provider or the release fails. See [Lock Commands](../guides/lock-commands) for the safety procedure.
 

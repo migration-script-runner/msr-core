@@ -8,10 +8,10 @@ nav_order: 9
 # CLI vs API: When to Use Each
 {: .no_toc }
 
-Understand when to use MSR's command-line interface versus the programmatic API for safe, reliable migrations.
+Choose whether migrations should run as a separate deployment command or from application code. Both approaches use the same MSR Core runner and database adapter.
 {: .fs-6 .fw-300 }
 
-## Table of Contents
+## Table of contents
 {: .no_toc .text-delta }
 
 1. TOC
@@ -19,587 +19,265 @@ Understand when to use MSR's command-line interface versus the programmatic API 
 
 ---
 
-## Quick Decision Guide
+## Quick decision guide
 
-```mermaid
-graph TD
-    A[Need to run migrations?] --> B{Environment?}
-    B -->|Production| C[Use CLI]
-    B -->|Development| D{Auto-migrate on startup?}
-    B -->|Testing| E[Use API]
-    B -->|CI/CD| C
+| Situation | Suggested approach | Reason |
+|-----------|--------------------|--------|
+| Production deployment | CLI in one deployment job | Runs before application instances start and separates migration credentials from app credentials. |
+| CI/CD validation or deployment | CLI | The command and its result are visible in the job log. |
+| Local development | API or CLI | Use the API to integrate with a local app workflow, or the CLI for a repeatable command. |
+| Automated tests | API | Test setup and teardown can be controlled by the test runner. |
+| Multiple application instances | One CLI job or API with locking | Neither CLI nor API prevents concurrent runs by itself. Use one migration process or configure adapter locking. |
+| Serverless deployment | CLI in the deployment pipeline | Avoid running migrations once per function instance or request. |
 
-    D -->|Yes| E
-    D -->|No| C
-
-    C --> F[Safe, controlled execution]
-    E --> G[Programmatic control]
-
-    style C fill:#c8e6c9
-    style E fill:#fff9c4
-    style F fill:#a5d6a7
-    style G fill:#fff59d
-```
+For the API, MSR exposes methods such as `up()`, `down()`, `list()`, and `validate()`. For CLI use, an adapter supplies the executable and registers commands through Core's `createCLI()` factory. See the [CLI reference](../api/cli-reference) and [CLI adapter development](cli-adapter-development).
 
 ---
 
-## Decision Matrix
+## The CLI approach
 
-| Scenario | Use | Why |
-|----------|-----|-----|
-| **Production deployment** | CLI | Controlled, auditable, single execution |
-| **Staging environment** | CLI | Production-like, prevents race conditions |
-| **Local development** | API | Integrated with app startup, fast iteration |
-| **CI/CD pipeline** | CLI | Explicit, visible in logs, fail-fast |
-| **Automated testing** | API | Programmatic control, test isolation |
-| **Docker entrypoint** | CLI | Single run before app starts |
-| **Kubernetes deployment** | CLI | Init container or Job, runs once |
-| **Development hot-reload** | API | Automatic on code changes |
-| **Manual operations** | CLI | Interactive, visible output |
-| **Database seeding** | API | Programmatic data control |
-| **Heroku/Railway/Render** | CLI | Release phase command |
-| **Multiple app instances** | CLI | Prevents concurrent execution issues |
+### What it is
 
----
+The CLI approach runs migrations as a separate process, usually in a release command, CI/CD job, container job, or operator-run task. This makes it straightforward to run the migration once before application instances are updated.
 
-## The CLI Approach
+MSR Core does not publish a standalone `msr` executable. The database adapter provides the CLI executable. The examples below use `my-adapter-cli` as a placeholder; replace it with the executable from your adapter.
 
-### What is it?
-
-The CLI approach uses MSR's command-line interface to run migrations as a separate step before starting your application.
-
-```bash
-# Run migrations via CLI
-npx msr migrate
-
-# Then start your application
-npm start
-```
-
-### When to Use CLI
-
-✅ **ALWAYS use CLI for:**
-
-1. **Production Deployments**
-   ```bash
-   # Heroku release phase
-   release: npx msr migrate
-   ```
-
-2. **CI/CD Pipelines**
-   ```yaml
-   # GitHub Actions
-   - name: Run Migrations
-     run: npx msr migrate
-   ```
-
-3. **Container Orchestration**
-   ```yaml
-   # Kubernetes init container
-   initContainers:
-   - name: migrations
-     command: ["npx", "msr", "migrate"]
-   ```
-
-4. **Staging Environments**
-   - Production-like setup
-   - Multiple instances
-   - Security requirements
-
-5. **Manual Operations**
-   - Schema changes during maintenance
-   - Troubleshooting migrations
-   - One-time data fixes
-
-### Benefits of CLI
-
-| Benefit | Description |
-|---------|-------------|
-| **🔒 Security** | App doesn't need DDL permissions (CREATE, ALTER, DROP) |
-| **🎯 Control** | Explicit execution, visible in deployment logs |
-| **🚫 No Race Conditions** | Single execution, no concurrent migration attempts |
-| **📊 Audit Trail** | Clear record of who ran what, when |
-| **🔍 Visibility** | Migration output appears in deployment logs |
-| **⚡ Fast Startup** | App starts immediately, no migration delay |
-| **🛡️ Rollback Safety** | Migrations separate from app code |
-
-### CLI Example
-
-**Dockerfile with separate migration step:**
-```dockerfile
-FROM node:20-alpine
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production
-
-COPY . .
-
-# Migrations run separately, not in app startup
-CMD ["npm", "start"]
-```
-
-**Docker Compose:**
-```yaml
-services:
-  migrate:
-    image: myapp
-    command: npx msr migrate
-    environment:
-      DATABASE_URL: postgres://user:pass@db:5432/mydb
-    depends_on:
-      - db
-    restart: on-failure
-
-  app:
-    image: myapp
-    command: npm start
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-    replicas: 3  # Safe to scale after migrations
-```
-
----
-
-## The API Approach
-
-### What is it?
-
-The API approach embeds migration execution directly in your application code.
-
-```typescript
-import {MigrationScriptRunner} from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
-
-class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
-
-
-// Run migrations on app startup
-const runner = new ExampleRunner({handler, config});
-await runner.migrate();
-
-// Then start your app
-await startServer();
-```
-
-### When to Use API
-
-✅ **Use API for:**
-
-1. **Local Development**
-   ```typescript
-   if (process.env.NODE_ENV === 'development') {
-     await runner.migrate();
-   }
-   ```
-
-2. **Automated Testing**
-   ```typescript
-   beforeAll(async () => {
-     await runner.migrate();
-   });
-
-   afterAll(async () => {
-     await runner.down(0); // Rollback all
-   });
-   ```
-
-3. **Database Seeding**
-   ```typescript
-   await runner.migrate();
-   await seedDatabase(db);
-   ```
-
-4. **Development Tools**
-   - Local admin panels
-   - Developer utilities
-   - Prototyping
-
-### Benefits of API
-
-| Benefit | Description |
-|---------|-------------|
-| **🔄 Auto-Migration** | Migrations run automatically on startup |
-| **🧪 Test Control** | Programmatic setup/teardown in tests |
-| **🎨 Flexibility** | Full control over migration logic |
-| **📦 Embedded** | No separate migration step needed |
-| **🔀 Conditional** | Run based on environment/flags |
-
-### API Example
-
-**Development with auto-migration:**
-```typescript
-import {MigrationScriptRunner, Config} from '@migration-script-runner/core';
-import {MyHandler} from './database';
-import { IDB } from '@migration-script-runner/core';
-
-class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
-
-
-async function startApp() {
-  const config = new Config();
-  const handler = new MyHandler();
-  const runner = new ExampleRunner({handler, config});
-
-  // Only in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Running migrations...');
-    const result = await runner.migrate();
-
-    if (!result.success) {
-      console.error('Migration failed:', result.errors);
-      process.exit(1);
-    }
-  }
-
-  // Start application
-  await startServer();
-}
-
-startApp();
-```
-
-**Testing setup:**
-```typescript
-import {MigrationScriptRunner} from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
-
-class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
-
-
-describe('User API', () => {
-  let runner: MigrationScriptRunner;
-
-  beforeAll(async () => {
-    runner = new ExampleRunner({handler, config});
-    await runner.migrate(); // Fresh database
-  });
-
-  afterAll(async () => {
-    await runner.down(0); // Clean up
-  });
-
-  it('should create user', async () => {
-    // Test with migrated database
-  });
-});
-```
-
----
-
-## Common Mistakes
-
-### ❌ DON'T: Use API in Production
-
-**Bad - API in production with multiple instances:**
-```typescript
-// server.ts - DON'T DO THIS IN PRODUCTION
-async function startServer() {
-  // This runs on EVERY instance startup
-  await runner.migrate(); // ← Race condition!
-
-  await app.listen(3000);
-}
-```
-
-**Problem:**
-```
-[Instance 1] Starting migrations... (00:00.000)
-[Instance 2] Starting migrations... (00:00.100) ← Race!
-[Instance 3] Starting migrations... (00:00.200) ← Corruption!
-```
-
-**Fix - Use CLI before deployment:**
-```bash
-# Deploy script
-npx msr migrate  # Run once
-kubectl rollout restart deployment/myapp  # Then scale
-```
-
-### ❌ DON'T: Give Production App DDL Permissions
-
-**Bad - Over-privileged application:**
-```sql
--- DON'T: Grant schema modification to app
-GRANT ALL PRIVILEGES ON DATABASE mydb TO myapp_user;
-```
-
-**Problem:**
-- If app is compromised, attacker can DROP tables
-- Security principle: least privilege
-- Increased attack surface
-
-**Fix - Minimal permissions for app:**
-```sql
--- Production app: DML only
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO myapp_user;
-
--- Migrations: DDL only (used during deployment)
-GRANT CREATE, ALTER, DROP ON SCHEMA public TO migration_user;
-```
-
-### ❌ DON'T: Mix Approaches Without Guards
-
-**Bad - Unguarded API usage:**
-```typescript
-// This runs in ALL environments
-await runner.migrate(); // ← Dangerous in production!
-await startServer();
-```
-
-**Fix - Environment guards:**
-```typescript
-// Only allow API in specific environments
-const allowedEnvs = ['development', 'test'];
-if (allowedEnvs.includes(process.env.NODE_ENV)) {
-  await runner.migrate();
-}
-
-// Or explicitly disable in production
-if (process.env.NODE_ENV !== 'production') {
-  await runner.migrate();
-}
-```
-
----
-
-## Platform-Specific Guidance
-
-### Heroku
-
-```json
-// Procfile
-release: npx msr migrate
-web: npm start
-```
-
-✅ **Why CLI**: Release phase runs once before scaling
-
-### Railway / Render
+Add an npm script to your application:
 
 ```json
 {
-  "deploy": {
-    "startCommand": "npm start",
-    "releaseCommand": "npx msr migrate"
+  "scripts": {
+    "migrate": "my-adapter-cli migrate"
   }
 }
 ```
 
-✅ **Why CLI**: Release command runs before instances start
-
-### AWS ECS / Fargate
-
-Run migrations as separate task before updating service:
+Run migrations before starting the application:
 
 ```bash
-# Deploy script
-aws ecs run-task --task-definition myapp-migrations
-aws ecs wait tasks-stopped --tasks $TASK_ARN
-aws ecs update-service --service myapp --force-new-deployment
+npm run migrate
+npm start
 ```
 
-✅ **Why CLI**: Controlled execution before scaling
+### When to use the CLI
 
-### Kubernetes
+- **Production deployments:** Run a single migration job before rolling out application instances.
+- **CI/CD:** Validate or migrate in an explicit pipeline step and stop the deployment if it fails.
+- **Manual operations:** Run or inspect migrations with the adapter's commands and visible output.
+- **Container platforms:** Use a one-off job or deployment task instead of starting migrations in every replica.
+- **Separate credentials:** Give the migration job schema-change permissions while keeping the application account more restricted, where your database supports this split.
 
-```yaml
-# Use init container or Job
-initContainers:
-- name: migrations
-  image: myapp:latest
-  command: ["npx", "msr", "migrate"]
-```
+### Benefits and limits
 
-✅ **Why CLI**: Runs once per pod deployment
+| Benefit | What it means |
+|---------|---------------|
+| **🔒 Credential separation** | The migration process can use a separate account from the running application. |
+| **🎯 Explicit execution** | Deployment configuration shows when migrations run. |
+| **📊 Visible output** | Migration logs appear with the deployment or CI/CD job. |
+| **🚦 Startup control** | The application rollout can wait for a successful migration job. |
+| **⚠️ Concurrency still matters** | Starting the same CLI command from several jobs or replicas can still create concurrent runs. Use a single job or adapter locking. |
 
-### Docker Compose
-
-```yaml
-services:
-  migrate:
-    image: myapp
-    command: npx msr migrate
-    restart: on-failure
-
-  app:
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-```
-
-✅ **Why CLI**: Explicit dependency, runs before app
-
-### Vercel / Netlify (Serverless)
-
-For serverless, consider:
-- Use external migration service (GitHub Actions)
-- Run migrations during build phase
-- Use platform-specific hooks
+### CI/CD example
 
 ```yaml
-# GitHub Actions - run before deploy
-- name: Run Migrations
-  run: npx msr migrate
+- name: Run database migrations
+  run: npm run migrate
   env:
     DATABASE_URL: ${{ secrets.DATABASE_URL }}
 ```
 
-✅ **Why CLI**: Serverless doesn't have "startup" phase
+### Docker Compose example
+
+The application image needs the adapter CLI and the `migrate` npm script. The database must be reachable using `DATABASE_URL`. The migration service runs once; the application waits for it to finish successfully.
+
+```yaml
+services:
+  migrate:
+    image: myapp:latest
+    command: ["npm", "run", "migrate"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    restart: "no"
+
+  app:
+    image: myapp:latest
+    command: ["npm", "start"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+```
+
+For Kubernetes, use a Job or a deployment system's pre-deployment step, rather than an init container in every application pod. See [Docker and Kubernetes](docker-kubernetes) for container configuration details.
 
 ---
 
-## Hybrid Approaches
+## The API approach
 
-### Development: API + Production: CLI
+### What it is
+
+The API approach creates an adapter runner in application code and calls its migration methods directly. It is useful when the application or test framework must control the migration lifecycle.
 
 ```typescript
-import { MigrationScriptRunner } from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
+import {
+  Config,
+  IDB,
+  IDatabaseMigrationHandler,
+  MigrationScriptRunner
+} from '@migration-script-runner/core';
 
 class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
 
-// src/migrations.ts
-export async function runMigrations() {
-  const runner = new ExampleRunner({handler, config});
-
-  // Only in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Auto-running migrations (development mode)...');
-    const result = await runner.migrate();
-
-    if (!result.success) {
-      throw new Error('Migrations failed: ' + result.errors?.map(e => e.message).join(', '));
-    }
-  }
+export async function runMigrations(
+  handler: IDatabaseMigrationHandler<IDB>,
+  config: Config
+) {
+  const runner = new ExampleRunner<IDB>({ handler, config });
+  return runner.up();
 }
+```
 
-// src/server.ts
-async function start() {
-  await runMigrations(); // No-op in production
+The handler is created by your database adapter; the configuration can be loaded or constructed by your application. The example declares both as function parameters so the runner dependencies are explicit.
+
+### When to use the API
+
+- **Local development:** Integrate migrations with an application startup or developer command.
+- **Automated tests:** Prepare a database before each suite and roll it back or recreate it afterward.
+- **Application-controlled workflows:** Run migrations from an administration tool or another controlled process.
+- **A dedicated migration process:** Use the API in a one-off process when it is easier to construct the adapter in code than in a CLI command.
+
+Avoid running migrations independently from every web-server or serverless instance. If the API runs in a multi-instance environment, coordinate it through a single process or configure the adapter's [migration locking](../configuration/locking-settings).
+
+### Benefits and limits
+
+| Benefit | What it means |
+|---------|---------------|
+| **🔄 Programmatic control** | Decide when to call `up()`, `down()`, `validate()`, or other runner methods. |
+| **🧪 Test integration** | Prepare and clean up test databases from test lifecycle hooks. |
+| **📦 In-process access** | Use the runner and handler from application code without invoking another process. |
+| **⚠️ Deployment responsibility** | Your code must ensure migrations run at the right time and are not started by every replica. |
+
+### Startup example
+
+Pass the handler and configuration from the application composition root. Handle a failed result before accepting traffic:
+
+```typescript
+async function prepareApplication(
+  handler: IDatabaseMigrationHandler<IDB>,
+  config: Config,
+  startServer: () => Promise<void>
+): Promise<void> {
+  const runner = new ExampleRunner<IDB>({ handler, config });
+  const result = await runner.up();
+
+  if (!result.success) {
+    throw new Error(`Migration failed: ${result.errors?.map((error) => error.message).join(', ')}`);
+  }
+
   await startServer();
 }
 ```
 
-**Production deployment:**
-```bash
-# Separate CLI step
-npx msr migrate
-npm start
-```
+Only call this from one controlled process in a deployment. If every application instance calls it, configure [locking](../configuration/locking-settings) and confirm the adapter implements the locking provider.
 
-### Testing: Always API
+### Test setup example
+
+The test runner supplies the handler and test configuration. `down(0)` rolls back migrations to version zero, so use it only with a disposable test database.
 
 ```typescript
-import { MigrationScriptRunner } from '@migration-script-runner/core';
-import { IDB } from '@migration-script-runner/core';
+async function setupTestDatabase(
+  handler: IDatabaseMigrationHandler<IDB>,
+  config: Config
+): Promise<void> {
+  const runner = new ExampleRunner<IDB>({ handler, config });
+  const result = await runner.up();
 
-class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
-
-// test/setup.ts
-export async function setupTestDatabase() {
-  const runner = new ExampleRunner({handler, testConfig});
-  await runner.migrate();
+  if (!result.success) {
+    throw new Error(`Test database migration failed: ${result.errors?.map((error) => error.message).join(', ')}`);
+  }
 }
 
-export async function teardownTestDatabase() {
+async function teardownTestDatabase(
+  handler: IDatabaseMigrationHandler<IDB>,
+  config: Config
+): Promise<void> {
+  const runner = new ExampleRunner<IDB>({ handler, config });
   await runner.down(0);
 }
 ```
 
 ---
 
-## Best Practices Summary
+## Common mistakes
 
-### ✅ DO
+### Starting migrations from every replica
 
-- **Use CLI for production deployments**
-- **Use CLI for staging environments**
-- **Use CLI in CI/CD pipelines**
-- **Use API for local development (with guards)**
-- **Use API for automated tests**
-- **Separate migration credentials from app credentials**
-- **Run migrations before scaling instances**
-- **Log migration output in deployment logs**
+This can cause competing processes to migrate at once. Prefer one deployment job. If your architecture requires startup migrations, implement adapter locking and verify it is configured for every instance.
 
-### ❌ DON'T
+### Giving the application account unnecessary schema permissions
 
-- **Don't use API in production without careful consideration**
-- **Don't give production app DDL permissions**
-- **Don't run migrations from multiple instances simultaneously**
-- **Don't mix approaches without environment guards**
-- **Don't skip migration logging**
-- **Don't ignore migration failures**
+Where the database allows it, use a migration account for schema changes and a more restricted account for normal application queries. Choose permissions based on the operations your migrations and application actually need.
+
+### Ignoring migration failures
+
+Check the `success` value returned by `up()` and fail the deployment or startup before serving traffic. Do not continue as if migrations succeeded.
+
+### Mixing CLI and API without coordination
+
+Both approaches can be used in one project, for example CLI in production and API in tests. Ensure they cannot start concurrently against the same database unless locking is configured.
 
 ---
 
-## Quick Reference
+## Platform patterns
 
-### I want to...
+- **CI/CD:** Run the npm migration script as a deployment step and stop the rollout if it fails.
+- **Kubernetes:** Run one Job before updating the application Deployment.
+- **Docker Compose:** Use a one-off migration service and wait for successful completion.
+- **Serverless:** Run migrations in CI/CD or a separate deployment task; do not run them from every function invocation.
 
-| Goal | Solution |
-|------|----------|
-| **Deploy to production** | Use CLI in deployment pipeline |
-| **Run migrations locally** | Use API with dev guard OR CLI |
-| **Set up test database** | Use API in test setup |
-| **Deploy to Kubernetes** | Use init container with CLI |
-| **Deploy to Heroku** | Use release phase with CLI |
-| **Run during CI** | Use CLI in CI step |
-| **Debug migrations** | Use CLI interactively |
-| **Auto-migrate on dev startup** | Use API with NODE_ENV guard |
+Platform command syntax changes over time. Follow the deployment platform's current documentation and point its migration step to the same adapter CLI script used locally.
+
+---
+
+## Best practices
+
+- Use a single migration process per deployment, or configure adapter locking for concurrent environments.
+- Keep the migration command in an npm script so local and deployment usage stay consistent.
+- Separate migration credentials from application credentials when practical.
+- Validate migrations in CI/CD and stop the deployment when validation or execution fails.
+- Keep migration output in CI/CD or deployment logs.
+- Use the API for controlled application workflows and test setup, not as an uncoordinated action in every replica.
+
+---
+
+## Quick reference
+
+| Goal | Suggested approach |
+|------|--------------------|
+| Deploy to production | One CLI migration job before application rollout |
+| Run migrations locally | CLI script or API, depending on the development workflow |
+| Prepare a test database | API in test setup |
+| Deploy to Kubernetes | One Job or deployment step, not one migration command per pod |
+| Run in CI/CD | Adapter CLI through `npm run migrate` |
+| Embed migrations in an application | API with explicit failure handling and deployment coordination |
 
 ---
 
 ## FAQ
 
-### Q: Can I use the API in production if I'm careful?
+### Can I use the API in production?
 
-**A**: While technically possible, it's **not recommended**. The risks outweigh the benefits:
+Yes, if a controlled process runs it once before application instances start, or if the adapter's locking implementation safely coordinates concurrent attempts. A CLI command does not provide concurrency protection by itself; deployment orchestration and locking determine that.
 
-- **Security**: App needs DDL permissions
-- **Concurrency**: Hard to prevent race conditions reliably
-- **Debugging**: Migration issues harder to diagnose
-- **Rollback**: Complicated if migrations are embedded
+### What if my platform has no pre-deployment hook?
 
-**Instead**: Use CLI for production. It's safer, clearer, and follows industry best practices.
+Run a separate migration job or task in CI/CD before updating the application. A Kubernetes Job or a manual deployment step can serve the same purpose.
 
-### Q: What if my platform doesn't support pre-deployment hooks?
+### How should serverless applications run migrations?
 
-**A**: Options:
+Run migrations in the deployment pipeline or a dedicated task. Avoid triggering them from each cold start or request. If a dedicated process may overlap with another, configure locking.
 
-1. **Run migrations in CI** before deploying code
-2. **Use a separate migration job/task** that runs first
-3. **Manual step**: Run migrations manually before deployment
-4. **Init container** (Kubernetes): Runs before main container
+### Can I use CLI and API in one project?
 
-### Q: How do I handle migrations with serverless?
-
-**A**: Serverless is tricky because there's no "startup" phase:
-
-1. **Best**: Run migrations in CI/CD before deployment
-2. **Alternative**: Use platform hooks (build phase, pre-deploy)
-3. **Last resort**: First request triggers migration (with distributed lock)
-
-**Recommended**: Treat serverless like production - use CLI in deployment pipeline.
-
-### Q: Can I mix CLI and API in the same project?
-
-**A**: Yes, with proper guards:
-
-```typescript
-// Development: API
-if (process.env.NODE_ENV === 'development') {
-  await runner.migrate();
-}
-
-// Production: CLI (separate step)
-// npx msr migrate
-```
-
-**Key**: Ensure they never run simultaneously in the same environment.
-
----
-
-{: .note }
-> **When in doubt, use CLI.** It's safer, more visible, and follows industry best practices for production deployments.
+Yes. For example, use the adapter CLI in deployment and the API in tests. Coordinate both so they do not run simultaneously against the same database unless locking is configured.

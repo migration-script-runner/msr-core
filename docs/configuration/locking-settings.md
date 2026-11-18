@@ -284,7 +284,7 @@ msr lock:status
 msr lock:release --force
 ```
 
-See [Lock Commands](/cli/lock-commands) for full CLI documentation.
+See [Lock Commands](/guides/lock-commands) for full CLI documentation.
 
 ---
 

@@ -411,7 +411,7 @@ export default class AddNameToUsers {
 
 ### 5. Transaction Configuration Validation
 
-**New in v0.5.0**
+
 
 Validates transaction configuration compatibility and warns about potential issues.
 
@@ -665,7 +665,7 @@ Built-in validation runs in this order:
    - MIGRATED_FILE_MISSING
    - MIGRATED_FILE_MODIFIED
    ↓
-6. Transaction Configuration Validation (v0.5.0+)
+6. Transaction Configuration Validation
    - Database transaction support check
    - Isolation level compatibility
    - Rollback strategy compatibility
@@ -975,5 +975,5 @@ git checkout -- migrations/
 | `MISSING_DOWN_METHOD` | ERROR/WARNING | No down() method (policy-based) |
 | `MIGRATED_FILE_MISSING` | ERROR | Executed migration file deleted |
 | `MIGRATED_FILE_MODIFIED` | ERROR | Executed migration file changed |
-| `IMPORT_FAILED` | ERROR | Database doesn't support transactions (v0.5.0+) |
-| `MISSING_DOWN_WITH_BOTH_STRATEGY` | WARNING | Transaction configuration warnings (v0.5.0+) |
+| `IMPORT_FAILED` | ERROR | Database doesn't support transactions |
+| `MISSING_DOWN_WITH_BOTH_STRATEGY` | WARNING | Transaction configuration warnings |

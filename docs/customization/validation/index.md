@@ -438,4 +438,4 @@ try {
 - **Learn about built-in validation** → [Built-in Validation Guide](built-in-validation)
 - **Understand checksum integrity** → [Checksum & Integrity Guide](checksum-integrity)
 - **Create custom validators** → [Custom Validation Guide](custom-validation)
-- **Configure validation** → [Configuration Reference](../configuration)
+- **Configure validation** → [Configuration Reference](../../configuration)

@@ -70,7 +70,7 @@ config.validateBeforeRun = true;
 
 **See Also:**
 - [Validation Settings](../../configuration/validation-settings)
-- [Validation Guide](../../guides/validation)
+- [Validation Guide](../../customization/validation/)
 - [Built-in Validators](../../customization/validation/built-in-validation)
 
 ---
@@ -121,7 +121,7 @@ config.strictValidation = true;
 
 **See Also:**
 - [Validation Settings](../../configuration/validation-settings#strictvalidation)
-- [Strict Mode Guide](../../customization/validation/built-in-validation#strict-mode)
+- [Strict Mode Guide](../../customization/validation/built-in-validation#strictvalidation)
 
 ---
 

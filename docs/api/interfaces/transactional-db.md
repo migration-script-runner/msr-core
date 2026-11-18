@@ -12,15 +12,13 @@ nav_order: 5
 The `ITransactionalDB` interface extends the base `IDB` interface to add transaction management capabilities for SQL databases.
 {: .fs-6 .fw-300 }
 
-## Table of Contents
+## Table of contents
 {: .no_toc .text-delta }
 
-- [Overview](#overview)
-- [Interface Definition](#interface-definition)
-- [Methods](#methods)
-- [Type Guards](#type-guards)
-- [Implementation Examples](#implementation-examples)
-- [Usage with Migration Runner](#usage-with-migration-runner)
+1. TOC
+{:toc}
+
+---
 
 ## Overview
 

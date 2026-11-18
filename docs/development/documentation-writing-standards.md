@@ -113,8 +113,8 @@ nav_order: 1
 ```
 
 **Rules:**
-- Always use `layout: default`
-- Title should match H1 heading in content
+- Use `layout: default` for standard content pages. Other layouts (for example `page`) are allowed when required by the page or theme behavior.
+- `title` is the concise navigation label; H1 is the reader-facing page heading. They must describe the same page, but do not have to be identical.
 - `nav_order` determines sidebar order (lower numbers appear first)
 - Use `has_children: true` only for parent sections
 - Keep `nav_order` sequential (1, 2, 3, ...) within each level
@@ -130,7 +130,7 @@ nav_order: 1
 1. **YAML front matter** (see above)
 2. **Page title** (H1 heading with `{: .no_toc }`)
 3. **Subtitle/description** (with `{: .fs-6 .fw-300 }`)
-4. **Table of contents** (for pages with multiple sections)
+4. **Table of contents** (for long pages or pages with many sections where it helps readers navigate; concise home, index, and compatibility pages may omit it)
 5. **Main content** (organized with H2 sections)
 6. **Horizontal separators** (`---`) between major sections
 
@@ -184,10 +184,11 @@ Learn how to write effective migration scripts for your database.
 
 ### Table of Contents
 
-**Use TOC when:**
-- Page has 3+ H2 sections
-- Page is longer than 200 lines
-- Content benefits from quick navigation
+**Use a TOC when:**
+- A page is longer than 200 lines, except for the home page and concise overview/index pages
+- A page has several substantial sections and readers benefit from jumping between them
+
+Do not add a TOC mechanically to short index, compatibility, or summary pages.
 
 **Standard format:**
 ```markdown
@@ -626,8 +627,8 @@ Coverage: 100% Lines | 100% Branches | 100% Functions
 
 For a release, keep the root `CHANGELOG.md`, release notes, and migration-guide navigation consistent:
 
-- Add unreleased work to `CHANGELOG.md` under `## [Unreleased]`, grouped under the existing Keep a Changelog categories. Keep each entry concise, describe the user-visible change, and link its issue when one exists.
-- When a release is actually published, move its entries under the matching version heading and use the published release date. Do not label a version as released based only on a package version bump or an open release branch.
+- Keep in-progress work in `CHANGELOG.md` under `## [Unreleased]`, grouped under the existing Keep a Changelog categories. Keep each entry concise, describe the user-visible change, and link its issue when one exists.
+- During the release documentation review, replace `[Unreleased]` with the target version heading once the release scope is reviewed. Do not add a release date until the version is published; package metadata or an open release branch alone does not mean the release is published.
 - In `docs/version-migration/index.md`, list only the latest upgrade guide under **Current Upgrade Guide**. Move the previous current guide under **Previous Releases**.
 - Keep the latest historical guide available on `docs/version-migration/previous.md` and in its sidebar submenu. Its front matter must use `parent: Previous`, `grand_parent: Version Migration`, and a sequential `nav_order` with the newest historical guide first.
 - When adding a new current guide, update both the index and the `Previous` page/sidebar metadata. Preserve older migration guides and their historical API examples.

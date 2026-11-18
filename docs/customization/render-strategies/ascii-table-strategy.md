@@ -9,6 +9,14 @@ nav_order: 1
 
 The `AsciiTableRenderStrategy` is the default rendering strategy that outputs formatted ASCII tables to the terminal, providing a rich visual display of migration information.
 
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Overview
 
 AsciiTableRenderStrategy is perfect for local development and manual migration runs where you want immediate, human-readable feedback. It displays migration information in beautifully formatted tables with borders, alignment, and human-readable timestamps.

@@ -1246,5 +1246,5 @@ await runner.migrate();
 
 - [Environment Variables API Reference](../api/environment-variables/) - Complete reference for all variables organized by category
 - [ConfigLoader API](../api/ConfigLoader) - Advanced usage
-- [Docker Deployment](../deployment/docker) - Container setup
-- [CI/CD Integration](../deployment/ci-cd) - Pipeline configuration
+- [Docker Deployment](./docker-kubernetes) - Container setup
+- [CI/CD Integration](./ci-cd-integration) - Pipeline configuration

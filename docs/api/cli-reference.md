@@ -61,7 +61,7 @@ When `--log-level` is provided, `createCLI()` applies it to `config.logLevel` be
 
 When `--format json` is provided, `createCLI()` passes a `JsonRenderStrategy` to the runner factory. `--format table` and an omitted `--format` use the runner's default table strategy.
 
-Adapter-defined options are registered with `addCustomOptions`; see [Adapter options and flags](../guides/cli-options-and-flags).
+Adapter-defined options are registered with `addCustomOptions`; see [Adapter CLI options and flags](../guides/cli-options-and-flags).
 
 ## Commands
 
@@ -145,26 +145,11 @@ msr lock:release --force
 
 | Option | Description |
 |---|---|
-| `-f, --force` | Required to proceed without the safety prompt. |
+| `-f, --force` | Required to reach the interactive confirmation prompt. It does not skip confirmation. |
 
-## Adapter-specific options and commands
+## Extending an adapter CLI
 
-Use `addCustomOptions(program)` to register adapter flags and `extendFlags(config, flags)` to map flat flag names to adapter configuration. Dot-notation flags are mapped into nested config automatically. Numeric and boolean string values are coerced; numeric path segments create arrays.
-
-```typescript
-addCustomOptions: (program) => {
-  program.option('--db.url <url>', 'Database URL');
-  program.option('--db.timeout <milliseconds>', 'Connection timeout');
-}
-```
-
-```bash
-msr migrate \
-  --db.url postgresql://localhost/app \
-  --db.timeout 5000
-```
-
-See [Nested Configuration Flags](../guides/cli-options-and-flags#nested-configuration-flags) and [Custom Commands](../guides/cli-custom-commands).
+Adapters can register database-specific flags and commands with `addCustomOptions`, `extendFlags`, and `extendCLI`. See [CLI Adapter Development](../guides/cli-adapter-development) for setup patterns, nested flags, and examples.
 
 ## Exit codes
 

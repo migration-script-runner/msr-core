@@ -24,8 +24,6 @@ Interface for collecting metrics during migration execution.
 
 `IMetricsCollector` defines the contract for metrics collection implementations. Collectors receive lifecycle events during migration execution and can send metrics to various destinations (console, files, monitoring services, etc.).
 
-**Added in:** v0.6.0
-
 **Use cases:**
 - Track migration performance
 - Monitor execution times in production

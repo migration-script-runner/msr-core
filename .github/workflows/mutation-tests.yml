@@ -1,0 +1,117 @@
+name: Mutation Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample_size:
+        description: Number of source files to sample
+        required: false
+        default: 5
+        type: number
+  schedule:
+    - cron: '17 3 1 * *'
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Select random source files
+    runs-on: ubuntu-latest
+    outputs:
+      files: ${{ steps.select-sample.outputs.files }}
+      sample-size: ${{ steps.select-sample.outputs.sample-size }}
+      pool-size: ${{ steps.select-sample.outputs.pool-size }}
+      seed: ${{ steps.select-sample.outputs.seed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Select a random sample
+        id: select-sample
+        env:
+          SAMPLE_SIZE: ${{ inputs.sample_size || 5 }}
+        run: |
+          SAMPLE="$(node .github/scripts/create-mutation-sample.mjs --count "$SAMPLE_SIZE" --seed "$GITHUB_RUN_ID")"
+          FILES="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).files.join(","))' "$SAMPLE")"
+          SAMPLE_SIZE_ACTUAL="$(node -e 'process.stdout.write(String(JSON.parse(process.argv[1]).files.length))' "$SAMPLE")"
+          POOL_SIZE="$(node -e 'process.stdout.write(String(JSON.parse(process.argv[1]).candidateCount))' "$SAMPLE")"
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "sample-size=$SAMPLE_SIZE_ACTUAL" >> "$GITHUB_OUTPUT"
+          echo "pool-size=$POOL_SIZE" >> "$GITHUB_OUTPUT"
+          echo "seed=$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Selected files: $FILES"
+          echo "Candidate pool: $POOL_SIZE; seed: $GITHUB_RUN_ID"
+
+  mutation-test:
+    name: Mutation test (${{ needs.prepare.outputs.sample-size }} files)
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create backups directory
+        run: mkdir -p backups
+
+      - name: Configure the sampled files
+        env:
+          MUTATION_FILES: ${{ needs.prepare.outputs.files }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const config = JSON.parse(fs.readFileSync('stryker.conf.json', 'utf8'));
+          config.mutate = process.env.MUTATION_FILES.split(',');
+          config.reporters = ['json', 'clear-text'];
+          config.thresholds = { ...config.thresholds, break: 0 };
+          config.jsonReporter = { fileName: 'reports/mutation/mutation.json' };
+          fs.writeFileSync('stryker-sample.conf.json', `${JSON.stringify(config, null, 2)}\n`);
+          NODE
+
+      - name: Run mutation tests
+        run: npm run test:mutation -- stryker-sample.conf.json
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/mutation.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  summarize:
+    name: Summarize sample results
+    needs: [prepare, mutation-test]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download mutation report
+        uses: actions/download-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/sample
+
+      - name: Summarize sample results
+        env:
+          MUTATION_SAMPLE_FILES: ${{ needs.prepare.outputs.files }}
+          MUTATION_POOL_SIZE: ${{ needs.prepare.outputs.pool-size }}
+          MUTATION_SEED: ${{ needs.prepare.outputs.seed }}
+        run: node .github/scripts/summarize-mutation-reports.mjs reports/mutation/sample

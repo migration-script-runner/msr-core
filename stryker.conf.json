@@ -9,7 +9,6 @@
   },
   "mutate": [
     "src/**/*.ts",
-    "!src/**/*.d.ts",
     "!src/index.ts"
   ],
   "checkers": ["typescript"],
@@ -22,7 +21,7 @@
   "coverageAnalysis": "perTest",
   "timeoutMS": 60000,
   "timeoutFactor": 1.5,
-  "maxConcurrentTestRunners": 2,
+  "concurrency": 2,
   "reporters": [
     "html",
     "clear-text",
@@ -34,11 +33,11 @@
   "ignorePatterns": [
     "dist",
     "node_modules",
-    "test",
     "reports",
+    "docs/_site",
     "coverage",
     ".nyc_output"
   ],
-  "disableTypeChecks": false,
+  "disableTypeChecks": "src/**/*.ts",
   "symlinkNodeModules": false
 }

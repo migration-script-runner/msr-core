@@ -181,6 +181,8 @@ If mutations survive:
 
 The `Mutation Tests` workflow runs on demand and monthly from the default branch. It selects a random sample from the current tracked TypeScript files under `src/` (except `src/index.ts`). Manual runs accept a `sample_size` input, which defaults to five; the monthly run also samples five files. Newly tracked source files automatically join the candidate pool. The run ID is used as the random seed, and the workflow summary records the selected files, pool size, mutation score, and seed.
 
+The test setup creates runtime directories such as `backups/` in each test runner's working directory. This is required because Stryker runs tests in isolated sandboxes, where directories created earlier in the workflow checkout are not present automatically.
+
 To start a run manually, open **Actions → Mutation Tests → Run workflow**. The selected files are tested together and the JSON report is uploaded as an artifact; a summary job publishes the mutation score and the exact sample to the workflow summary. The workflow must first be present on the repository's default branch before GitHub can offer the manual run button.
 
 ## Troubleshooting

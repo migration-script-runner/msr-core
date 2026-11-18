@@ -65,9 +65,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create backups directory
-        run: mkdir -p backups
-
       - name: Configure the sampled files
         env:
           MUTATION_FILES: ${{ needs.prepare.outputs.files }}

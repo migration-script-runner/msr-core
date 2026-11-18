@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
-import {mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {describe, it} from 'node:test';
@@ -9,6 +9,8 @@ import {fileURLToPath} from 'node:url';
 const repositoryRoot = fileURLToPath(new URL('../..', import.meta.url));
 const sampleSelectorPath = path.join(repositoryRoot, '.github/scripts/create-mutation-sample.mjs');
 const reportSummarizerPath = path.join(repositoryRoot, '.github/scripts/summarize-mutation-reports.mjs');
+const testSetupPath = path.join(repositoryRoot, 'test/setup.ts');
+const tsNodeRegisterPath = path.join(repositoryRoot, 'node_modules/ts-node/register');
 
 function selectSample(seed, count) {
     const output = execFileSync(process.execPath, [sampleSelectorPath, '--count', String(count), '--seed', String(seed)], {
@@ -29,6 +31,22 @@ function writeMutationReport(directory, mutants) {
 }
 
 describe('mutation workflow helpers', () => {
+    it('creates runtime directories in the test runner working directory', () => {
+        const directory = mkdtempSync(path.join(tmpdir(), 'msr-mutation-sandbox-'));
+        try {
+            const result = spawnSync(process.execPath, [
+                '--require', tsNodeRegisterPath,
+                '--require', testSetupPath,
+                '--eval', ''
+            ], {cwd: directory, encoding: 'utf8'});
+
+            assert.equal(result.status, 0, result.stderr);
+            assert.equal(existsSync(path.join(directory, 'backups')), true);
+        } finally {
+            rmSync(directory, {recursive: true, force: true});
+        }
+    });
+
     it('randomly selects the requested number of tracked source files reproducibly', () => {
         const sample = selectSample(12345, 5);
         assert.deepEqual(sample, selectSample(12345, 5));

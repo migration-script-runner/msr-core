@@ -10,6 +10,10 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import spies from 'chai-spies';
+import {mkdirSync} from 'node:fs';
+
+// Stryker runs tests from isolated sandboxes, so create runtime directories there.
+mkdirSync('backups', {recursive: true});
 
 // Configure chai plugins globally
 chai.use(chaiAsPromised);  // Adds .to.be.rejectedWith(), .to.be.fulfilled, etc.

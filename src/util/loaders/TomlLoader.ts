@@ -1,6 +1,6 @@
 import * as path from 'node:path';
-import * as fs from 'node:fs';
 import { IConfigFileLoader } from '../../interface/IConfigFileLoader';
+import { parseConfigFile } from './configFileParser';
 
 /**
  * Loader for TOML configuration files.
@@ -103,33 +103,6 @@ export class TomlLoader implements IConfigFileLoader {
             );
         }
 
-        try {
-            const resolvedPath = path.resolve(filePath);
-            const content = fs.readFileSync(resolvedPath, 'utf8');
-
-            // Parse TOML content
-            const parsed = this.tomlModule!.parse(content);
-
-            if (parsed === null || parsed === undefined) {
-                throw new Error('TOML file is empty or contains only null/undefined');
-            }
-
-            if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-                throw new TypeError(
-                    `Expected TOML file to contain an object, got ${Array.isArray(parsed) ? 'array' : typeof parsed}`
-                );
-            }
-
-            return parsed as T;
-        } catch (error) {
-            // Don't double-wrap our own error messages
-            if (error instanceof Error && error.message.startsWith('Cannot load TOML file')) {
-                throw error;
-            }
-
-            // Format error message with fallback for non-Error exceptions
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            throw new Error(`Failed to load configuration from ${filePath}: ${errorMessage}`, {cause: error});
-        }
+        return parseConfigFile<T>(filePath, 'TOML', content => this.tomlModule!.parse(content));
     }
 }

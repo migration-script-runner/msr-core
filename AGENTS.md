@@ -294,11 +294,11 @@ Before any GitHub issue, pull request, milestone, label, GitHub Release, tag, or
 
 - For GitHub Release titles and notes, follow [`.agents/skills/msr-github-release-notes/SKILL.md`](.agents/skills/msr-github-release-notes/SKILL.md). For `CHANGELOG.md`, migration guides, and documentation navigation, use [`.agents/skills/msr-release-changelog/SKILL.md`](.agents/skills/msr-release-changelog/SKILL.md).
 
-- Run `gh` only from the main project checkout root, never from a sandbox copy or worktree. Before using it, confirm `pwd` and `git rev-parse --show-toplevel` identify the user's main project directory. If that checkout is unavailable, do not fall back to another checkout.
+- Run `gh` directly from the user's main project checkout root, never from a sandbox copy or worktree. Before using it, confirm `pwd` and `git rev-parse --show-toplevel` identify that checkout. Use the checkout's host authentication context; a sandboxed `gh auth status` may not reflect the user's valid local login. If sandboxed execution reports an invalid token, rerun `gh` from the main checkout with host credential access instead of concluding the user's login is invalid or switching checkouts.
 
 - For task PR creation or updates, use the project skill [`.agents/skills/msr-github-pr/SKILL.md`](.agents/skills/msr-github-pr/SKILL.md) and its helper script. It applies the repository title, target branch, assignee, labels, milestone, and Development-link rules. The command requires an already-pushed, clean task branch; it never commits or pushes.
 - Link the related issue through GitHub's **Development** relationship. Do not put `Closes #<issue>` in the PR description. The script creates and verifies the manual link through GitHub GraphQL's `addCloseIssueReferences` mutation.
-- Generated Sonar remediation PRs use the exact title `[Sonar Fix] Fix findings for #<source-pr-number>` and the head branch `automation/sonar-fix/pr-<source-pr-number>`. This is the only task PR title exception; the title validator accepts it only when the branch matches. These PRs target the head branch of the source PR analyzed by SonarCloud, remain drafts for human review, and carry the `🤖 Automation: Sonar Fix` label.
+- Human-authored task PR titles use `#<issue>: <imperative title>`. Generated Sonar remediation PRs use `[Sonar Fix] Fix findings for #<source-pr-number>` only on the matching `automation/sonar-fix/pr-<source-pr-number>` branch. PRs authored by `dependabot[bot]` are exempt from title validation because their titles are generated automatically. These PRs target the head branch of the source PR analyzed by SonarCloud, remain drafts for human review, and carry the `🤖 Automation: Sonar Fix` label.
 
 ### SonarCloud issue retrieval
 

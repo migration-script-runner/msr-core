@@ -3,6 +3,17 @@ import {pathToFileURL} from 'node:url';
 const taskTitlePattern = /^#[1-9][0-9]*: [A-Z].+$/;
 const releaseTitlePattern = /^Release v[0-9]+\.[0-9]+\.[0-9]+$/;
 const sonarFixBranchPattern = /^automation\/sonar-fix\/pr-([1-9][0-9]*)$/;
+const dependabotAuthorLogin = 'dependabot[bot]';
+
+/**
+ * Determines whether the repository title convention applies to a pull request author.
+ * Dependabot uses generated titles and is exempt from this check.
+ * @param {string} authorLogin Pull request author's GitHub login.
+ * @returns {boolean} Whether the title should be checked.
+ */
+export function shouldValidatePullRequestTitle(authorLogin) {
+    return authorLogin !== dependabotAuthorLogin;
+}
 
 /**
  * Checks a pull request title against repository conventions.
@@ -23,6 +34,12 @@ export function isValidPullRequestTitle(title, headRef) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
     const title = process.env.PR_TITLE ?? '';
     const headRef = process.env.PR_HEAD_REF ?? '';
+    const authorLogin = process.env.PR_AUTHOR ?? '';
+
+    if (!shouldValidatePullRequestTitle(authorLogin)) {
+        console.info('Skipping title validation for Dependabot pull requests.');
+        process.exit(0);
+    }
 
     if (isValidPullRequestTitle(title, headRef)) {
         process.exit(0);

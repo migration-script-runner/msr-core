@@ -34,7 +34,7 @@ If tests don't catch a mutation, it indicates:
 ## When to Run Mutation Tests
 
 {: .note }
-> **Mutation testing is NOT part of the regular CI pipeline** (`npm run test:report`) due to its long execution time (30-60 minutes).
+> **Mutation testing is not part of the regular pull request checks** because it takes substantially longer than the regular test suite.
 
 ### Recommended Usage
 
@@ -42,7 +42,7 @@ Run mutation tests in these scenarios:
 
 - **After major test suite changes**: When you've added significant new tests
 - **Before releases**: As part of the release quality checklist
-- **Weekly/Monthly schedule**: Set up a scheduled CI job to track quality over time
+- **Monthly or on demand**: Run the dedicated GitHub Actions workflow to track test quality without tying up a local machine
 - **When investigating test quality**: If you suspect tests are passing without properly validating behavior
 - **During test refactoring**: To ensure refactored tests still catch bugs effectively
 
@@ -58,7 +58,7 @@ Run mutation tests in these scenarios:
 
 ### Full Mutation Test Run
 
-⚠️ **Warning**: This is slow! Expect 30-60 minutes for the first run.
+⚠️ **Warning**: A full mutation run can take hours, depending on the source files and runner capacity.
 
 ```bash
 npm run test:mutation
@@ -177,17 +177,11 @@ If mutations survive:
    });
    ```
 
-## CI/CD Integration
+## GitHub Actions Workflow
 
-Add to your CI/CD pipeline (e.g., CircleCI):
+The `Mutation Tests` workflow runs on demand and monthly from the default branch. It selects a random sample from the current tracked TypeScript files under `src/` (except `src/index.ts`). Manual runs accept a `sample_size` input, which defaults to five; the monthly run also samples five files. Newly tracked source files automatically join the candidate pool. The run ID is used as the random seed, and the workflow summary records the selected files, pool size, mutation score, and seed.
 
-```yaml
-- run:
-    name: Mutation Testing
-    command: npm run test:mutation
-    # Only run on main branch or PRs to avoid slowing down all builds
-    when: << pipeline.git.branch >> == "main"
-```
+To start a run manually, open **Actions → Mutation Tests → Run workflow**. The selected files are tested together and the JSON report is uploaded as an artifact; a summary job publishes the mutation score and the exact sample to the workflow summary. The workflow must first be present on the repository's default branch before GitHub can offer the manual run button.
 
 ## Troubleshooting
 

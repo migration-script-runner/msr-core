@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://migration-script-runner.dev/images/msr-logo-color-glass-translucent.png" alt="Migration Script Runner logo" width="180">
+</p>
+
 # Migration Script Runner
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/migration-script-runner/msr-core/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/migration-script-runner/msr-core/tree/master)

@@ -198,28 +198,30 @@ console.log(`Connected to ${info.host}:${info.port}`);
 
 ---
 
-#### createInstance() (Static Factory Method)
+#### `getInstance()` and `createInstance()`
 
-Factory method for creating runner instances with async handler initialization.
+Adapters use public `getInstance()` for async initialization. The base method throws if an adapter forgets to override it. The protected `createInstance()` helper resolves configuration before creating the handler, then calls the adapter's runner-construction callback.
 
 ```typescript
 protected static async createInstance<
     DB extends IDB,
+    TConfig extends Config,
     THandler extends IDatabaseMigrationHandler<DB>,
     TRunner extends MigrationScriptRunner<DB, THandler, TConfig>,
-    TConfig extends Config = Config,
-    TOptions extends IRunnerOptions<DB, TConfig> = IRunnerOptions<DB, TConfig>
+    TOptions extends IRunnerOptions<DB, TConfig>
 >(
-    RunnerClass: new (deps: IRunnerDependencies<DB, THandler, TConfig>) => TRunner,
     options: TOptions,
-    createHandler: (config: TConfig) => Promise<THandler>
+    createDefaultConfig: () => TConfig,
+    createHandler: (config: TConfig) => Promise<THandler>,
+    createRunner: (dependencies: IRunnerDependencies<DB, THandler, TConfig>) => TRunner
 ): Promise<TRunner>
 ```
 
 **Parameters:**
-- `RunnerClass`: Constructor of the runner subclass
 - `options`: Runner options (can be adapter-specific interface extending `IRunnerOptions`)
+- `createDefaultConfig`: Factory for adapter-specific typed defaults
 - `createHandler`: Async factory function for creating the handler
+- `createRunner`: Callback that constructs the runner; supports private constructors
 
 **Returns:** `Promise<TRunner>` - Instance of the runner subclass
 
@@ -237,11 +239,12 @@ export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseH
         super(deps);
     }
 
-    static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-        return MigrationScriptRunner.createInstance(
-            FirebaseRunner,
+    static override getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
+        return this.createInstance(
             options,
-            (config) => FirebaseHandler.getInstance(config)
+            () => new FirebaseConfig(),
+            (config) => FirebaseHandler.getInstance(config),
+            (dependencies) => new FirebaseRunner(dependencies)
         );
     }
 }
@@ -260,14 +263,15 @@ export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
         super(deps);
     }
 
-    static async getInstance(options: IRunnerOptions<IMongoDb>): Promise<MongoRunner> {
-        return MigrationScriptRunner.createInstance(
-            MongoRunner,
+    static override getInstance(options: IRunnerOptions<IMongoDb>): Promise<MongoRunner> {
+        return this.createInstance(
             options,
+            () => new Config(),
             async (config) => {
                 const client = await MongoClient.connect(config.connectionString);
                 return new MongoHandler(client, config);
-            }
+            },
+            (dependencies) => new MongoRunner(dependencies)
         );
     }
 }

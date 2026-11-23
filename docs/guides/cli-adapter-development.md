@@ -47,27 +47,32 @@ Most database adapters require async initialization. Use the `createInstance` he
 > **Best Practice:** Use this pattern for MongoDB, PostgreSQL, Firebase, MySQL, and most production databases.
 
 ```typescript
-import {createCLI, MigrationScriptRunner, IRunnerDependencies, IRunnerOptions} from '@migration-script-runner/core';
+import {createCLI, MigrationScriptRunner, IRunnerDependencies, IRunnerOptions, Config} from '@migration-script-runner/core';
 import {MongoHandler} from './MongoHandler';
 import {IMongoDb} from './types';
 
 // Define your adapter with async initialization
-class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
-  constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
+class MongoConfig extends Config {
+  mongoUri = 'mongodb://localhost';
+}
+
+class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler, MongoConfig> {
+  private constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler, MongoConfig>) {
     super(deps);
   }
 
-  static async getInstance(options: IRunnerOptions<IMongoDb>): Promise<MongoRunner> {
-    return MigrationScriptRunner.createInstance(
-      MongoRunner,
+  static override getInstance(options: IRunnerOptions<IMongoDb, MongoConfig>): Promise<MongoRunner> {
+    return this.createInstance(
       options,
-      async (config) => MongoHandler.connect(config.mongoUri || 'mongodb://localhost')
+      () => new MongoConfig(),
+      async (config) => MongoHandler.connect(config.mongoUri),
+      (dependencies) => new MongoRunner(dependencies)
     );
   }
 }
 
 // Create CLI with async runner
-const program = createCLI({
+const program = createCLI<IMongoDb, MongoRunner, MongoConfig>({
   name: 'msr-mongodb',
   description: 'MongoDB Migration Runner',
   version: '1.0.0',

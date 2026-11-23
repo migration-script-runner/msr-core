@@ -1,7 +1,6 @@
 import {IDatabaseMigrationHandler} from "./IDatabaseMigrationHandler";
 import {IDB} from "./dao";
 import {IRunnerOptions} from "./IRunnerOptions";
-import {IConfigLoader} from "./IConfigLoader";
 import {Config} from "../model";
 
 /**
@@ -33,14 +32,18 @@ import {Config} from "../model";
  * @example
  * ```typescript
  * // ✅ CORRECT: Use in private constructor
- * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
- *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+ * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
+ *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
  *         super(deps);  // ✅ Has handler
  *     }
  *
- *     static async getInstance(options: IRunnerOptions<IFirebaseDB>): Promise<FirebaseRunner> {
- *         const handler = await FirebaseHandler.connect(options.config);
- *         return new FirebaseRunner({ handler, ...options });  // Spread IRunnerOptions
+ *     static override getInstance(options: IRunnerOptions<IFirebaseDB, FirebaseConfig>): Promise<FirebaseRunner> {
+ *         return this.createInstance(
+ *             options,
+ *             () => new FirebaseConfig(),
+ *             (config) => FirebaseHandler.connect(config),
+ *             (dependencies) => new FirebaseRunner(dependencies)
+ *         );
  *     }
  * }
  *
@@ -101,42 +104,4 @@ export interface IRunnerDependencies<
      */
     handler: THandler;
 
-    /**
-     * Config loader for loading and processing configuration (v0.7.0).
-     *
-     * If not provided, uses ConfigLoader instance with default behavior.
-     * Adapters can provide custom ConfigLoader implementations to add
-     * database-specific environment variable handling.
-     *
-     * @example
-     * ```typescript
-     * import { MigrationScriptRunner } from '@migration-script-runner/core';
-     * import { IDB } from '@migration-script-runner/core';
-     *
-     * class ExampleRunner<DB extends IDB> extends MigrationScriptRunner<DB> {}
-     *
-     * // Use default ConfigLoader
-     * const runner = new ExampleRunner<IDB>({
-     *     handler: myDatabaseHandler
-     * });
-     * // ConfigLoader automatically used
-     *
-     * // Use custom ConfigLoader
-     * class MyConfigLoader extends ConfigLoader {
-     *     applyEnvironmentVariables(config: Config): void {
-     *         super.applyEnvironmentVariables(config);
-     *         // Add custom env vars
-     *         if (process.env.MY_DB_HOST) {
-     *             (config as any).host = process.env.MY_DB_HOST;
-     *         }
-     *     }
-     * }
-     *
-     * const runner = new ExampleRunner<IDB>({
-     *     handler: myDatabaseHandler,
-     *     configLoader: new MyConfigLoader()
-     * });
-     * ```
-     */
-    configLoader?: IConfigLoader<TConfig>;
 }

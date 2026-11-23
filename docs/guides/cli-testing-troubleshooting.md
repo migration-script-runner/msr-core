@@ -109,13 +109,17 @@ TypeError: Handler is required in IRunnerDependencies.
 ```typescript
 // ✅ CORRECT
 export class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
-    constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
+    private constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
         super(deps);  // ✅ Has handler
     }
 
-    static async getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
-        const handler = await MyHandler.connect(options.config);
-        return new MyRunner({ handler, ...options });  // Spread options
+    static override getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
+        return this.createInstance(
+            options,
+            () => new Config(),
+            (config) => MyHandler.connect(config),
+            (dependencies) => new MyRunner(dependencies)
+        );
     }
 }
 ```
@@ -185,10 +189,13 @@ export class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
     }
 
     // Public factory - uses IRunnerOptions
-    static async getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
-        const handler = await MyHandler.connect(options.config);
-        // Spread IRunnerOptions into IRunnerDependencies
-        return new MyRunner({ handler, ...options });
+    static override getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
+        return this.createInstance(
+            options,
+            () => new Config(),
+            (config) => MyHandler.connect(config),
+            (dependencies) => new MyRunner(dependencies)
+        );
     }
 }
 ```
@@ -215,9 +222,13 @@ export class MyRunner extends MigrationScriptRunner<IDB, MyHandler, AppConfig> {
         console.log(this.config.databaseUrl);  // ✅ Type-safe!
     }
 
-    static async getInstance(options: IRunnerOptions<IDB, AppConfig>): Promise<MyRunner> {
-        const handler = await MyHandler.connect(options.config.databaseUrl);
-        return new MyRunner({ handler, ...options });
+    static override getInstance(options: IRunnerOptions<IDB, AppConfig>): Promise<MyRunner> {
+        return this.createInstance(
+            options,
+            () => new AppConfig(),
+            (config) => MyHandler.connect(config.databaseUrl),
+            (dependencies) => new MyRunner(dependencies)
+        );
     }
 }
 ```
@@ -232,15 +243,16 @@ export class MyRunner extends MigrationScriptRunner<IDB, MyHandler, AppConfig> {
 
 ```typescript
 export class MyRunner extends MigrationScriptRunner<IDB, MyHandler> {
-    constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
+    private constructor(deps: IRunnerDependencies<IDB, MyHandler>) {
         super(deps);
     }
 
-    static async getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
-        return MigrationScriptRunner.createInstance(
-            MyRunner,
+    static override getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
+        return this.createInstance(
             options,
-            async (config) => MyHandler.connect(config)
+            () => new Config(),
+            async (config) => MyHandler.connect(config),
+            (dependencies) => new MyRunner(dependencies)
         );
     }
 }

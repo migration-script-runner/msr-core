@@ -9,6 +9,7 @@ import {IValidationResult, IValidationIssue, IDB} from "../interface";
 import {ILoaderRegistry} from "../interface/loader/ILoaderRegistry";
 import {ILockStatus} from "../interface/service/ILockingProvider";
 import {createMigrationServices} from "./MigrationServicesFactory";
+import {ConfigLoader} from "../util/ConfigLoader";
 import {CoreServices} from "./facade/CoreServices";
 import {ExecutionServices} from "./facade/ExecutionServices";
 import {OutputServices} from "./facade/OutputServices";
@@ -101,6 +102,42 @@ export abstract class MigrationScriptRunner<
     THandler extends IDatabaseMigrationHandler<DB> = IDatabaseMigrationHandler<DB>,
     TConfig extends Config = Config
 > {
+
+    /**
+     * Standard async factory entry point for database adapters.
+     *
+     * Concrete adapters must override this method with their public, database-specific
+     * options and delegate the common lifecycle to {@link createInstance}. Keeping a
+     * base implementation makes a missing override fail clearly at runtime.
+     *
+     * @param _options Adapter options. The base fallback does not use them.
+     * @returns A promise for the adapter runner; the base implementation always rejects.
+     * @throws Error when an adapter inherits this method without overriding it.
+     *
+     * @example
+     * ```typescript
+     * class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
+     *   private constructor(dependencies: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+     *     super(dependencies);
+     *   }
+     *
+     *   static override getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
+     *     return this.createInstance(
+     *       options,
+     *       () => new FirebaseConfig(),
+     *       (config) => FirebaseHandler.getInstance(config),
+     *       (dependencies) => new FirebaseRunner(dependencies)
+     *     );
+     *   }
+     * }
+     * ```
+     */
+    public static async getInstance(_options: object): Promise<object> {
+        void _options;
+        throw new Error(
+            'This database adapter must override static getInstance() to create its runner.'
+        );
+    }
 
     /** Configuration for the migration system */
     protected readonly config: TConfig;
@@ -201,9 +238,10 @@ export abstract class MigrationScriptRunner<
                 '  2. Forgetting to create handler before passing to super()\n\n' +
                 'Solutions:\n' +
                 '  • For async initialization: Use a factory method pattern:\n' +
-                '    static async getInstance(options: IRunnerOptions<DB>): Promise<MyRunner> {\n' +
-                '      const handler = await MyHandler.connect(options.config);\n' +
-                '      return new MyRunner({ handler, ...options });\n' +
+                '    static override getInstance(options: IRunnerOptions<DB>): Promise<MyRunner> {\n' +
+                '      return this.createInstance(options, () => new MyConfig(),\n' +
+                '        (config) => MyHandler.connect(config),\n' +
+                '        (dependencies) => new MyRunner(dependencies));\n' +
                 '    }\n\n' +
                 '  • For sync initialization: Create handler before super():\n' +
                 '    constructor(options: IRunnerOptions<DB>) {\n' +
@@ -248,15 +286,17 @@ export abstract class MigrationScriptRunner<
      *
      * @template DB - Database interface type
      * @template THandler - Handler interface type
-     * @template TRunner - Runner subclass type
      * @template TConfig - Config type (defaults to base Config class)
      * @template TOptions - Options type extending IRunnerOptions (allows adapter-specific options)
+     * @template TRunner - Runner subclass type
      *
-     * @param RunnerClass - Constructor of the runner subclass
      * @param options - Runner options (can be adapter-specific interface extending IRunnerOptions)
+     * @param createDefaultConfig - Factory returning the adapter's typed default config
      * @param createHandler - Async factory function for creating the handler
+     * @param createRunner - Adapter callback that constructs the runner from resolved dependencies
      *
      * @returns Promise resolving to the runner instance
+     * @throws Error when config loading, handler creation, or runner construction fails.
      *
      * @since v0.8.2
      *
@@ -268,33 +308,35 @@ export abstract class MigrationScriptRunner<
      * }
      *
      * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
-     *     constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+     *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
      *         super(deps);
      *     }
      *
      *     static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-     *         return MigrationScriptRunner.createInstance(
-     *             FirebaseRunner,
+     *         return this.createInstance(
      *             options,
-     *             (config) => FirebaseHandler.getInstance(config)
+     *             () => new FirebaseConfig(),
+     *             (config) => FirebaseHandler.getInstance(config),
+     *             (dependencies) => new FirebaseRunner(dependencies)
      *         );
      *     }
      * }
      *
      * // MongoDB adapter with custom initialization
      * export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
-     *     constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
+     *     private constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
      *         super(deps);
      *     }
      *
      *     static async getInstance(options: IRunnerOptions<IMongoDb>): Promise<MongoRunner> {
-     *         return MigrationScriptRunner.createInstance(
-     *             MongoRunner,
+     *         return this.createInstance(
      *             options,
+     *             () => new Config(),
      *             async (config) => {
      *                 const client = await MongoClient.connect(config.connectionString);
      *                 return new MongoHandler(client, config);
-     *             }
+     *             },
+     *             (dependencies) => new MongoRunner(dependencies)
      *         );
      *     }
      * }
@@ -308,22 +350,28 @@ export abstract class MigrationScriptRunner<
      */
     protected static async createInstance<
         DB extends IDB,
+        TConfig extends Config,
         THandler extends IDatabaseMigrationHandler<DB>,
         TRunner extends MigrationScriptRunner<DB, THandler, TConfig>,
-        TConfig extends Config = Config,
-        TOptions extends IRunnerOptions<DB, TConfig> = IRunnerOptions<DB, TConfig>
+        TOptions extends IRunnerOptions<DB, TConfig>
     >(
-        RunnerClass: new (deps: IRunnerDependencies<DB, THandler, TConfig>) => TRunner,
         options: TOptions,
-        createHandler: (config: TConfig) => Promise<THandler>
+        createDefaultConfig: () => TConfig,
+        createHandler: (config: TConfig) => Promise<THandler>,
+        createRunner: (dependencies: IRunnerDependencies<DB, THandler, TConfig>) => TRunner
     ): Promise<TRunner> {
-        // Create handler using adapter-provided factory
-        const handler = await createHandler(options.config as TConfig);
+        const config = options.config
+            ?? (options.configLoader ?? new ConfigLoader<TConfig>()).load(
+                undefined,
+                undefined,
+                createDefaultConfig()
+            );
+        const handler = await createHandler(config);
 
-        // Construct runner with handler and options
-        return new RunnerClass({
+        return createRunner({
+            ...options,
             handler,
-            ...options
+            config
         });
     }
 

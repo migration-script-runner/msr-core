@@ -13,7 +13,11 @@ import {
     IRollbackService,
     MigrationScript,
     ILoaderRegistry,
-    IMigrationScriptLoader
+    IMigrationScriptLoader,
+    IRunnerDependencies,
+    IRunnerOptions,
+    IConfigLoader,
+    TransactionMode
 } from '../../../src';
 
 describe('MigrationScriptRunner - Dependency Injection', () => {
@@ -553,69 +557,66 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
         });
     });
 
-    describe('createInstance factory method (v0.8.2)', () => {
-        /**
-         * Test: createInstance creates runner with async handler initialization
-         * Validates that adapters can use the factory method to create instances
-         * with asynchronous handler creation.
-         */
-        it('should create runner instance with async handler initialization', async () => {
-            // Simulate async handler creation
-            const createHandlerSpy = sinon.stub().resolves(handler);
+    describe('async adapter factory (v1.0.0)', () => {
+        class AppConfig extends Config {
+            databaseUrl = 'adapter-default';
 
-            // Create a test subclass
-            class TestRunner extends MigrationScriptRunner<IDB> {
-                private constructor(deps: any) {
-                    super(deps);
-                }
-
-                static async getInstance(options: any): Promise<TestRunner> {
-                    return (MigrationScriptRunner as any).createInstance(
-                        TestRunner,
-                        options,
-                        createHandlerSpy
-                    );
-                }
+            constructor() {
+                super();
+                this.showBanner = false;
+                this.transaction.mode = TransactionMode.NONE;
             }
+        }
 
-            // Create instance
-            const runner = await TestRunner.getInstance({ config });
+        interface ICustomHandler extends IDatabaseMigrationHandler<IDB> {
+            customMethod(): string;
+        }
 
-            // Verify handler creation was called
-            expect(createHandlerSpy.calledOnce).to.be.true;
-            expect(createHandlerSpy.firstCall.args[0]).to.equal(config);
-
-            // Verify runner was created
-            expect(runner).to.be.instanceOf(TestRunner);
-            expect(runner).to.be.instanceOf(MigrationScriptRunner);
+        const createCustomHandler = (): ICustomHandler => ({
+            ...handler,
+            customMethod: () => 'custom'
         });
 
-        /**
-         * Test: createInstance preserves handler type through THandler generic
-         * Validates that the created runner has correctly typed handler.
-         */
-        it('should preserve handler type through THandler generic', async () => {
-            // Custom handler interface
-            interface ICustomHandler extends IDatabaseMigrationHandler<IDB> {
-                customMethod(): string;
-            }
-
-            const customHandler: ICustomHandler = {
-                ...handler,
-                customMethod: () => 'custom'
+        it('resolves typed configuration before handler creation and shares it with the runner', async () => {
+            const phases: string[] = [];
+            const customHandler = createCustomHandler();
+            let resolvedConfig: AppConfig | undefined;
+            const loader: IConfigLoader<AppConfig> = {
+                load: (_overrides, _loaderOptions, defaults) => {
+                    expect(defaults).to.be.instanceOf(AppConfig);
+                    const loadedConfig = defaults ?? new AppConfig();
+                    loadedConfig.databaseUrl = 'https://firebase.example.com';
+                    phases.push('config');
+                    return loadedConfig;
+                },
+                applyEnvironmentVariables: () => undefined
             };
 
-            class TestRunner extends MigrationScriptRunner<IDB, ICustomHandler> {
-                private constructor(deps: any) {
-                    super(deps);
+            class FirebaseRunner extends MigrationScriptRunner<IDB, ICustomHandler, AppConfig> {
+                private constructor(dependencies: IRunnerDependencies<IDB, ICustomHandler, AppConfig>) {
+                    super(dependencies);
                 }
 
-                static async getInstance(options: any): Promise<TestRunner> {
-                    return (MigrationScriptRunner as any).createInstance(
-                        TestRunner,
+                static override getInstance(options: IRunnerOptions<IDB, AppConfig>): Promise<FirebaseRunner> {
+                    return this.createInstance(
                         options,
-                        async () => customHandler
+                        () => new AppConfig(),
+                        async (resolved) => {
+                            phases.push('handler');
+                            resolvedConfig = resolved;
+                            return customHandler;
+                        },
+                        (dependencies) => {
+                            phases.push('runner');
+                            expect(dependencies.config).to.equal(resolvedConfig);
+                            expect(dependencies.handler).to.equal(customHandler);
+                            return new FirebaseRunner(dependencies);
+                        }
                     );
+                }
+
+                getDatabaseUrl(): string {
+                    return this.config.databaseUrl;
                 }
 
                 getCustomValue(): string {
@@ -623,154 +624,141 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 }
             }
 
-            const runner = await TestRunner.getInstance({ config });
+            const runner = await FirebaseRunner.getInstance({ configLoader: loader });
 
-            // Verify handler method is accessible
+            expect(phases).to.deep.equal(['config', 'handler', 'runner']);
+            expect(resolvedConfig).to.be.instanceOf(AppConfig);
+            expect(runner.getDatabaseUrl()).to.equal('https://firebase.example.com');
             expect(runner.getCustomValue()).to.equal('custom');
         });
 
-        /**
-         * Test: createInstance propagates all options to runner
-         * Validates that logger, hooks, and other services are passed through.
-         */
-        it('should propagate all options to runner', async () => {
-            const customLogger = new SilentLogger();
-            const customHooks = {
-                onBeforeMigrate: sinon.stub()
+        it('uses explicit config without invoking loader or adapter defaults', async () => {
+            const customHandler = createCustomHandler();
+            const explicitConfig = new AppConfig();
+            explicitConfig.databaseUrl = 'https://explicit.example.com';
+            let defaultsCreated = 0;
+            let loaderCalls = 0;
+            let handlerConfig: AppConfig | undefined;
+
+            const loader: IConfigLoader<AppConfig> = {
+                load: () => {
+                    loaderCalls += 1;
+                    throw new Error('Explicit config should bypass loading');
+                },
+                applyEnvironmentVariables: () => undefined
             };
 
-            class TestRunner extends MigrationScriptRunner<IDB> {
-                private constructor(deps: any) {
-                    super(deps);
+            class FirebaseRunner extends MigrationScriptRunner<IDB, ICustomHandler, AppConfig> {
+                private constructor(dependencies: IRunnerDependencies<IDB, ICustomHandler, AppConfig>) {
+                    super(dependencies);
                 }
 
-                static async getInstance(options: any): Promise<TestRunner> {
-                    return (MigrationScriptRunner as any).createInstance(
-                        TestRunner,
+                static override getInstance(options: IRunnerOptions<IDB, AppConfig>): Promise<FirebaseRunner> {
+                    return this.createInstance(
                         options,
-                        async () => handler
-                    );
-                }
-            }
-
-            const runner = await TestRunner.getInstance({
-                config,
-                logger: customLogger,
-                hooks: customHooks
-            });
-
-            // Verify options were passed through
-            // Logger is wrapped in LevelAwareLogger, check the underlying logger
-            expect((runner as any).output.logger.logger).to.equal(customLogger);
-            // Hooks are wrapped in CompositeHooks, check it contains our hooks
-            expect((runner as any).hooks.hooks).to.deep.include(customHooks);
-        });
-
-        /**
-         * Test: createInstance handles handler creation errors
-         * Validates that errors from async handler creation propagate correctly.
-         */
-        it('should propagate errors from handler creation', async () => {
-            const createHandlerStub = sinon.stub().rejects(new Error('Connection failed'));
-
-            class TestRunner extends MigrationScriptRunner<IDB> {
-                private constructor(deps: any) {
-                    super(deps);
-                }
-
-                static async getInstance(options: any): Promise<TestRunner> {
-                    return (MigrationScriptRunner as any).createInstance(
-                        TestRunner,
-                        options,
-                        createHandlerStub
-                    );
-                }
-            }
-
-            // Verify error is propagated
-            await expect(TestRunner.getInstance({ config }))
-                .to.be.rejectedWith('Connection failed');
-        });
-
-        /**
-         * Test: createInstance works with custom config type (TConfig generic)
-         * Validates that custom config types are properly typed through generics.
-         */
-        it('should work with custom config type (TConfig generic)', async () => {
-            // Custom config class
-            class AppConfig extends Config {
-                databaseUrl?: string;
-            }
-
-            const appConfig = new AppConfig();
-            appConfig.databaseUrl = 'https://mydb.example.com';
-
-            const createHandlerSpy = sinon.stub().resolves(handler);
-
-            class TestRunner extends MigrationScriptRunner<IDB, IDatabaseMigrationHandler<IDB>, AppConfig> {
-                private constructor(deps: any) {
-                    super(deps);
-                }
-
-                static async getInstance(options: any): Promise<TestRunner> {
-                    return (MigrationScriptRunner as any).createInstance(
-                        TestRunner,
-                        options,
-                        createHandlerSpy
+                        () => {
+                            defaultsCreated += 1;
+                            return new AppConfig();
+                        },
+                        async (resolved) => {
+                            handlerConfig = resolved;
+                            return customHandler;
+                        },
+                        (dependencies) => new FirebaseRunner(dependencies)
                     );
                 }
 
-                getDatabaseUrl(): string | undefined {
+                getDatabaseUrl(): string {
                     return this.config.databaseUrl;
                 }
             }
 
-            const runner = await TestRunner.getInstance({ config: appConfig });
+            const runner = await FirebaseRunner.getInstance({ config: explicitConfig, configLoader: loader });
 
-            // Verify config is passed to handler creation
-            expect(createHandlerSpy.calledOnce).to.be.true;
-            expect(createHandlerSpy.firstCall.args[0]).to.equal(appConfig);
-
-            // Verify custom config property is accessible
-            expect(runner.getDatabaseUrl()).to.equal('https://mydb.example.com');
+            expect(loaderCalls).to.equal(0);
+            expect(defaultsCreated).to.equal(0);
+            expect(handlerConfig).to.equal(explicitConfig);
+            expect(runner.getDatabaseUrl()).to.equal('https://explicit.example.com');
         });
 
-        /**
-         * Test: createInstance supports adapter-specific options (TOptions extends IRunnerOptions)
-         * Validates that adapters can define custom options interfaces.
-         */
-        it('should support adapter-specific options extending IRunnerOptions', async () => {
-            // Adapter-specific options
-            interface IFirebaseRunnerOptions {
-                config?: Config;
-                logger?: any;
-                customFirebaseOption?: string;
-            }
-
-            const firebaseOptions: IFirebaseRunnerOptions = {
-                config,
-                customFirebaseOption: 'firebase-specific-value'
-            };
-
-            class FirebaseRunner extends MigrationScriptRunner<IDB> {
-                private constructor(deps: any) {
-                    super(deps);
+        it('uses typed adapter defaults with the default Core loader', async () => {
+            const customHandler = createCustomHandler();
+            class FirebaseRunner extends MigrationScriptRunner<IDB, ICustomHandler, AppConfig> {
+                private constructor(dependencies: IRunnerDependencies<IDB, ICustomHandler, AppConfig>) {
+                    super(dependencies);
                 }
 
-                static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-                    return (MigrationScriptRunner as any).createInstance(
-                        FirebaseRunner,
+                static override getInstance(options: IRunnerOptions<IDB, AppConfig>): Promise<FirebaseRunner> {
+                    return this.createInstance(
                         options,
-                        async () => handler
+                        () => new AppConfig(),
+                        async () => customHandler,
+                        (dependencies) => new FirebaseRunner(dependencies)
+                    );
+                }
+
+                getConfig(): AppConfig {
+                    return this.config;
+                }
+            }
+
+            const runner = await FirebaseRunner.getInstance({});
+
+            expect(runner.getConfig()).to.be.instanceOf(AppConfig);
+            expect(runner.getConfig().databaseUrl).to.equal('adapter-default');
+            expect(runner.getConfig().transaction.mode).to.equal(TransactionMode.NONE);
+        });
+
+        it('propagates errors from config loaders and handler factories', async () => {
+            const customHandler = createCustomHandler();
+            const loadError = new Error('Config loader failed');
+            const loader: IConfigLoader<AppConfig> = {
+                load: () => { throw loadError; },
+                applyEnvironmentVariables: () => undefined
+            };
+
+            class ConfigFailingRunner extends MigrationScriptRunner<IDB, ICustomHandler, AppConfig> {
+                private constructor(dependencies: IRunnerDependencies<IDB, ICustomHandler, AppConfig>) {
+                    super(dependencies);
+                }
+
+                static override getInstance(options: IRunnerOptions<IDB, AppConfig>): Promise<ConfigFailingRunner> {
+                    return this.createInstance(
+                        options,
+                        () => new AppConfig(),
+                        async () => customHandler,
+                        (dependencies) => new ConfigFailingRunner(dependencies)
                     );
                 }
             }
 
-            const runner = await FirebaseRunner.getInstance(firebaseOptions);
+            await expect(ConfigFailingRunner.getInstance({ configLoader: loader }))
+                .to.be.rejectedWith('Config loader failed');
 
-            // Verify instance was created
-            expect(runner).to.be.instanceOf(FirebaseRunner);
-            expect(runner).to.be.instanceOf(MigrationScriptRunner);
+            class HandlerFailingRunner extends MigrationScriptRunner<IDB, ICustomHandler, AppConfig> {
+                private constructor(dependencies: IRunnerDependencies<IDB, ICustomHandler, AppConfig>) {
+                    super(dependencies);
+                }
+
+                static override getInstance(options: IRunnerOptions<IDB, AppConfig>): Promise<HandlerFailingRunner> {
+                    return this.createInstance(
+                        options,
+                        () => new AppConfig(),
+                        async (): Promise<ICustomHandler> => { throw new Error('Connection failed'); },
+                        (dependencies) => new HandlerFailingRunner(dependencies)
+                    );
+                }
+            }
+
+            await expect(HandlerFailingRunner.getInstance({ config: new AppConfig() }))
+                .to.be.rejectedWith('Connection failed');
+        });
+
+        it('rejects when an adapter inherits the base getInstance fallback', async () => {
+            class AdapterWithoutFactory extends MigrationScriptRunner<IDB> {}
+
+            await expect(AdapterWithoutFactory.getInstance({}))
+                .to.be.rejectedWith(Error, 'must override static getInstance()');
         });
     });
 
@@ -796,7 +784,7 @@ describe('MigrationScriptRunner - Dependency Injection', () => {
                 expect.fail('Should have thrown error');
             } catch (error) {
                 expect(error).to.be.instanceOf(TypeError);
-                expect((error as Error).message).to.include('static async getInstance');
+                expect((error as Error).message).to.include('static override getInstance');
                 expect((error as Error).message).to.include('MyHandler.connect');
             }
         });

@@ -289,35 +289,37 @@ console.log(`Pending checked: ${results.pending.length}`);
 
 ## Async adapter initialization
 
-`MigrationScriptRunner.createInstance()` is a **protected static helper**, not a public factory that consumers call directly. Adapters can wrap it in a public `getInstance()` method when the handler needs asynchronous initialization. See [Async Adapter Initialization](../guides/cli-async-initialization).
+`getInstance()` is the adapter's public async factory. The base implementation throws when an adapter fails to override it. Adapter overrides delegate common configuration resolution and creation order to the protected `createInstance()` helper. See [Async Adapter Initialization](../guides/cli-async-initialization).
 
 **Signature:**
 
 ```typescript
 protected static createInstance<
   DB extends IDB,
+  TConfig extends Config,
   THandler extends IDatabaseMigrationHandler<DB>,
   TRunner extends MigrationScriptRunner<DB, THandler, TConfig>,
-  TConfig extends Config = Config,
-  TOptions extends IRunnerOptions<DB, TConfig> = IRunnerOptions<DB, TConfig>
+  TOptions extends IRunnerOptions<DB, TConfig>
 >(
-  RunnerClass: new (dependencies: IRunnerDependencies<DB, THandler, TConfig>) => TRunner,
   options: TOptions,
-  createHandler: (config: TConfig) => Promise<THandler>
+  createDefaultConfig: () => TConfig,
+  createHandler: (config: TConfig) => Promise<THandler>,
+  createRunner: (dependencies: IRunnerDependencies<DB, THandler, TConfig>) => TRunner
 ): Promise<TRunner>
 ```
 
 ```typescript
-static async getInstance(options: IRunnerOptions<AppDatabase>): Promise<AppRunner> {
-  return MigrationScriptRunner.createInstance(
-    AppRunner,
+static override getInstance(options: IRunnerOptions<AppDatabase>): Promise<AppRunner> {
+  return this.createInstance(
     options,
-    (config) => AppHandler.connect(config)
+    () => new Config(),
+    (config) => AppHandler.connect(config),
+    (dependencies) => new AppRunner(dependencies)
   );
 }
 ```
 
-The adapter's `getInstance()` method is the public API.
+When `options.config` is provided, Core passes that instance directly. Otherwise, the loader resolves configuration from adapter defaults, files, and environment before the handler callback runs. The same config instance reaches the runner-construction callback. The adapter's `getInstance()` method remains the public API.
 
 ## Related references
 

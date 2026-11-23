@@ -630,64 +630,36 @@ function createTransactionProvider<DB extends IDB>(...): ITransactionProvider<DB
 }
 ```
 
-### Async Adapter Initialization Factory (v0.8.2)
+### Async adapter initialization factory
 
-**New in v0.8.2:** The `createInstance` static method provides a standardized factory pattern for database adapters requiring asynchronous initialization.
+`MigrationScriptRunner` provides a shared async factory lifecycle for adapters:
 
-#### Pattern Overview
+1. Resolve the typed config once from explicit config or Core's loader and adapter defaults.
+2. Create the database handler with that resolved config.
+3. Construct the runner with the same config and handler.
 
-Many database adapters need async initialization (connections, authentication, etc.). The `createInstance` helper eliminates boilerplate:
-
-```typescript
-// MigrationScriptRunner provides:
-protected static async createInstance<DB, THandler, TRunner, TConfig, TOptions>(
-    RunnerClass: new (deps: IRunnerDependencies<DB, THandler, TConfig>) => TRunner,
-    options: TOptions,
-    createHandler: (config: TConfig) => Promise<THandler>
-): Promise<TRunner>
-```
-
-#### Benefits
-
-1. **Reduces Boilerplate**: From ~10 lines to 3 lines per adapter
-2. **Standardizes Pattern**: Consistent across all async adapters
-3. **Type Safety**: Full generic support with proper type inference
-4. **Error Prevention**: Automatically handles `...options` spreading
-
-#### Adapter Implementation
-
-**With `createInstance` (Recommended):**
+The base `getInstance()` method throws if an adapter inherits it without overriding. A typed override can keep adapter-specific options and result types. Core uses a runner callback so adapters can keep their constructors private.
 
 ```typescript
-export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
-    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
-        super(deps);
+export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
+    private constructor(dependencies: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+        super(dependencies);
     }
 
-    static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-        return MigrationScriptRunner.createInstance(
-            FirebaseRunner,
+    static override getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
+        return this.createInstance(
             options,
-            (config) => FirebaseHandler.getInstance(config)
+            () => new FirebaseConfig(),
+            (config) => FirebaseHandler.getInstance(config),
+            (dependencies) => new FirebaseRunner(dependencies)
         );
     }
 }
 ```
 
-**Without `createInstance` (Manual):**
+If `options.config` is supplied, Core passes it directly and skips config loading. Otherwise, the supplied typed defaults are the starting config; the selected loader applies its file and environment sources before the handler callback. Adapters can supply `configLoader` through `IRunnerOptions` to add database-specific variables or validation.
 
-```typescript
-export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
-    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
-        super(deps);
-    }
-
-    static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-        const handler = await FirebaseHandler.getInstance(options.config);
-        return new FirebaseRunner({ handler, ...options });  // Easy to forget ...options!
-    }
-}
-```
+Existing async adapters should replace the old `createInstance(RunnerClass, options, createHandler)` call with `createInstance(options, createDefaultConfig, createHandler, createRunner)`. The construction callback also removes the old requirement for a public constructor or unsafe cast.
 
 #### When to Use
 

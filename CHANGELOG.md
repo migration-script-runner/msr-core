@@ -4,13 +4,14 @@ Notable changes to MSR Core are recorded here. The project uses [Semantic Versio
 
 ## [1.0.0]
 
-> Release notes for v1.0.0. The package metadata is currently `1.0.0-beta.1`; no stable release date is recorded here because the final tag has not been published.
+> Release notes for v1.0.0. The package metadata is currently `1.0.0-beta.2`; no stable release date is recorded here because the final tag has not been published.
 
 ### Added
 - Added the common `--backup-mode` CLI option with validated values (`full`, `create_only`, `restore_only`, and `manual`) ([#153](https://github.com/migration-script-runner/msr-core/issues/153), [#173](https://github.com/migration-script-runner/msr-core/issues/173)).
 - Added dot-notation support for adapter-specific CLI options, mapping flags such as `--mongo.uri` into nested configuration ([#162](https://github.com/migration-script-runner/msr-core/issues/162)).
 - Added repository guidance, GitHub workflow documentation, security reporting guidance, contributor templates, compatibility policy, and CI security auditing ([#163](https://github.com/migration-script-runner/msr-core/issues/163), [#167](https://github.com/migration-script-runner/msr-core/issues/167)).
 - Added an automated workflow that retrieves SonarCloud findings and opens a guarded Codex remediation PR ([#178](https://github.com/migration-script-runner/msr-core/issues/178)).
+- Added a standard async `getInstance()` factory that resolves typed configuration before handler creation and shares it with the handler and runner, while supporting adapter defaults, custom loaders, and private constructors ([#199](https://github.com/migration-script-runner/msr-core/issues/199)).
 
 ### Changed
 - **Breaking:** Made `MigrationScriptRunner` an abstract base class for adapters ([#150](https://github.com/migration-script-runner/msr-core/issues/150)).

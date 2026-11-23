@@ -197,16 +197,17 @@ import {
   MyDatabaseHandler
 } from './database-handler';
 
-export class MyDatabaseRunner extends MigrationScriptRunner<IMyDatabase, MyDatabaseHandler> {
-  constructor(dependencies: IRunnerDependencies<IMyDatabase, MyDatabaseHandler>) {
+export class MyDatabaseRunner extends MigrationScriptRunner<IMyDatabase, MyDatabaseHandler, MyDatabaseConfig> {
+  private constructor(dependencies: IRunnerDependencies<IMyDatabase, MyDatabaseHandler, MyDatabaseConfig>) {
     super(dependencies);
   }
 
-  static async getInstance(options: IRunnerOptions<IMyDatabase>): Promise<MyDatabaseRunner> {
-    return MigrationScriptRunner.createInstance(
-      MyDatabaseRunner,
+  static override getInstance(options: IRunnerOptions<IMyDatabase, MyDatabaseConfig>): Promise<MyDatabaseRunner> {
+    return this.createInstance(
       options,
-      (config) => createMyDatabaseHandler(config)
+      () => new MyDatabaseConfig(),
+      (config) => createMyDatabaseHandler(config),
+      (dependencies) => new MyDatabaseRunner(dependencies)
     );
   }
 }

@@ -47,13 +47,14 @@ export interface IConfigLoader<C extends Config = Config> {
      * Load configuration from various sources.
      *
      * Loading order (later sources override earlier):
-     * 1. Default values from Config constructor
+     * 1. Typed defaults supplied by Core or default values from Config constructor
      * 2. Config file (if found)
      * 3. Environment variables
      * 4. Overrides parameter
      *
      * @param overrides - Optional configuration overrides
      * @param options - Optional loader options (baseDir for config file search)
+     * @param defaults - Optional typed adapter config used as the starting object
      * @returns Loaded configuration
      *
      * @example
@@ -68,7 +69,7 @@ export interface IConfigLoader<C extends Config = Config> {
      * const config = loader.load({}, { baseDir: '/custom/path' });
      * ```
      */
-    load(overrides?: Partial<C>, options?: ConfigLoaderOptions): C;
+    load(overrides?: Partial<C>, options?: ConfigLoaderOptions, defaults?: C): C;
 
     /**
      * Apply environment variables to configuration.

@@ -12,6 +12,7 @@ import {ILoaderRegistry} from "./loader/ILoaderRegistry";
 import {IDB} from "./dao";
 import {IMetricsCollector} from "./IMetricsCollector";
 import {Config} from "../model";
+import {IConfigLoader} from "./IConfigLoader";
 
 /**
  * **PUBLIC API** - Optional services and configuration for MigrationScriptRunner.
@@ -39,14 +40,18 @@ import {Config} from "../model";
  * @example
  * ```typescript
  * // ✅ CORRECT: Use in public factory method
- * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
- *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+ * export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
+ *     private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
  *         super(deps);
  *     }
  *
- *     static async getInstance(options: IRunnerOptions<IFirebaseDB>): Promise<FirebaseRunner> {
- *         const handler = await FirebaseHandler.connect(options.config);
- *         return new FirebaseRunner({ handler, ...options });  // Spread options into deps
+ *     static override getInstance(options: IRunnerOptions<IFirebaseDB, FirebaseConfig>): Promise<FirebaseRunner> {
+ *         return this.createInstance(
+ *             options,
+ *             () => new FirebaseConfig(),
+ *             (config) => FirebaseHandler.connect(config),
+ *             (dependencies) => new FirebaseRunner(dependencies)
+ *         );
  *     }
  * }
  *
@@ -101,6 +106,15 @@ export interface IRunnerOptions<
      * ```
      */
     config?: TConfig;
+
+    /**
+     * Optional typed loader used by Core to resolve configuration before the
+     * adapter creates its database handler.
+     *
+     * If omitted, Core uses its default ConfigLoader with the adapter-provided
+     * default config factory.
+     */
+    configLoader?: IConfigLoader<TConfig>;
 
     /**
      * Custom backup service implementation.

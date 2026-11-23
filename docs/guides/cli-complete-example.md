@@ -73,26 +73,32 @@ export class MongoHandler implements IDatabaseMigrationHandler<MongoDBInterface>
 ```typescript
 import {
   MigrationScriptRunner,
+  Config,
   IRunnerDependencies,
   IRunnerOptions
 } from '@migration-script-runner/core';
 import {MongoHandler, MongoDBInterface} from './MongoHandler';
 
-export class MongoRunner extends MigrationScriptRunner<MongoDBInterface, MongoHandler> {
-  constructor(deps: IRunnerDependencies<MongoDBInterface, MongoHandler>) {
+class MongoConfig extends Config {
+  mongoUri = 'mongodb://localhost';
+}
+
+export class MongoRunner extends MigrationScriptRunner<MongoDBInterface, MongoHandler, MongoConfig> {
+  private constructor(deps: IRunnerDependencies<MongoDBInterface, MongoHandler, MongoConfig>) {
     super(deps);
   }
 
   // Async factory method using createInstance helper
-  static async getInstance(options: IRunnerOptions<MongoDBInterface>): Promise<MongoRunner> {
-    return MigrationScriptRunner.createInstance(
-      MongoRunner,
+  static override getInstance(options: IRunnerOptions<MongoDBInterface, MongoConfig>): Promise<MongoRunner> {
+    return this.createInstance(
       options,
+      () => new MongoConfig(),
       async (config) => {
         const handler = new MongoHandler(config.mongoUri || 'mongodb://localhost');
         await handler.connect();  // Async initialization
         return handler;
-      }
+      },
+      (dependencies) => new MongoRunner(dependencies)
     );
   }
 

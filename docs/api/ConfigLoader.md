@@ -103,7 +103,8 @@ Load configuration using waterfall approach.
 ```typescript
 load(
     overrides?: Partial<C>,
-    options?: ConfigLoaderOptions
+    options?: ConfigLoaderOptions,
+    defaults?: C
 ): C
 ```
 
@@ -112,6 +113,7 @@ load(
 |------|------|---------|-------------|
 | `overrides` | `Partial<C>` | `undefined` | Optional configuration overrides (highest priority) |
 | `options` | `ConfigLoaderOptions` | `undefined` | Loader options (baseDir, configFile) |
+| `defaults` | `C` | `undefined` | Optional typed adapter config instance used as the starting object |
 
 **ConfigLoaderOptions:**
 ```typescript

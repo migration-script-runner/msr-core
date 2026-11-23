@@ -99,7 +99,7 @@ export class ConfigLoader<C extends Config = Config> implements IConfigLoader<C>
      * Instance method: Load configuration using waterfall approach.
      *
      * **Priority Order:**
-     * 1. Start with built-in defaults (new Config())
+     * 1. Start with the supplied typed defaults, or built-in defaults (new Config())
      * 2. Merge with config from file (if exists)
      * 3. Merge with environment variables (MSR_*)
      * 4. Merge with provided overrides
@@ -108,6 +108,7 @@ export class ConfigLoader<C extends Config = Config> implements IConfigLoader<C>
      *
      * @param overrides - Optional configuration overrides (highest priority)
      * @param options - Optional loader options (baseDir, configFile)
+     * @param defaults - Optional typed adapter defaults used as the starting config
      * @returns Fully loaded configuration
      *
      * @example
@@ -125,13 +126,14 @@ export class ConfigLoader<C extends Config = Config> implements IConfigLoader<C>
      */
     load(
         overrides?: Partial<C>,
-        options?: ConfigLoaderOptions
+        options?: ConfigLoaderOptions,
+        defaults?: C
     ): C {
         const baseDir = options?.baseDir || process.cwd();
         const explicitConfigFile = options?.configFile;
 
         // Step 1: Start with built-in defaults
-        const config = new Config();
+        const config = defaults ?? new Config() as C;
 
         // Step 2: Merge with config file (if exists)
         let configFilePath: string | undefined;

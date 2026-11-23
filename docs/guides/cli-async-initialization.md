@@ -21,13 +21,13 @@ Initialize database connections and other asynchronous dependencies when creatin
 
 ---
 
-## Async Adapter Initialization (v0.8.2)
+## Async adapter initialization
 
-Many database adapters require asynchronous initialization - connecting to a database, authenticating, setting up connection pools, etc. MSR Core v0.8.2 provides a standardized factory pattern to eliminate boilerplate code and ensure consistency across adapters.
+Many database adapters need configuration before they can connect, authenticate, or create connection pools. The Core factory resolves one typed configuration first, then passes that same object to handler creation and runner construction.
 
 ### The Problem
 
-Without the factory pattern, every adapter must implement the same boilerplate:
+The previous factory called `createHandler(options.config)` before the runner constructor loaded configuration. When `options.config` was omitted, asynchronous adapters could not use configuration from Core's file and environment sources before connecting.
 
 ```typescript
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
@@ -36,44 +36,40 @@ export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseH
     }
 
     static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-        // Boilerplate: Create handler async
+        // Previously this could receive undefined even when a config file or
+        // MSR_* variables provided the database URL.
         const handler = await FirebaseHandler.getInstance(options.config);
-        // Boilerplate: Construct with handler + options
         return new FirebaseRunner({ handler, ...options });
     }
 }
 ```
 
-**Problems:**
-- ❌ Code duplication across every async adapter
-- ❌ Easy to forget spreading `...options`
-- ❌ Inconsistent patterns between adapters
+The handler may therefore connect with a different or incomplete configuration than the runner later uses.
 
-### The Solution: `createInstance` Factory Method
+### Use the Core factory
 
-MSR Core v0.8.2 provides a `protected static createInstance()` helper that standardizes the pattern:
+Override the base `getInstance()` with adapter-specific options. Delegate config resolution, handler creation, and runner construction to the protected `createInstance()` helper:
 
 ```typescript
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler> {
-    constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler>) {
+    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
         super(deps);
     }
 
-    static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-        return MigrationScriptRunner.createInstance(
-            FirebaseRunner,                                    // Runner class
-            options,                                           // Options (IRunnerOptions or extension)
-            (config) => FirebaseHandler.getInstance(config)    // Handler factory function
+    static override getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
+        return this.createInstance(
+            options,
+            () => new FirebaseConfig(),
+            (config) => FirebaseHandler.getInstance(config),
+            (dependencies) => new FirebaseRunner(dependencies)
         );
     }
 }
 ```
 
-**Benefits:**
-- ✅ Reduces boilerplate to 3 lines
-- ✅ Consistent pattern across all adapters
-- ✅ Type-safe with full generic support
-- ✅ Handles option spreading automatically
+The base class also provides a `getInstance()` fallback that throws a clear error when an adapter forgets to override it. The typed override can keep its narrower `IFirebaseRunnerOptions` parameter and `FirebaseRunner` return type.
+
+The private constructor is supported because the adapter passes a construction callback from inside its static method; Core does not need a public constructor reference or a type cast.
 
 ### Type Parameters
 
@@ -82,16 +78,19 @@ The `createInstance` method supports all runner generics:
 ```typescript
 protected static async createInstance<
     DB extends IDB,                                           // Your database interface
+    TConfig extends Config,                                   // Custom config type
     THandler extends IDatabaseMigrationHandler<DB>,           // Your handler type
     TRunner extends MigrationScriptRunner<DB, THandler, TConfig>,  // Your runner subclass
-    TConfig extends Config = Config,                          // Custom config type
-    TOptions extends IRunnerOptions<DB, TConfig> = IRunnerOptions<DB, TConfig>  // Custom options
+    TOptions extends IRunnerOptions<DB, TConfig>               // Custom options
 >(
-    RunnerClass: new (deps: IRunnerDependencies<DB, THandler, TConfig>) => TRunner,
     options: TOptions,
-    createHandler: (config: TConfig) => Promise<THandler>
+    createDefaultConfig: () => TConfig,
+    createHandler: (config: TConfig) => Promise<THandler>,
+    createRunner: (dependencies: IRunnerDependencies<DB, THandler, TConfig>) => TRunner
 ): Promise<TRunner>
 ```
+
+When `options.config` is supplied, Core uses that instance directly and skips the loader. Otherwise it starts with `createDefaultConfig()`, then the selected config loader applies its normal file and environment handling. The resolved config is passed unchanged to both callbacks and into the runner dependencies. Pass `configLoader` in `IRunnerOptions` to customize loading.
 
 ### Example: Firebase Adapter
 
@@ -108,19 +107,20 @@ export interface IFirebaseRunnerOptions extends IRunnerOptions<IFirebaseDB, Fire
 }
 
 export class FirebaseRunner extends MigrationScriptRunner<IFirebaseDB, FirebaseHandler, FirebaseConfig> {
-    constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
+    private constructor(deps: IRunnerDependencies<IFirebaseDB, FirebaseHandler, FirebaseConfig>) {
         super(deps);
     }
 
-    static async getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
-        return MigrationScriptRunner.createInstance(
-            FirebaseRunner,
+    static override getInstance(options: IFirebaseRunnerOptions): Promise<FirebaseRunner> {
+        return this.createInstance(
             options,
+            () => new FirebaseConfig(),
             async (config) => {
                 // Your async initialization logic
                 const app = await initializeApp(config.credential);
                 return new FirebaseHandler(app, config);
-            }
+            },
+            (dependencies) => new FirebaseRunner(dependencies)
         );
     }
 }
@@ -140,20 +140,21 @@ await runner.up();
 
 ```typescript
 export class MongoRunner extends MigrationScriptRunner<IMongoDb, MongoHandler> {
-    constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
+    private constructor(deps: IRunnerDependencies<IMongoDb, MongoHandler>) {
         super(deps);
     }
 
-    static async getInstance(options: IRunnerOptions<IMongoDb>): Promise<MongoRunner> {
-        return MigrationScriptRunner.createInstance(
-            MongoRunner,
+    static override getInstance(options: IRunnerOptions<IMongoDb>): Promise<MongoRunner> {
+        return this.createInstance(
             options,
+            () => new Config(),
             async (config) => {
                 // Connect to MongoDB
                 const client = await MongoClient.connect(config.connectionString);
                 const db = client.db(config.database);
                 return new MongoHandler(db, config);
-            }
+            },
+            (dependencies) => new MongoRunner(dependencies)
         );
     }
 }
@@ -193,10 +194,10 @@ await adapter.up();
 The factory method propagates errors from handler creation:
 
 ```typescript
-static async getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
-    return MigrationScriptRunner.createInstance(
-        MyRunner,
+static override getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
+    return this.createInstance(
         options,
+        () => new Config(),
         async (config) => {
             try {
                 const client = await DatabaseClient.connect(config.connectionString);
@@ -204,7 +205,8 @@ static async getInstance(options: IRunnerOptions<IDB>): Promise<MyRunner> {
             } catch (error) {
                 throw new Error(`Failed to connect to database: ${error.message}`);
             }
-        }
+        },
+        (dependencies) => new MyRunner(dependencies)
     );
 }
 ```
